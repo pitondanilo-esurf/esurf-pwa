@@ -35,7 +35,7 @@
                     </button>
                 </div>
                 
-                <div v-if="message" :class="['alert', isError ? 'alert-error' : 'alert-success']">{{ message }}</div>
+                <div v-if="message" :class="['alert', isError ? 'alert-error' : 'alert-success']" style="white-space: pre-line;">{{ message }}</div>
             </div>
         </div>
 
@@ -87,7 +87,7 @@
                                     :disabled="filterStatus === 'processed' || filterStatus === 'failed'"
                                 >
                             </th>
-                            <th>Data</th> <th>Stato</th> <th>POD ID</th>
+                            <th>Data</th> <th>Stato / Errore</th> <th>POD ID</th>
                             <th>Titolare</th>
                             <th>Località</th>
                             <th class="text-right">Dati Tecnici</th>
@@ -95,7 +95,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="pod in filteredPods" :key="pod.id" :class="{ 'selected-row': selectedIds.includes(pod.id) }">
+                        <tr v-for="pod in filteredPods" :key="pod.id" :class="{ 'selected-row': selectedIds.includes(pod.id), 'row-error': pod.status === 'failed' }">
                             
                             <td>
                                 <input 
@@ -114,6 +114,9 @@
                                 <span :class="['status-badge', pod.status]">
                                     {{ getStatusLabel(pod.status) }}
                                 </span>
+                                <div v-if="pod.status === 'failed'" class="error-text" :title="pod.error_log">
+                                    {{ pod.error_log }}
+                                </div>
                             </td>
 
                             <td class="font-mono">{{ pod.pod_code }}</td>
@@ -136,6 +139,7 @@
                                     <span title="Immissione" v-if="Number(pod.producer_power_kw) > 0" class="text-green">📈 {{ pod.producer_power_kw }}</span>
                                     <span title="Accumulo" v-if="Number(pod.storage_power_kw) > 0" class="text-blue">🔋 {{ pod.storage_power_kw }}</span>
                                     <span title="Remoto" v-if="pod.remote_control_inverter">📡</span>
+                                    <span v-if="pod.bill_file" title="Bolletta Presente" class="text-purple" style="cursor:help">📄 PDF</span>
                                 </div>
                             </td>
 
@@ -144,8 +148,8 @@
                                     <button @click="openEditModal(pod)" class="btn-icon" title="Modifica">✏️</button>
                                     <button @click="deletePod(pod.id)" class="btn-icon danger" title="Elimina">🗑️</button>
                                 </div>
-                                <div v-else-if="pod.status === 'failed'" class="error-tooltip" :title="pod.error_log">
-                                    ⚠️ Errore
+                                <div v-else-if="pod.status === 'failed'" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <button @click="deletePod(pod.id)" class="btn-icon danger" title="Elimina Riga Fallita">🗑️</button>
                                 </div>
                                 <div v-else class="text-green text-xs">
                                     OK
@@ -264,6 +268,19 @@
                     </div>
                 </div>
 
+                <div v-if="editingPod.bill_file" class="form-row" style="margin-top: 15px;">
+                    <div class="form-group">
+                        <label>File Bolletta (Archiviato)</label>
+                        <div class="input-field readonly-field" style="background: #f1f5f9; display: flex; align-items: center; gap: 5px;">
+                            <span style="font-size: 1.2rem;">📄</span> 
+                            <span style="font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: monospace;">
+                                {{ editingPod.bill_file.split('/').pop() }}
+                            </span>
+                        </div>
+                        <small class="text-muted">Il file verrà trasferito automaticamente al POD definitivo.</small>
+                    </div>
+                </div>
+
                 <div class="modal-footer">
                     <button type="button" @click="closeModal" class="btn-secondary">Annulla</button>
                     <button type="submit" class="btn-primary">Salva Modifiche</button>
@@ -277,9 +294,9 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import axios from '@/services/axios'; // Assicurati di usare l'istanza configurata
+import axios from '@/services/axios';
+import CommunityService from '@/services/CommunityService';
 import PodBulkLoader from '@/services/PodBulkLoader';
-import CommunityService from '@/services/CommunityService'; 
 
 // --- STATO ---
 const selectedFile = ref(null);
@@ -290,7 +307,6 @@ const message = ref('');
 const isError = ref(false);
 const fileInput = ref(null);
 
-// Inizializza come array vuoto per evitare errori prima del caricamento
 const pendingPods = ref([]); 
 const loadingTable = ref(false);
 const selectedIds = ref([]);
@@ -306,49 +322,34 @@ onMounted(async () => {
     await loadStagingData();
 });
 
-// --- API: Load Data & Info ---
+// --- API ---
 const loadCommunityInfo = async () => {
     try {
         const res = await CommunityService.getMyCommunity();
-        if(res.data && res.data.type) {
-            communityType.value = res.data.type;
-        }
-    } catch (e) { 
-        console.warn("Impossibile recuperare info community per il template."); 
-    }
+        if(res.data && res.data.type) communityType.value = res.data.type;
+    } catch (e) { console.warn("Info community non disponibili"); }
 };
 
 const loadStagingData = async () => {
-  loadingTable.value = true; // Fix: usa la variabile loading corretta
+  loadingTable.value = true;
   try {
     const response = await axios.get('/api/pods/staging');
-    
-    // --- GESTIONE ROBUSTA DELLA RISPOSTA ---
     let incomingData = response.data;
-
-    // Se la risposta è un oggetto avvolto da 'data' (Laravel Resource / Pagination)
     if (incomingData && incomingData.data && Array.isArray(incomingData.data)) {
         pendingPods.value = incomingData.data;
-    } 
-    // Se la risposta è direttamente un array
-    else if (Array.isArray(incomingData)) {
+    } else if (Array.isArray(incomingData)) {
         pendingPods.value = incomingData;
-    } 
-    // Fallback di sicurezza
-    else {
-        console.warn("API Staging: Formato dati non riconosciuto, atteso Array.", incomingData);
+    } else {
         pendingPods.value = [];
     }
-
   } catch (error) {
-    console.error("Errore caricamento staging:", error);
+    console.error("Errore staging:", error);
     pendingPods.value = []; 
   } finally {
     loadingTable.value = false;
   }
 };
 
-// --- ACTION: Download Template ---
 const downloadTemplate = async () => {
     isDownloading.value = true;
     try {
@@ -361,48 +362,57 @@ const downloadTemplate = async () => {
         link.click();
         link.remove();
     } catch (e) {
-        alert("Errore durante il download del template.");
+        alert("Errore download template.");
     } finally {
         isDownloading.value = false;
     }
 };
 
-// --- ACTION: Upload File ---
 const handleFileSelect = (event) => { 
     if (event.target.files.length > 0) selectedFile.value = event.target.files[0]; 
 };
 
 const uploadFile = async () => {
     if (!selectedFile.value) return;
+
     isUploading.value = true;
     message.value = '';
-    isError.value = false;
+
     try {
-        const res = await PodBulkLoader.uploadExcel(selectedFile.value);
-        message.value = `✅ ${res.data.imported_count} record caricati in staging.`;
+        const response = await PodBulkLoader.uploadExcel(selectedFile.value); 
+        
+        const warnings = response.data.warnings || [];
+        
+        if (warnings.length > 0) {
+            const msg = `Importazione con ${warnings.length} avvisi:\n` + warnings.join('\n');
+            alert("⚠️ " + msg);
+            message.value = msg;
+            isError.value = true;
+        } else {
+            alert("✅ Importazione completata!");
+            message.value = "File caricato correttamente.";
+            isError.value = false;
+        }
+        
+        await loadStagingData();
         selectedFile.value = null;
-        if (fileInput.value) fileInput.value.value = "";
-        filterStatus.value = 'pending'; 
-        await loadStagingData(); // Ricarica la tabella
+        if (fileInput.value) fileInput.value.value = '';
+
     } catch (e) {
+        console.error(e);
+        const errMsg = e.response?.data?.message || e.message;
+        alert("Errore caricamento: " + errMsg);
+        message.value = "Errore: " + errMsg;
         isError.value = true;
-        message.value = e.response?.data?.message || "Errore durante l'upload.";
-    } finally { isUploading.value = false; }
+    } finally {
+        isUploading.value = false;
+    }
 };
 
-// --- ACTION: Modale & Editing ---
 const openEditModal = (pod) => {
-    // Deep copy per non modificare la riga finché non si salva
     editingPod.value = JSON.parse(JSON.stringify(pod));
-    
-    // Fix booleani
     editingPod.value.remote_control_inverter = !!editingPod.value.remote_control_inverter;
-
-    // [IMPORTANTE] Inizializza extra_attributes se mancante
-    if (!editingPod.value.extra_attributes) {
-        editingPod.value.extra_attributes = {};
-    }
-
+    if (!editingPod.value.extra_attributes) editingPod.value.extra_attributes = {};
     showModal.value = true;
 };
 
@@ -417,43 +427,33 @@ const saveEdit = async () => {
 };
 
 const deletePod = async (id) => {
-    if(!confirm("Sei sicuro di voler eliminare questa riga?")) return;
+    if(!confirm("Eliminare riga?")) return;
     try { 
         await PodBulkLoader.deleteStagingPod(id); 
         await loadStagingData(); 
-    } catch(e) {
-        alert("Errore cancellazione");
-    }
+    } catch(e) { alert("Errore cancellazione"); }
 };
 
 const confirmSelection = async () => {
     if (selectedIds.value.length === 0) return;
-    if(!confirm(`Confermi l'importazione di ${selectedIds.value.length} POD? Verranno inviate le email di invito.`)) return;
+    if(!confirm(`Confermi ${selectedIds.value.length} POD?`)) return;
 
     isProcessing.value = true;
     try {
         const res = await PodBulkLoader.processSelection(selectedIds.value);
         alert(res.data.message);
-        
-        // Pulizia selezione
         selectedIds.value = [];
-        
         await loadStagingData();
-        filterStatus.value = 'processed'; // Sposta vista sui completati
+        filterStatus.value = 'processed';
     } catch (e) { 
-        console.error(e);
-        alert("Errore durante l'elaborazione. Controlla la console."); 
+        alert("Errore elaborazione."); 
     } finally { isProcessing.value = false; }
 };
 
-// --- COMPUTED & UTILS ---
+// --- COMPUTED ---
 const filteredPods = computed(() => {
-    // [FIX] Protezione se pendingPods non è array
     if (!Array.isArray(pendingPods.value)) return [];
-
-    if (filterStatus.value === 'all') {
-        return pendingPods.value;
-    }
+    if (filterStatus.value === 'all') return pendingPods.value;
     return pendingPods.value.filter(pod => pod.status === filterStatus.value);
 });
 
@@ -466,21 +466,14 @@ const formatDate = (dateString) => {
 };
 
 const getStatusLabel = (status) => {
-    const map = {
-        'pending': 'In Attesa',
-        'processed': 'Completato',
-        'failed': 'Fallito'
-    };
+    const map = { 'pending': 'In Attesa', 'processed': 'Completato', 'failed': 'Fallito' };
     return map[status] || status;
 };
 
 const hasPendingSelection = computed(() => selectedIds.value.length > 0);
-
 const isAllSelected = computed(() => {
-    // [FIX] Usa sempre l'array sicuro
     const pods = filteredPods.value || [];
     const selectable = pods.filter(p => p.status === 'pending');
-    
     if (selectable.length === 0) return false;
     return selectable.every(p => selectedIds.value.includes(p.id));
 });
@@ -488,38 +481,45 @@ const isAllSelected = computed(() => {
 const toggleSelectAll = () => {
     const pods = filteredPods.value || [];
     const selectable = pods.filter(p => p.status === 'pending');
-    
     if (selectable.length === 0) return;
 
     if (isAllSelected.value) {
-        // Deseleziona tutti quelli visibili
         const idsToRemove = selectable.map(p => p.id);
         selectedIds.value = selectedIds.value.filter(id => !idsToRemove.includes(id));
     } else {
-        // Seleziona tutti quelli visibili
         const newIds = selectable.map(p => p.id);
-        // Set per evitare duplicati
         selectedIds.value = [...new Set([...selectedIds.value, ...newIds])];
     }
 };
 </script>
 
 <style scoped>
-/* Layout */
+/* Nuove Classi Aggiunte per gestire l'errore */
+.row-error {
+    background-color: #fef2f2 !important; /* Colore rosso molto chiaro */
+}
+
+.error-text {
+    color: #b91c1c;
+    font-size: 0.75rem;
+    max-width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 4px;
+    cursor: help;
+}
+
+.text-purple { color: #9333ea; font-weight: 600; }
 .owner-layout { padding: 2rem; background: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif; }
 .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
 .subtitle { color: #64748b; margin-top: 0.5rem; }
-
-/* Cards */
 .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; margin-bottom: 2rem; }
 .card-header { padding: 1.25rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
 .card-body { padding: 1.5rem; }
 .upload-card.collapsed .card-body { padding: 1rem; }
-
-/* Upload & Buttons */
 .upload-area { display: flex; gap: 1rem; align-items: center; }
 .file-input { flex: 1; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; }
-
 .btn-primary { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
 .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
 .btn-secondary { background: white; border: 1px solid #cbd5e1; color: #475569; padding: 8px 16px; border-radius: 8px; cursor: pointer; }

@@ -71,8 +71,8 @@
                                     v-if="pod.ai_analysis" 
                                     @click.stop="openAiModal(pod.ai_analysis)" 
                                     class="btn-ai-indicator" 
-                                    title="Vedi Analisi AI">
-                                    ✨ AI
+                                    title="Vedi Analisi">
+                                    ✨
                                 </button>
 
                                 <button 
@@ -92,6 +92,15 @@
                             <div class="c-location">
                                 {{ pod.city }} ({{ pod.province }}), {{ pod.address }}
                             </div>
+                            <div v-if="pod.communities && pod.communities.length > 0" class="c-community-row">
+                                <div v-for="comm in pod.communities" :key="comm.id" class="comm-pill" :title="comm.type">
+                                    <span class="cp-icon">🤝</span> 
+                                    <span class="cp-name">{{ comm.name }}</span>
+                                    <span v-if="comm.pivot?.membership_type" class="cp-role-tag">
+                                        {{ comm.pivot.membership_type === 'main_cer' ? 'Main' : 'Sub' }}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="c-tech-grid">
@@ -108,7 +117,10 @@
                                 <div class="tech-cell"><span class="t-label">Impianto</span><span class="t-val">{{ pod.production_capacity }} kWp</span></div>
                                 <div class="tech-cell"><span class="t-label">GSE</span><span class="t-val">{{ pod.gse_convention_code }}</span></div>
                             </template>
-                            
+                            <div class="tech-cell" v-if="pod.primary_substation">
+                                <span class="t-label">Cabina</span>
+                                <span class="t-val" style="color: var(--accent);">{{ pod.primary_substation }}</span>
+                            </div>                           
                             <div class="tech-cell" v-if="pod.has_storage">
                                 <span class="t-label">Accumulo</span><span class="t-val">{{ pod.storage_capacity }} kWh</span>
                             </div>
@@ -411,7 +423,24 @@
                 </div>
                 
                 <div class="modal-body compact-body">
-                    <form id="podForm" @submit.prevent class="compact-form">
+                    
+                    <div v-if="uploadingFile" class="ai-processing-state">
+                        <div class="ai-animation-box">
+                            <div class="magic-ring">
+                                <div class="magic-sparkle">✨</div>
+                            </div>
+                        </div>
+                        
+                        <h3>Analisi AI in corso...</h3>
+                        <p>E-surf sta leggendo i dati dalla tua bolletta.</p>
+                        <p class="sub-text">L'operazione potrebbe richiedere alcuni secondi.</p>
+                        
+                        <div class="loader-bar">
+                            <div class="bar-fill"></div>
+                        </div>
+                    </div>
+
+                    <form v-else id="podForm" @submit.prevent class="compact-form">
                         <div class="role-selector-tiny">
                             <label class="role-opt" :class="{ active: form.pod_role === 'consumer' }">
                                 <input type="radio" v-model="form.pod_role" value="consumer"> Consumer
@@ -653,7 +682,6 @@ const openAssetModal = async (pod) => {
     loadingAssets.value = true;
 
     try {
-        // Carica configurazioni Enum se non ci sono ancora
         if (assetConfig.types.length === 0) {
             const confRes = await PodService.getAssetTypes();
             assetConfig.types = confRes.data.asset_types;
@@ -661,7 +689,6 @@ const openAssetModal = async (pod) => {
             assetConfig.controls = confRes.data.controls;
         }
         
-        // Carica la lista asset
         const res = await PodService.getAssets(pod.id);
         assetList.value = res.data;
     } catch (e) {
@@ -689,7 +716,6 @@ const startAddAsset = () => {
     isAddingAsset.value = true;
 };
 
-// NUOVA FUNZIONE PER EDITARE
 const startEditAsset = (asset) => {
     assetForm.name = asset.name;
     assetForm.priority = asset.priority;
@@ -715,18 +741,14 @@ const saveAsset = async () => {
         const payload = { ...assetForm, pod_id: selectedPodForAssets.value.id };
         
         if (isEditingAsset.value) {
-            // Chiamata di update (Assicurati che esista in PodService)
             await PodService.updateAsset(editingAssetId.value, payload);
         } else {
-            // Chiamata di creazione
             await PodService.createAsset(payload);
         }
         
-        // Ricarica lista
         const res = await PodService.getAssets(selectedPodForAssets.value.id);
         assetList.value = res.data;
         
-        // Reset stati
         isAddingAsset.value = false;
         isEditingAsset.value = false;
         editingAssetId.value = null;
@@ -872,12 +894,9 @@ const uploadSingleFile = async (type) => {
     
     Object.keys(form.value).forEach(key => {
         let val = form.value[key];
-        if (key === 'bill_file' || key === 'load_curve_file') return;
+        if (['bill_file', 'load_curve_file', 'pod_code'].includes(key)) return;
         
         if (val !== null && val !== undefined && typeof val !== 'object') {
-             if (key === 'pod_code' && typeof val === 'string') {
-                 val = val.toUpperCase();
-             }
              if (typeof val === 'boolean') {
                  formData.append(key, val ? 1 : 0);
              } else {
@@ -896,43 +915,41 @@ const uploadSingleFile = async (type) => {
 
     try {
         const response = await PodService.updatePod(editId.value, formData);
-        
-        if (type === 'bill') {
-            alert("Bolletta caricata! L'AI sta analizzando il documento...");
-            setTimeout(() => { fetchPods(); }, 6000);
-        } else {
-            alert("Curve salvate.");
-        }
-        
-        billFile.value = null;
-        curveFile.value = null;
-        const billInput = document.getElementById('editBillInput');
-        if(billInput) billInput.value = '';
-        const curveInput = document.getElementById('editCurveInput');
-        if(curveInput) curveInput.value = '';
-        
+        alert("File caricato e analizzato con successo!");
         await fetchPods();
-
     } catch (e) {
-        handleError(e);
+        handleError(e); 
     } finally {
         uploadingFile.value = false;
     }
 };
 
 const handleError = (e) => {
-    console.error(e);
-    if (e.response?.status === 422 && e.response?.data?.errors) {
-        const firstKey = Object.keys(e.response.data.errors)[0];
-        const firstError = e.response.data.errors[firstKey][0];
-        errorMsg.value = `Errore Dati (${firstKey}): ${firstError}`;
+    console.error("API Error Details:", e);
+    let displayMessage = "Si è verificato un errore imprevisto.";
+
+    if (e.response) {
+        if (e.response.status === 422) {
+            const data = e.response.data;
+            if (data.errors) {
+                const firstKey = Object.keys(data.errors)[0];
+                const firstMsg = data.errors[firstKey][0];
+                displayMessage = `⚠️ Validazione non superata: ${firstMsg}`;
+            } 
+            else if (data.message) {
+                displayMessage = `⚠️ Attenzione: ${data.message}`;
+            }
+        } 
+        else {
+            displayMessage = `Errore Server (${e.response.status}): ${e.response.data.message || e.message}`;
+        }
     } else {
-        errorMsg.value = e.response?.data?.message || "Errore durante l'operazione.";
+        displayMessage = "Errore di connessione. Verifica la tua rete.";
     }
+
+    errorMsg.value = displayMessage;
+    alert(displayMessage);
 };
-
-
-// ------------------------------------------------------------------
 
 const viewPdf = async (pod, type) => {
     showPdfModal.value = true; pdfLoading.value = true;
@@ -983,7 +1000,7 @@ const isActive = (status) => {
 
 .page-wrapper { min-height: 100vh; background-color: var(--bg-page); font-family: 'Inter', sans-serif; padding-top: var(--nav-height); color: var(--text-main); }
 
-/* --- NAVBAR (Standard) --- */
+/* NAVBAR (Standard) */
 .navbar { position: fixed; top: 0; left: 0; width: 100%; height: var(--nav-height); z-index: 1000; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); }
 .nav-container { max-width: 1200px; margin: 0 auto; height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; }
 .brand { display: flex; align-items: center; gap: 10px; }
@@ -1006,7 +1023,7 @@ const isActive = (status) => {
 .mobile-link.warning { color: #ea580c; background: #fff7ed; }
 .mobile-link.logout { color: #ef4444; background: #fef2f2; border: none; width: 100%; font-size: 1rem; cursor: pointer; }
 
-/* --- HEADER & BTN ADD --- */
+/* HEADER & BTN ADD */
 .main-content { padding: 4rem 1.5rem 2rem 1.5rem; max-width: 1000px; margin: 0 auto; }
 .page-header-compact { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; gap: 20px; }
 .header-left h2 { font-size: 1.5rem; font-weight: 700; color: var(--primary); margin: 0; }
@@ -1015,7 +1032,7 @@ const isActive = (status) => {
 .btn-add-compact:hover { background-color: #333; transform: translateY(-1px); box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.15); }
 .btn-add-compact:active { transform: translateY(0); }
 
-/* --- CARD --- */
+/* CARD */
 .pods-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
 .compact-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s ease; display: flex; flex-direction: column; }
 .compact-card:hover { border-color: #cbd5e1; box-shadow: 0 8px 12px -3px rgba(0, 0, 0, 0.05); transform: translateY(-2px); }
@@ -1029,7 +1046,7 @@ const isActive = (status) => {
 .c-status.active { color: #16a34a; background: #dcfce7; } .c-status.pending { color: #d97706; background: #fff7ed; }
 .dot { width: 6px; height: 6px; background: currentColor; border-radius: 50%; }
 
-/* --- BOTTONE "AI" --- */
+/* BOTTONE "AI" */
 .btn-ai-indicator {
     background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
     color: white; border: none; border-radius: 12px;
@@ -1056,9 +1073,8 @@ const isActive = (status) => {
 .c-btn-sign { background: var(--primary); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; font-weight: 600; }
 .c-btn-del { background: #fef2f2; border: none; color: #ef4444; font-size: 1rem; cursor: pointer; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
 
-/* MODALI AI */
-/* --- AI MODAL STYLES UPDATED --- */
-.ai-modal { max-width: 600px; /* Allargata leggermente per contenere tutto */ }
+/* AI MODAL STYLES */
+.ai-modal { max-width: 600px; }
 .ai-header { background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
 .ai-subtitle { font-size: 0.7rem; color: var(--accent); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-top: 2px; }
 .ai-body { padding: 1.5rem; background: #fff; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; }
@@ -1074,7 +1090,7 @@ const isActive = (status) => {
 .kpi-card.low { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
 .kpi-card.confidence { background: #eff6ff; color: #1e40af; border-color: #dbeafe; }
 
-/* SEZIONI E GRIGLIE */
+/* SEZIONI E GRIGLIE AI */
 .ai-section-box { background: #f8fafc; border-radius: 10px; padding: 12px; border: 1px solid #e2e8f0; }
 .ai-section-box.no-bg { background: transparent; border: 1px solid #e2e8f0; padding: 10px; }
 
@@ -1239,15 +1255,53 @@ const isActive = (status) => {
     cursor: not-allowed;
 }
 
-/* ======================================================= */
-/* STILI AGGIUNTI PER MODALE ASSET */
-/* ======================================================= */
+/* COMMUNITY TAGS */
+.c-community-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.comm-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #eff6ff; 
+    border: 1px solid #bfdbfe;
+    color: #1e40af;      
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: default;
+}
+
+.comm-pill:hover {
+    background: #dbeafe;
+    transform: translateY(-1px);
+}
+
+.cp-icon { font-size: 0.8rem; }
+
+.cp-role-tag {
+    font-size: 0.6rem;
+    background: rgba(255,255,255,0.6);
+    padding: 1px 4px;
+    border-radius: 4px;
+    margin-left: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ASSET MODAL */
 .asset-modal { width: 100%; max-width: 450px; height: 500px; display: flex; flex-direction: column; }
 .header-title { display: flex; flex-direction: column; }
 .subtitle-pod { font-size: 0.7rem; color: var(--accent); font-weight: 700; font-family: monospace; }
 .asset-body { padding: 0; background: #f8fafc; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
-/* Lista */
+/* Lista Asset */
 .asset-list-view { padding: 1rem; height: 100%; display: flex; flex-direction: column; }
 .assets-scroll-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 .asset-row { background: white; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; }
@@ -1267,29 +1321,30 @@ const isActive = (status) => {
 .empty-assets { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; }
 .empty-icon-small { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5; }
 .btn-primary-small { 
-    background-color: #2563eb !important; /* Blu acceso forzato (invece di var(--accent)) */
-    color: #ffffff !important;            /* Testo bianco forzato */
-    border: 1px solid #1d4ed8;            /* Bordo leggermente più scuro */
-    padding: 10px 20px;                   /* Padding leggermente aumentato */
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border: 1px solid #1d4ed8;
+    padding: 10px 20px;
     border-radius: 8px; 
     cursor: pointer; 
     font-weight: 700;
     font-size: 0.9rem;
-    display: inline-flex;                 /* Assicura che il bottone prenda spazio */
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Ombreggiatura */
-    opacity: 1 !important;                /* Assicura che sia visibile */
-    z-index: 10;                          /* Assicura che sia sopra altri elementi */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    opacity: 1 !important;
+    z-index: 10;
     transition: all 0.2s ease;
-    margin-top: 15px;                     /* Un po' di spazio sopra */
+    margin-top: 15px;
 }
 
 .btn-primary-small:hover {
-    background-color: #1d4ed8 !important; /* Blu più scuro al passaggio del mouse */
-    transform: translateY(-1px);          /* Effetto sollevamento */
+    background-color: #1d4ed8 !important;
+    transform: translateY(-1px);
     box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.15);
 }
+
 /* Form View Asset */
 .asset-form-view { padding: 1.5rem; background: white; height: 100%; }
 .form-title { margin: 0 0 1rem 0; font-size: 1.1rem; color: #334155; }
@@ -1306,12 +1361,8 @@ const isActive = (status) => {
     transition: background 0.2s;
     font-size: 1rem;
 }
-.btn-icon-action.edit:hover {
-    background-color: #e0f2fe; /* Azzurro chiaro */
-}
-.btn-icon-action.delete:hover {
-    background-color: #fee2e2; /* Rosso chiaro */
-}
+.btn-icon-action.edit:hover { background-color: #e0f2fe; }
+.btn-icon-action.delete:hover { background-color: #fee2e2; }
 
 /* Animations */
 .slide-down-enter-active, .slide-down-leave-active { transition: all 0.3s ease; }
@@ -1329,7 +1380,116 @@ const isActive = (status) => {
 .empty-state { text-align: center; padding: 3rem 1.5rem; display: flex; flex-direction: column; align-items: center; }
 .empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
 
-/* Mobile */
+/* --- [NUOVO] STILI ANIMAZIONE AI PROCESSING --- */
+.ai-processing-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 2rem;
+    animation: fadeIn 0.5s ease;
+}
+
+.ai-animation-box {
+    margin-bottom: 1.5rem;
+    position: relative;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Magic Ring Animation */
+.magic-ring {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e0e7ff, #eef2ff);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    animation: pulse-ring 2s infinite;
+}
+
+.magic-ring::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #6366f1;
+    border-top-color: transparent;
+    animation: spin 1.5s linear infinite;
+}
+
+.magic-sparkle {
+    font-size: 2rem;
+    animation: bounce 2s infinite;
+}
+
+.ai-processing-state h3 {
+    color: #1e293b;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+}
+
+.ai-processing-state p {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.ai-processing-state .sub-text {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: 5px;
+}
+
+/* Loader Bar */
+.loader-bar {
+    width: 100%;
+    max-width: 250px;
+    height: 6px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    margin-top: 1.5rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    width: 50%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 10px;
+    animation: load-bar 2s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+
+@keyframes load-bar {
+    0% { left: -50%; width: 50%; }
+    50% { left: 25%; width: 50%; }
+    100% { left: 100%; width: 50%; }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
 @media (max-width: 768px) {
     .desktop-menu, .desktop-actions { display: none !important; }
     .hamburger { display: flex; }

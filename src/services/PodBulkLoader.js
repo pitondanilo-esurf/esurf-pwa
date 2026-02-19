@@ -24,29 +24,30 @@ export default {
     },
 
     /**
-     * [NUOVO] Aggiorna un singolo POD in staging (chiamato dalla Modale)
+     * [NUOVO] Scarica il template Excel
+     */
+    async downloadTemplate() {
+        return apiClient.get('/api/pods/template', { responseType: 'blob' });
+    },
+
+    /**
+     * Aggiorna un singolo POD in staging
      */
     async updateStagingPod(id, data) {
         return apiClient.put(`/api/pods/import/${id}`, data);
     },
 
     /**
-     * [NUOVO] Conferma i POD selezionati per la migrazione definitiva
+     * Conferma i POD selezionati per la migrazione definitiva
      */
     async processSelection(ids) {
         return apiClient.post('/api/pods/process', { ids });
     },
 
     /**
-     * [NUOVO] Cancella un POD dalla staging
+     * Cancella un POD dalla staging
      */
     async deleteStagingPod(id) {
         return apiClient.delete(`/api/pods/import/${id}`);
-    },
-
-    async downloadTemplate() {
-        return apiClient.get('/api/pods/template', {
-            responseType: 'blob', // Fondamentale per il download di file
-        });
     }
 };

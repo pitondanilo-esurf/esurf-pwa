@@ -74,6 +74,7 @@
                           <option value="CER">CER (Comunità Energetica Rinnovabile)</option>
                           <option value="AUC">AUC (Autoconsumo Collettivo)</option>
                           <option value="Azienda">Azienda (Autoconsumo Diffuso)</option>
+                          <option value="Cooperativa">Cooperativa</option>
                           <option value="Altro">Altro</option>
                       </select>
                   </div>
