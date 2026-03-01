@@ -1,0 +1,130 @@
+{
+  "common": {
+    "login": "Accedi",
+    "logout": "Esci",
+    "profile": "Profilo",
+    "faq": "F.A.Q.",
+    "back": "Torna indietro"
+  },
+  "home": {
+    "hero": {
+      "title": "Crea la tua identità Digitale Energetica",
+      "subtitle1": "Rendi i tuoi contatori dei nodi intelligenti: partecipa attivamente alla rete moderna scambiando energia, dati e flessibilità.",
+      "btnPods": "Gestisci i tuoi POD",
+      "subtitle2": "Sblocca il valore della tua energia: attiva la tua identità energetica digitale nell'app E-Surf in soli 5 step.",
+      "btnGuide": "Scopri di più",
+      "suggestion": "Come funziona"
+    }
+  },
+  "notifiche": {
+    "title": "notifiche",
+    "intro": "Le notifiche di e-surf non sono semplici avvisi, ma veri e propri strumenti di abilitazione...",
+    "warning": "Non hai consentito le notifiche da questa app",
+    "settings": {
+      "opp": {
+        "title": "Opportunità Strategiche",
+        "desc": "ricevi suggerimenti immediati basati sul tuo Potenziale CER e D&R..."
+      },
+      "comp": {
+        "title": "Alert di Compliance",
+        "desc": "il sistema ti avvisa in tempo reale se mancano documenti legali..."
+      }
+    }
+  },
+  "blocks": {
+    "features": {
+        "notifications": {
+            "title": "Ricevi notifiche",
+            "description": "Grazie a un sistema di avvisi proattivi, E-Surf trasforma la gestione dei tuoi consumi in una serie di scelte strategiche.",
+            "button": "Scopri di più"
+        },
+        "activation": {
+            "title": "Identità energetica digitale: attivala ora.",
+            "description": "Evolvi da semplice consumatore a protagonista attivo della transizione energetica.",
+            "button": "Scopri di più"
+        }
+    }
+  },
+  "guides": {
+    "steps": {
+      "step1": {
+        "title": "1) Benvenuta/o nell'energia del futuro",
+        "subtitle": "Carica la tua bolletta in un clic",
+        "description": "Inizia il tuo percorso caricando una foto o un PDF della tua bolletta elettrica..."
+      },
+      "step2": {
+        "title": "2) Identità Legale",
+        "subtitle": "Sicurezza e Privacy",
+        "description": "Firma digitalmente i consensi privacy e la delega di lettura..."
+      },
+      "step3": { "title": "3) Configurazione", "subtitle": "Dai valore ai tuoi dispositivi", "description": "Arricchisci il tuo profilo mappando i tuoi 'asset'..." },
+      "step4": { "title": "4) Strategia", "subtitle": "Potenziale di Mercato", "description": "La nostra AI calcola il tuo potenziale per le CER..." },
+      "step5": { "title": "5) Eccellenza", "subtitle": "Livello Platinum", "description": "Monitora il tuo indice di compliance e raggiungi il livello Platinum..." }
+    }
+   },
+   "notificheHelp": {
+        "title": "notifiche",
+        "intro": "Le notifiche di e-surf non sono semplici avvisi, ma veri e propri strumenti di abilitazione che ti permettono di scegliere le opzioni più vantaggiose per la tua identità energetica.",
+        "warning": "Non hai consentito le notifiche da questa app",
+        "settings": {
+            "opp": {
+                "title": "Opportunità Strategiche",
+                "desc": "ricevi suggerimenti immediati basati sul tuo Potenziale CER e D&R, che ti segnalano quando è il momento e per partecipare a mercati di scambio o comunità energetiche."
+            },
+            "comp": {
+                "title": "Alert di Compliance",
+                "desc": "il sistema ti avvisa in tempo reale se mancano documenti legali (come deleghe o consensi privacy) o dati tecnici necessari per elevare il tuo profilo.."
+            },
+            "readiness": {
+                "title": "Prontezza Operativa",
+                "desc": "trasforma il tuo contatore in un nodo attivo della rete moderna, capace di rispondere agli avvisi e scambiare flessibilità proprio quando il mercato lo richiede."
+            },
+            "platinum": {
+                "title": "Guida al Livello Platinum",
+                "desc": "ogni notifica è studiata per aiutarti a scalare i livelli di maturità energetica, portandoti verso lo stato Platinum per sbloccare la massima capacità di guadagno e risparmio."
+            }
+        }
+    },
+    "identita": {
+        "intro": {
+        "text": "L'Identità Energetica Digitale trasforma il tuo POD da semplice contatore a un vero e proprio profilo certificato, abilitandoti a partecipare attivamente e trarre vantaggio dai mercati dell'energia.",
+        "subtext": "Si fonda su tre pilastri:"
+        },
+        "pillar1": {
+        "title": "Valutazione Strategica",
+        "highlight": "(L'Intelligenza del Profilo)",
+        "desc": "L'Intelligenza Artificiale analizza le tue bollette per definire il tuo potenziale:",
+        "list": {
+            "cer_label": "CER:",
+            "cer_desc": "Calcola i benefici derivanti dalla condivisione di energia rinnovabile.",
+            "flex_label": "Flessibilità (D&R):",
+            "flex_desc": "Valuta la tua capacità di supportare la stabilità della rete.",
+            "market_label": "Mercato:",
+            "market_desc": "Identifica il tuo valore commerciale in base al tipo di utenza e ai consumi."
+        }
+        },
+        "pillar2": {
+        "title": "Compliance",
+        "highlight": "(La Conformità 0-100)",
+        "desc": "Misura quanto il tuo profilo sia in regola per operare legalmente e tecnicamente:",
+        "items": {
+            "legality": { "label": "Legalità", "desc": "Consensi privacy e deleghe firmate digitalmente." },
+            "grid": { "label": "Rete", "desc": "Corretta associazione alla Cabina Primaria." },
+            "bill": { "label": "Bolletta" },
+            "curves": { "label": "Curve di Carico", "desc": "Affidabilità e caricamento delle curve di consumo quarto-orarie." },
+            "assets": { "label": "Asset", "desc": "Presenza di dispositivi fisici censiti (es. pannelli solari o batterie)." }
+        }
+        },
+        "pillar3": {
+        "title": "Prontezza",
+        "highlight": "(Il Livello di Maturità)",
+        "desc": "Indica la tua capacità di azione e guadagno immediato sul mercato:",
+        "tiers": {
+            "bronze": "Fase iniziale; mancano documenti o dati essenziali.",
+            "silver": "Profilo di base; documenti legali validi ma dettagli tecnici assenti.",
+            "gold": "Profilo avanzato; pronto per simulazioni dettagliate.",
+            "platinum": "Eccellenza operativa; profilo completo e almeno un asset fisico attivo per iniziare a monetizzare."
+        }
+        }
+    }
+}

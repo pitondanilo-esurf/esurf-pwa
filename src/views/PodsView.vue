@@ -892,9 +892,15 @@ const uploadSingleFile = async (type) => {
     const formData = new FormData();
     formData.append('_method', 'PUT'); 
     
-    Object.keys(form.value).forEach(key => {
+Object.keys(form.value).forEach(key => {
         let val = form.value[key];
-        if (['bill_file', 'load_curve_file', 'pod_code'].includes(key)) return;
+
+        // ❌ ERRORE PRECEDENTE:
+        // if (['bill_file', 'load_curve_file', 'pod_code'].includes(key)) return;
+
+        // ✅ CORREZIONE: Rimuovi 'pod_code' da questa lista.
+        // Il backend richiede il pod_code per validare che sia unico (anche se è lo stesso).
+        if (['bill_file', 'load_curve_file'].includes(key)) return;
         
         if (val !== null && val !== undefined && typeof val !== 'object') {
              if (typeof val === 'boolean') {

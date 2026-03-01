@@ -7,6 +7,10 @@ import LoginView from '../views/auth/LoginView.vue'
 import DashboardView from '../views/DashboardView.vue' 
 import PodsView from '../views/PodsView.vue'
 
+import Home from '../views/Home.vue'
+import ProfiloView from '@/views/ProfiloView.vue'
+import FiveSteps from '@/views/guide/5Steps.vue'
+
 // [NUOVO] Import Dashboard Admin
 import AdminDashboard from '../views/admin/AdminDashboard.vue'
 
@@ -41,6 +45,17 @@ const router = createRouter({
       component: DashboardView 
     },
     {
+      path: '/Home',
+      name: 'Home',
+      component: Home 
+    },
+    // [NUOVO] Rotta Guida Identità Digitale
+    {
+      path: '/guide/identita-digitale',
+      name: 'identita-digitale',
+      component: () => import('../views/guide/IdentitaDigitale.vue')
+    },
+    {
       path: '/pods',          
       name: 'pods',
       component: PodsView     
@@ -70,7 +85,27 @@ const router = createRouter({
       path: '/owner/pods',
       name: 'owner-pods',
       component: OwnerPodsView // Questo file ora usa PodBulkLoader
+    },
+    {
+    path: '/profilo',
+    name: 'Profilo',
+    component: ProfiloView,
+    // Se vuoi proteggere la rotta in modo che ci si acceda solo da loggati:
+    meta: { requiresAuth: true } 
+    },
+    {
+      path: '/guide/5-steps',
+      name: 'FiveSteps',
+      component: FiveSteps
+    },
+    // Rotta per la guida alle Notifiche Strategiche
+    {
+      path: '/guide/notifiche',
+      name: 'notifiche-guida',
+      // Assicurati che il file sia salvato in src/views/guide/Notifiche.vue
+      component: () => import('../views/guide/Notifiche.vue')
     }
+
   ]
 })
 
