@@ -87,5 +87,9 @@ export default {
     // ELIMINA ASSET
     deleteAsset(assetId) {
         return apiClient.delete(`/api/pod-assets/${assetId}`);
-    }
+    },
+  extractFromBill(formData) {
+    // Passiamo solo l'URL e il formData. NESSUN HEADER.
+    return apiClient.post('/api/pods/extract', formData);
+  },
 };

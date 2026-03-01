@@ -1,68 +1,80 @@
 {
-  "common": {
-    "login": "Accedi",
-    "logout": "Esci",
-    "profile": "Profilo",
-    "faq": "F.A.Q.",
-    "back": "Torna indietro"
-  },
-  "home": {
-    "hero": {
-      "title": "Crea la tua identità Digitale Energetica",
-      "subtitle1": "Rendi i tuoi contatori dei nodi intelligenti: partecipa attivamente alla rete moderna scambiando energia, dati e flessibilità.",
-      "btnPods": "Gestisci i tuoi POD",
-      "subtitle2": "Sblocca il valore della tua energia: attiva la tua identità energetica digitale nell'app E-Surf in soli 5 step.",
-      "btnGuide": "Scopri di più",
-      "suggestion": "Come funziona"
-    }
-  },
-  "notifiche": {
-    "title": "notifiche",
-    "intro": "Le notifiche di e-surf non sono semplici avvisi, ma veri e propri strumenti di abilitazione...",
-    "warning": "Non hai consentito le notifiche da questa app",
-    "settings": {
-      "opp": {
-        "title": "Opportunità Strategiche",
-        "desc": "ricevi suggerimenti immediati basati sul tuo Potenziale CER e D&R..."
-      },
-      "comp": {
-        "title": "Alert di Compliance",
-        "desc": "il sistema ti avvisa in tempo reale se mancano documenti legali..."
-      }
-    }
-  },
-  "blocks": {
-    "features": {
-        "notifications": {
-            "title": "Ricevi notifiche",
-            "description": "Grazie a un sistema di avvisi proattivi, E-Surf trasforma la gestione dei tuoi consumi in una serie di scelte strategiche.",
-            "button": "Scopri di più"
-        },
-        "activation": {
-            "title": "Identità energetica digitale: attivala ora.",
-            "description": "Evolvi da semplice consumatore a protagonista attivo della transizione energetica.",
-            "button": "Scopri di più"
+    "common": {
+        "login": "Accedi",
+        "logout": "Esci",
+        "profile": "Profilo",
+        "faq": "F.A.Q.",
+        "back": "Torna indietro"
+    },
+    "home": {
+        "hero": {
+            "title": "Crea la tua identità Digitale Energetica",
+            "subtitle1": "Rendi i tuoi contatori dei nodi intelligenti: partecipa attivamente alla rete moderna scambiando energia, dati e flessibilità.",
+            "btnPods": "Gestisci i tuoi POD",
+            "subtitle2": "Sblocca il valore della tua energia: attiva la tua identità energetica digitale nell'app E-Surf in soli 5 step.",
+            "btnGuide": "Scopri di più",
+            "suggestion": "Come funziona"
         }
-    }
-  },
-  "guides": {
-    "steps": {
-      "step1": {
-        "title": "1) Benvenuta/o nell'energia del futuro",
-        "subtitle": "Carica la tua bolletta in un clic",
-        "description": "Inizia il tuo percorso caricando una foto o un PDF della tua bolletta elettrica..."
-      },
-      "step2": {
-        "title": "2) Identità Legale",
-        "subtitle": "Sicurezza e Privacy",
-        "description": "Firma digitalmente i consensi privacy e la delega di lettura..."
-      },
-      "step3": { "title": "3) Configurazione", "subtitle": "Dai valore ai tuoi dispositivi", "description": "Arricchisci il tuo profilo mappando i tuoi 'asset'..." },
-      "step4": { "title": "4) Strategia", "subtitle": "Potenziale di Mercato", "description": "La nostra AI calcola il tuo potenziale per le CER..." },
-      "step5": { "title": "5) Eccellenza", "subtitle": "Livello Platinum", "description": "Monitora il tuo indice di compliance e raggiungi il livello Platinum..." }
-    }
-   },
-   "notificheHelp": {
+    },
+    "notifiche": {
+        "title": "notifiche",
+        "intro": "Le notifiche di e-surf non sono semplici avvisi, ma veri e propri strumenti di abilitazione...",
+        "warning": "Non hai consentito le notifiche da questa app",
+        "settings": {
+            "opp": {
+                "title": "Opportunità Strategiche",
+                "desc": "ricevi suggerimenti immediati basati sul tuo Potenziale CER e D&R..."
+            },
+            "comp": {
+                "title": "Alert di Compliance",
+                "desc": "il sistema ti avvisa in tempo reale se mancano documenti legali..."
+            }
+        }
+    },
+    "blocks": {
+        "features": {
+            "notifications": {
+                "title": "Ricevi notifiche",
+                "description": "Grazie a un sistema di avvisi proattivi, E-Surf trasforma la gestione dei tuoi consumi in una serie di scelte strategiche.",
+                "button": "Scopri di più"
+            },
+            "activation": {
+                "title": "Identità energetica digitale: attivala ora.",
+                "description": "Evolvi da semplice consumatore a protagonista attivo della transizione energetica.",
+                "button": "Scopri di più"
+            }
+        }
+    },
+    "guides": {
+        "steps": {
+            "step1": {
+                "title": "1) Benvenuta/o nell'energia del futuro",
+                "subtitle": "Carica la tua bolletta in un clic",
+                "description": "Inizia il tuo percorso caricando una foto o un PDF della tua bolletta elettrica..."
+            },
+            "step2": {
+                "title": "2) Identità Legale",
+                "subtitle": "Sicurezza e Privacy",
+                "description": "Firma digitalmente i consensi privacy e la delega di lettura..."
+            },
+            "step3": {
+                "title": "3) Configurazione",
+                "subtitle": "Dai valore ai tuoi dispositivi",
+                "description": "Arricchisci il tuo profilo mappando i tuoi 'asset'..."
+            },
+            "step4": {
+                "title": "4) Strategia",
+                "subtitle": "Potenziale di Mercato",
+                "description": "La nostra AI calcola il tuo potenziale per le CER..."
+            },
+            "step5": {
+                "title": "5) Eccellenza",
+                "subtitle": "Livello Platinum",
+                "description": "Monitora il tuo indice di compliance e raggiungi il livello Platinum..."
+            }
+        }
+    },
+    "notificheHelp": {
         "title": "notifiche",
         "intro": "Le notifiche di e-surf non sono semplici avvisi, ma veri e propri strumenti di abilitazione che ti permettono di scegliere le opzioni più vantaggiose per la tua identità energetica.",
         "warning": "Non hai consentito le notifiche da questa app",
@@ -87,44 +99,188 @@
     },
     "identita": {
         "intro": {
-        "text": "L'Identità Energetica Digitale trasforma il tuo POD da semplice contatore a un vero e proprio profilo certificato, abilitandoti a partecipare attivamente e trarre vantaggio dai mercati dell'energia.",
-        "subtext": "Si fonda su tre pilastri:"
+            "text": "L'Identità Energetica Digitale trasforma il tuo POD da semplice contatore a un vero e proprio profilo certificato, abilitandoti a partecipare attivamente e trarre vantaggio dai mercati dell'energia.",
+            "subtext": "Si fonda su tre pilastri:"
         },
         "pillar1": {
-        "title": "Valutazione Strategica",
-        "highlight": "(L'Intelligenza del Profilo)",
-        "desc": "L'Intelligenza Artificiale analizza le tue bollette per definire il tuo potenziale:",
-        "list": {
-            "cer_label": "CER:",
-            "cer_desc": "Calcola i benefici derivanti dalla condivisione di energia rinnovabile.",
-            "flex_label": "Flessibilità (D&R):",
-            "flex_desc": "Valuta la tua capacità di supportare la stabilità della rete.",
-            "market_label": "Mercato:",
-            "market_desc": "Identifica il tuo valore commerciale in base al tipo di utenza e ai consumi."
-        }
+            "title": "Valutazione Strategica",
+            "highlight": "(L'Intelligenza del Profilo)",
+            "desc": "L'Intelligenza Artificiale analizza le tue bollette per definire il tuo potenziale:",
+            "list": {
+                "cer_label": "CER:",
+                "cer_desc": "Calcola i benefici derivanti dalla condivisione di energia rinnovabile.",
+                "flex_label": "Flessibilità (D&R):",
+                "flex_desc": "Valuta la tua capacità di supportare la stabilità della rete.",
+                "market_label": "Mercato:",
+                "market_desc": "Identifica il tuo valore commerciale in base al tipo di utenza e ai consumi."
+            }
         },
         "pillar2": {
-        "title": "Compliance",
-        "highlight": "(La Conformità 0-100)",
-        "desc": "Misura quanto il tuo profilo sia in regola per operare legalmente e tecnicamente:",
-        "items": {
-            "legality": { "label": "Legalità", "desc": "Consensi privacy e deleghe firmate digitalmente." },
-            "grid": { "label": "Rete", "desc": "Corretta associazione alla Cabina Primaria." },
-            "bill": { "label": "Bolletta" },
-            "curves": { "label": "Curve di Carico", "desc": "Affidabilità e caricamento delle curve di consumo quarto-orarie." },
-            "assets": { "label": "Asset", "desc": "Presenza di dispositivi fisici censiti (es. pannelli solari o batterie)." }
-        }
+            "title": "Compliance",
+            "highlight": "(La Conformità 0-100)",
+            "desc": "Misura quanto il tuo profilo sia in regola per operare legalmente e tecnicamente:",
+            "items": {
+                "legality": {
+                    "label": "Legalità",
+                    "desc": "Consensi privacy e deleghe firmate digitalmente."
+                },
+                "grid": {
+                    "label": "Rete",
+                    "desc": "Corretta associazione alla Cabina Primaria."
+                },
+                "bill": {
+                    "label": "Bolletta"
+                },
+                "curves": {
+                    "label": "Curve di Carico",
+                    "desc": "Affidabilità e caricamento delle curve di consumo quarto-orarie."
+                },
+                "assets": {
+                    "label": "Asset",
+                    "desc": "Presenza di dispositivi fisici censiti (es. pannelli solari o batterie)."
+                }
+            }
         },
         "pillar3": {
-        "title": "Prontezza",
-        "highlight": "(Il Livello di Maturità)",
-        "desc": "Indica la tua capacità di azione e guadagno immediato sul mercato:",
-        "tiers": {
-            "bronze": "Fase iniziale; mancano documenti o dati essenziali.",
-            "silver": "Profilo di base; documenti legali validi ma dettagli tecnici assenti.",
-            "gold": "Profilo avanzato; pronto per simulazioni dettagliate.",
-            "platinum": "Eccellenza operativa; profilo completo e almeno un asset fisico attivo per iniziare a monetizzare."
+            "title": "Prontezza",
+            "highlight": "(Il Livello di Maturità)",
+            "desc": "Indica la tua capacità di azione e guadagno immediato sul mercato:",
+            "tiers": {
+                "bronze": "Fase iniziale; mancano documenti o dati essenziali.",
+                "silver": "Profilo di base; documenti legali validi ma dettagli tecnici assenti.",
+                "gold": "Profilo avanzato; pronto per simulazioni dettagliate.",
+                "platinum": "Eccellenza operativa; profilo completo e almeno un asset fisico attivo per iniziare a monetizzare."
+            }
         }
+    },
+    "pods": {
+        "header": {
+            "title": "Portfolio Utenze",
+            "subtitle": "Gestione asset energetici",
+            "newBtn": "+ Nuovo POD"
+        },
+        "status": {
+            "loading": "Caricamento...",
+            "saving": "Salvataggio...",
+            "waiting": "Attendere...",
+            "active": "Attivo",
+            "pending": "In Attesa"
+        },
+        "empty": {
+            "title": "Nessun POD",
+            "desc": "Non hai ancora registrato nessun contatore.",
+            "addBtn": "Aggiungi"
+        },
+        "actions": {
+            "viewAi": "Vedi Analisi",
+            "aiBtn": "Analisi AI",
+            "manageAssets": "Gestisci Dispositivi",
+            "assetBtn": "Asset",
+            "edit": "Modifica",
+            "delegation": "Delega",
+            "policy": "Privacy",
+            "revoke": "Revoca",
+            "sign": "Firma Documenti",
+            "deleteAsset": "Elimina Asset",
+            "cancel": "Annulla",
+            "save": "Salva",
+            "update": "Aggiorna"
+        },
+        "labels": {
+            "power": "Potenza",
+            "consumption": "Consumo",
+            "plant": "Impianto",
+            "gse": "GSE",
+            "committed": "Impegnata",
+            "substation": "Cabina",
+            "storage": "Accumulo",
+            "bill": "Bolletta",
+            "curves": "Curve",
+            "present": "Presente",
+            "presents": "Presenti"
+        },
+        "assetModal": {
+            "title": "Dispositivi & Asset",
+            "empty": "Nessun dispositivo configurato.",
+            "addBtn": "Aggiungi Dispositivo",
+            "addAnotherBtn": "Aggiungi un altro dispositivo",
+            "editTitle": "Modifica Dispositivo",
+            "newTitle": "Nuovo Dispositivo",
+            "form": {
+                "type": "Tipo",
+                "name": "Nome (Opzionale)",
+                "power": "Potenza (kW)",
+                "priority": "Priorità (0-5)",
+                "usage": "Utilizzo",
+                "control": "Controllo"
+            }
+        },
+        "aiModal": {
+            "title": "Analisi Energetica",
+            "reliability": "AFFIDABILITÀ",
+            "registry": "Anagrafica",
+            "type": "Tipologia",
+            "company": "Azienda",
+            "private": "Privato",
+            "supplyAddress": "Indirizzo Fornitura",
+            "activeOffer": "Offerta Attiva",
+            "techData": "DATI TECNICI",
+            "voltage": "Tensione",
+            "meter": "Misuratore",
+            "materialCosts": "COSTI MATERIA (€/kWh)",
+            "consumptionAnalysis": "Analisi Consumi"
+        },
+        "formModal": {
+            "editTitle": "Modifica POD",
+            "newTitle": "Nuovo POD",
+            "aiProgress": "Analisi AI in corso...",
+            "aiReading": "E-surf sta leggendo i dati dalla tua bolletta.",
+            "aiWait": "L'operazione potrebbe richiedere alcuni secondi.",
+            "missing": "Mancante",
+            "missings": "Mancanti",
+            "uploadAndAnalyze": "Carica & Analizza",
+            "upload": "Carica",
+            "updateData": "Aggiorna Dati",
+            "saveAsset": "Salva Asset",
+            "fields": {
+                "podCode": "Codice POD",
+                "address": "Indirizzo",
+                "city": "Città",
+                "prov": "Pr.",
+                "zip": "CAP",
+                "powerKw": "Potenza (kW)",
+                "consumptionKwh": "Consumo (kWh)",
+                "plantKwp": "Imp. (kWp)",
+                "gseCode": "Cod. GSE",
+                "hasStorage": "Accumulo?",
+                "documents": "Documenti",
+                "billDoc": "Bolletta (PDF/IMG)",
+                "curveDoc": "Curve (XLS/PDF)"
+            }
+        },
+        "signModal": {
+            "title": "Attivazione",
+            "signFor": "Firma per",
+            "acceptDel": "Accetto Delega",
+            "acceptPol": "Accetto Privacy",
+            "signBtn": "FIRMA"
+        },
+        "alerts": {
+            "assetLoadError": "Errore caricamento asset",
+            "saveError": "Errore salvataggio",
+            "deleteAssetConfirm": "Eliminare dispositivo?",
+            "deleteError": "Errore eliminazione",
+            "podCreated": "Nuovo POD creato con successo! Se hai caricato una bolletta, l'AI è al lavoro.",
+            "podUpdated": "Dati anagrafici aggiornati.",
+            "fileAnalyzed": "File caricato e analizzato con successo!",
+            "errorFallback": "Si è verificato un errore imprevisto.",
+            "errorValidation": "⚠️ Validazione non superata",
+            "errorServer": "Errore Server",
+            "errorNetwork": "Errore di connessione. Verifica la tua rete.",
+            "errorLoadingPdf": "Errore caricamento.",
+            "deletePodConfirm": "Eliminare asset?",
+            "revokeConfirm": "Revocare delega?",
+            "errorSigning": "Errore firma"
         }
     }
 }

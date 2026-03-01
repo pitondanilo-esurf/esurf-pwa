@@ -281,7 +281,7 @@ const handleLogin = async () => {
              router.push('/owner/dashboard');
         } else {
             // Utente Standard
-            router.push('/dashboard');
+            router.push('/home');
         }
     }
 

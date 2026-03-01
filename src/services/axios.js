@@ -32,6 +32,14 @@ apiClient.interceptors.request.use(config => {
         console.warn("⚠️ Nessun Bearer Token nel LocalStorage!");
     }
 
+    // 3. 🚀 FIX DEFINITIVO PER I CARICAMENTI FILE (FormData)
+    if (config.data instanceof FormData) {
+        // Eliminiamo la forzatura del JSON. 
+        // Il browser inserirà in automatico "multipart/form-data; boundary=..."
+        delete config.headers['Content-Type'];
+        console.log("📄 Rilevato FormData: rimosso Content-Type per permettere l'invio del file.");
+    }
+
     console.log("Headers finali:", config.headers);
     console.groupEnd();
 

@@ -1,138 +1,282 @@
 {
-  "common": {
-    "login": "Login",
-    "logout": "Logout",
-    "profile": "Profile",
-    "faq": "F.A.Q.",
-    "back": "Back"
-  },
-  "home": {
-    "hero": {
-      "title": "Create your Digital Energy Identity",
-      "subtitle1": "Turn your meters into smart nodes: participate actively in the modern grid...",
-      "btnPods": "Manage your PODs",
-      "subtitle2": "Unlock your energy's value in just 5 steps.",
-      "btnGuide": "Learn more",
-      "suggestion": "How does it works"
-    }
-  },
-  "notifiche": {
-    "title": "notifications",
-    "intro": "E-surf notifications are not just alerts, but real enablement tools...",
-    "warning": "You have not allowed notifications from this app",
-    "settings": {
-      "opp": {
-        "title": "Strategic Opportunities",
-        "desc": "receive immediate suggestions based on your CER and D&R Potential..."
-      }
-    }
-  },
-  "blocks":{
-  "features": {
-    "notifications": {
-      "title": "Receive notifications",
-      "description": "Thanks to a proactive alert system, E-Surf turns the management of your consumption into a series of strategic choices.",
-      "button": "Learn more"
+    "common": {
+        "login": "Login",
+        "logout": "Logout",
+        "profile": "Profile",
+        "faq": "F.A.Q.",
+        "back": "Back"
     },
-    "activation": {
-      "title": "Digital energy identity: activate it now.",
-      "description": "Evolve from a simple consumer to an active protagonist of the energy transition.",
-      "button": "Learn more"
-    }
-  }
-},
-  "guides": {
-    "steps": {
-      "step1": {
-        "title": "1) Welcome to the energy of the future",
-        "subtitle": "Upload your bill in one click",
-        "description": "Start your journey by uploading a photo or PDF of your electricity bill. Our Artificial Intelligence will automatically extract your POD code, committed power, and consumption profiles."
-      },
-      "step2": {
-        "title": "2) Legal Identity",
-        "subtitle": "Security and Privacy",
-        "description": "Digitally sign privacy consents and the reading delegation. These 'paperless' documents are essential to ensure the security of your data and allow you to legally operate in the market."
-      },
-      "step3": {
-        "title": "3) Configuration",
-        "subtitle": "Give value to your devices",
-        "description": "Enrich your profile by mapping your 'assets': solar panels, batteries, heat pumps, or wall boxes. It is the fundamental step to unlock the true potential of your utility."
-      },
-      "step4": {
-        "title": "4) Strategy",
-        "subtitle": "Market Potential",
-        "description": "Our AI calculates your potential for Energy Communities (CER). You will discover if your profile has a 'High', 'Medium', or 'Low' value based on your usage."
-      },
-      "step5": {
-        "title": "5) Excellence",
-        "subtitle": "Platinum Level",
-        "description": "Monitor your compliance index. By reaching the Platinum level, you will be ready to start trading energy and actively earning."
-      }
-    }
-  },
-  "notificheHelp": {
-    "title": "notifications",
-    "intro": "E-surf notifications are not just alerts, but real enablement tools that allow you to choose the most advantageous options for your energy identity.",
-    "warning": "You have not allowed notifications from this app",
-    "settings": {
-      "opp": {
-        "title": "Strategic Opportunities",
-        "desc": "Receive immediate suggestions based on your REC and D&R Potential, signaling when it's time to participate in exchange markets or energy communities."
-      },
-      "comp": {
-        "title": "Compliance Alerts",
-        "desc": "The system warns you in real-time if legal documents (like delegations or privacy consents) or technical data needed to elevate your profile are missing."
-      },
-      "readiness": {
-        "title": "Operational Readiness",
-        "desc": "Transforms your meter into an active node of the modern grid, capable of responding to alerts and exchanging flexibility exactly when the market requests it."
-      },
-      "platinum": {
-        "title": "Platinum Level Guide",
-        "desc": "Every notification is designed to help you climb the energy maturity levels, leading you towards Platinum status to unlock maximum earning and saving capacity."
-      }
-    }
-  },
-  "identita": {
-    "intro": {
-      "text": "The Digital Energy Identity transforms your POD from a simple meter to a certified profile, enabling you to actively participate and benefit from energy markets.",
-      "subtext": "It is based on three pillars:"
+    "home": {
+        "hero": {
+            "title": "Create your Digital Energy Identity",
+            "subtitle1": "Turn your meters into smart nodes: participate actively in the modern grid...",
+            "btnPods": "Manage your PODs",
+            "subtitle2": "Unlock your energy's value in just 5 steps.",
+            "btnGuide": "Learn more",
+            "suggestion": "How does it works"
+        }
     },
-    "pillar1": {
-      "title": "Strategic Evaluation",
-      "highlight": "(Profile Intelligence)",
-      "desc": "Artificial Intelligence analyzes your bills to define your potential:",
-      "list": {
-        "cer_label": "REC:",
-        "cer_desc": "Calculates the benefits derived from sharing renewable energy.",
-        "flex_label": "Flexibility (D&R):",
-        "flex_desc": "Evaluates your ability to support grid stability.",
-        "market_label": "Market:",
-        "market_desc": "Identifies your commercial value based on user type and consumption."
-      }
+    "notifiche": {
+        "title": "notifications",
+        "intro": "E-surf notifications are not just alerts, but real enablement tools...",
+        "warning": "You have not allowed notifications from this app",
+        "settings": {
+            "opp": {
+                "title": "Strategic Opportunities",
+                "desc": "receive immediate suggestions based on your CER and D&R Potential..."
+            }
+        }
     },
-    "pillar2": {
-      "title": "Compliance",
-      "highlight": "(The 0-100 Conformity)",
-      "desc": "Measures how compliant your profile is to operate legally and technically:",
-      "items": {
-        "legality": { "label": "Legality", "desc": "Digitally signed privacy consents and delegations." },
-        "grid": { "label": "Grid", "desc": "Correct association to the Primary Cabin." },
-        "bill": { "label": "Bill" },
-        "curves": { "label": "Load Curves", "desc": "Reliability and upload of quarter-hourly consumption curves." },
-        "assets": { "label": "Assets", "desc": "Presence of registered physical devices (e.g., solar panels or batteries)." }
-      }
+    "blocks": {
+        "features": {
+            "notifications": {
+                "title": "Receive notifications",
+                "description": "Thanks to a proactive alert system, E-Surf turns the management of your consumption into a series of strategic choices.",
+                "button": "Learn more"
+            },
+            "activation": {
+                "title": "Digital energy identity: activate it now.",
+                "description": "Evolve from a simple consumer to an active protagonist of the energy transition.",
+                "button": "Learn more"
+            }
+        }
     },
-    "pillar3": {
-      "title": "Readiness",
-      "highlight": "(The Maturity Level)",
-      "desc": "Indicates your capacity for immediate action and earning on the market:",
-      "tiers": {
-        "bronze": "Initial phase; missing essential documents or data.",
-        "silver": "Basic profile; valid legal documents but technical details are absent.",
-        "gold": "Advanced profile; ready for detailed simulations.",
-        "platinum": "Operational excellence; complete profile and at least one active physical asset to start monetizing."
-      }
+    "guides": {
+        "steps": {
+            "step1": {
+                "title": "1) Welcome to the energy of the future",
+                "subtitle": "Upload your bill in one click",
+                "description": "Start your journey by uploading a photo or PDF of your electricity bill. Our Artificial Intelligence will automatically extract your POD code, committed power, and consumption profiles."
+            },
+            "step2": {
+                "title": "2) Legal Identity",
+                "subtitle": "Security and Privacy",
+                "description": "Digitally sign privacy consents and the reading delegation. These 'paperless' documents are essential to ensure the security of your data and allow you to legally operate in the market."
+            },
+            "step3": {
+                "title": "3) Configuration",
+                "subtitle": "Give value to your devices",
+                "description": "Enrich your profile by mapping your 'assets': solar panels, batteries, heat pumps, or wall boxes. It is the fundamental step to unlock the true potential of your utility."
+            },
+            "step4": {
+                "title": "4) Strategy",
+                "subtitle": "Market Potential",
+                "description": "Our AI calculates your potential for Energy Communities (CER). You will discover if your profile has a 'High', 'Medium', or 'Low' value based on your usage."
+            },
+            "step5": {
+                "title": "5) Excellence",
+                "subtitle": "Platinum Level",
+                "description": "Monitor your compliance index. By reaching the Platinum level, you will be ready to start trading energy and actively earning."
+            }
+        }
+    },
+    "notificheHelp": {
+        "title": "notifications",
+        "intro": "E-surf notifications are not just alerts, but real enablement tools that allow you to choose the most advantageous options for your energy identity.",
+        "warning": "You have not allowed notifications from this app",
+        "settings": {
+            "opp": {
+                "title": "Strategic Opportunities",
+                "desc": "Receive immediate suggestions based on your REC and D&R Potential, signaling when it's time to participate in exchange markets or energy communities."
+            },
+            "comp": {
+                "title": "Compliance Alerts",
+                "desc": "The system warns you in real-time if legal documents (like delegations or privacy consents) or technical data needed to elevate your profile are missing."
+            },
+            "readiness": {
+                "title": "Operational Readiness",
+                "desc": "Transforms your meter into an active node of the modern grid, capable of responding to alerts and exchanging flexibility exactly when the market requests it."
+            },
+            "platinum": {
+                "title": "Platinum Level Guide",
+                "desc": "Every notification is designed to help you climb the energy maturity levels, leading you towards Platinum status to unlock maximum earning and saving capacity."
+            }
+        }
+    },
+    "identita": {
+        "intro": {
+            "text": "The Digital Energy Identity transforms your POD from a simple meter to a certified profile, enabling you to actively participate and benefit from energy markets.",
+            "subtext": "It is based on three pillars:"
+        },
+        "pillar1": {
+            "title": "Strategic Evaluation",
+            "highlight": "(Profile Intelligence)",
+            "desc": "Artificial Intelligence analyzes your bills to define your potential:",
+            "list": {
+                "cer_label": "REC:",
+                "cer_desc": "Calculates the benefits derived from sharing renewable energy.",
+                "flex_label": "Flexibility (D&R):",
+                "flex_desc": "Evaluates your ability to support grid stability.",
+                "market_label": "Market:",
+                "market_desc": "Identifies your commercial value based on user type and consumption."
+            }
+        },
+        "pillar2": {
+            "title": "Compliance",
+            "highlight": "(The 0-100 Conformity)",
+            "desc": "Measures how compliant your profile is to operate legally and technically:",
+            "items": {
+                "legality": {
+                    "label": "Legality",
+                    "desc": "Digitally signed privacy consents and delegations."
+                },
+                "grid": {
+                    "label": "Grid",
+                    "desc": "Correct association to the Primary Cabin."
+                },
+                "bill": {
+                    "label": "Bill"
+                },
+                "curves": {
+                    "label": "Load Curves",
+                    "desc": "Reliability and upload of quarter-hourly consumption curves."
+                },
+                "assets": {
+                    "label": "Assets",
+                    "desc": "Presence of registered physical devices (e.g., solar panels or batteries)."
+                }
+            }
+        },
+        "pillar3": {
+            "title": "Readiness",
+            "highlight": "(The Maturity Level)",
+            "desc": "Indicates your capacity for immediate action and earning on the market:",
+            "tiers": {
+                "bronze": "Initial phase; missing essential documents or data.",
+                "silver": "Basic profile; valid legal documents but technical details are absent.",
+                "gold": "Advanced profile; ready for detailed simulations.",
+                "platinum": "Operational excellence; complete profile and at least one active physical asset to start monetizing."
+            }
+        }
+    },
+    "pods": {
+        "header": {
+            "title": "Utilities Portfolio",
+            "subtitle": "Energy asset management",
+            "newBtn": "+ New POD"
+        },
+        "status": {
+            "loading": "Loading...",
+            "saving": "Saving...",
+            "waiting": "Please wait...",
+            "active": "Active",
+            "pending": "Pending"
+        },
+        "empty": {
+            "title": "No PODs found",
+            "desc": "You haven't registered any energy meters yet.",
+            "addBtn": "Add"
+        },
+        "actions": {
+            "viewAi": "View Analysis",
+            "aiBtn": "AI Analysis",
+            "manageAssets": "Manage Devices",
+            "assetBtn": "Assets",
+            "edit": "Edit",
+            "delegation": "Delegation",
+            "policy": "Privacy",
+            "revoke": "Revoke",
+            "sign": "Sign Documents",
+            "deleteAsset": "Delete Asset",
+            "cancel": "Cancel",
+            "save": "Save",
+            "update": "Update"
+        },
+        "labels": {
+            "power": "Power",
+            "consumption": "Consumption",
+            "plant": "Plant",
+            "gse": "GSE",
+            "committed": "Committed",
+            "substation": "Substation",
+            "storage": "Storage",
+            "bill": "Bill",
+            "curves": "Curves",
+            "present": "Present",
+            "presents": "Present"
+        },
+        "assetModal": {
+            "title": "Devices & Assets",
+            "empty": "No devices configured.",
+            "addBtn": "Add Device",
+            "addAnotherBtn": "Add another device",
+            "editTitle": "Edit Device",
+            "newTitle": "New Device",
+            "form": {
+                "type": "Type",
+                "name": "Name (Optional)",
+                "power": "Power (kW)",
+                "priority": "Priority (0-5)",
+                "usage": "Usage",
+                "control": "Control"
+            }
+        },
+        "aiModal": {
+            "title": "Energy Analysis",
+            "reliability": "RELIABILITY",
+            "registry": "Registry",
+            "type": "Type",
+            "company": "Company",
+            "private": "Private",
+            "supplyAddress": "Supply Address",
+            "activeOffer": "Active Offer",
+            "techData": "TECHNICAL DATA",
+            "voltage": "Voltage",
+            "meter": "Meter",
+            "materialCosts": "MATERIAL COSTS (€/kWh)",
+            "consumptionAnalysis": "Consumption Analysis"
+        },
+        "formModal": {
+            "editTitle": "Edit POD",
+            "newTitle": "New POD",
+            "aiProgress": "AI Analysis in progress...",
+            "aiReading": "E-surf is reading data from your bill.",
+            "aiWait": "This operation may take a few seconds.",
+            "missing": "Missing",
+            "missings": "Missing",
+            "uploadAndAnalyze": "Upload & Analyze",
+            "upload": "Upload",
+            "updateData": "Update Data",
+            "saveAsset": "Save Asset",
+            "fields": {
+                "podCode": "POD Code",
+                "address": "Address",
+                "city": "City",
+                "prov": "Pr.",
+                "zip": "ZIP",
+                "powerKw": "Power (kW)",
+                "consumptionKwh": "Consumption (kWh)",
+                "plantKwp": "Plant (kWp)",
+                "gseCode": "GSE Code",
+                "hasStorage": "Storage?",
+                "documents": "Documents",
+                "billDoc": "Bill (PDF/IMG)",
+                "curveDoc": "Curves (XLS/PDF)"
+            }
+        },
+        "signModal": {
+            "title": "Activation",
+            "signFor": "Sign for",
+            "acceptDel": "I accept Delegation",
+            "acceptPol": "I accept Privacy",
+            "signBtn": "SIGN"
+        },
+        "alerts": {
+            "assetLoadError": "Error loading assets",
+            "saveError": "Error saving",
+            "deleteAssetConfirm": "Delete device?",
+            "deleteError": "Error deleting",
+            "podCreated": "New POD successfully created! If you uploaded a bill, the AI is at work.",
+            "podUpdated": "Registry data updated.",
+            "fileAnalyzed": "File successfully uploaded and analyzed!",
+            "errorFallback": "An unexpected error occurred.",
+            "errorValidation": "⚠️ Validation failed",
+            "errorServer": "Server Error",
+            "errorNetwork": "Connection error. Check your network.",
+            "errorLoadingPdf": "Loading error.",
+            "deletePodConfirm": "Delete asset?",
+            "revokeConfirm": "Revoke delegation?",
+            "errorSigning": "Signature error"
+        }
     }
-  }
 }
