@@ -4,7 +4,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import RegisterView from '../views/auth/RegisterView.vue'
 import LoginView from '../views/auth/LoginView.vue'
-import DashboardView from '../views/DashboardView.vue' 
+import DashboardView from '../views/DashboardView.vue'
 import PodsView from '../views/PodsView.vue'
 
 import Home from '../views/Home.vue'
@@ -20,6 +20,7 @@ import OwnerSetupView from '../views/auth/OwnerSetupView.vue'
 // [NUOVO] Import Dashboard Owner
 import OwnerDashboard from '../views/owner/OwnerDashboard.vue'
 import OwnerPodsView from '../views/owner/OwnerPodsView.vue'
+import OwnerCommunityView from '@/views/owner/OwnerCommunityView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -42,12 +43,12 @@ const router = createRouter({
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: DashboardView 
+      component: DashboardView
     },
     {
       path: '/Home',
       name: 'Home',
-      component: Home 
+      component: Home
     },
     // [NUOVO] Rotta Guida Identità Digitale
     {
@@ -56,11 +57,11 @@ const router = createRouter({
       component: () => import('../views/guide/IdentitaDigitale.vue')
     },
     {
-      path: '/pods',          
+      path: '/pods',
       name: 'pods',
-      component: PodsView     
+      component: PodsView
     },
-    
+
     // [NUOVO] Rotta Admin
     {
       path: '/admin',
@@ -87,11 +88,11 @@ const router = createRouter({
       component: OwnerPodsView // Questo file ora usa PodBulkLoader
     },
     {
-    path: '/profilo',
-    name: 'Profilo',
-    component: ProfiloView,
-    // Se vuoi proteggere la rotta in modo che ci si acceda solo da loggati:
-    meta: { requiresAuth: true } 
+      path: '/profilo',
+      name: 'Profilo',
+      component: ProfiloView,
+      // Se vuoi proteggere la rotta in modo che ci si acceda solo da loggati:
+      meta: { requiresAuth: true }
     },
     {
       path: '/guide/5-steps',
@@ -104,7 +105,13 @@ const router = createRouter({
       name: 'notifiche-guida',
       // Assicurati che il file sia salvato in src/views/guide/Notifiche.vue
       component: () => import('../views/guide/Notifiche.vue')
-    }
+    },
+    {
+      path: '/owner/cabine',
+      name: 'OwnerCabine',
+      component: OwnerCommunityView,
+      meta: { requiresAuth: true } // Mantieni i tuoi meta tag di protezione se li usi
+    },
 
   ]
 })

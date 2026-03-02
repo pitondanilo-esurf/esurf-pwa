@@ -227,8 +227,13 @@
             "consumptionAnalysis": "Consumption Analysis"
         },
         "formModal": {
-            "editTitle": "Edit POD",
             "newTitle": "New POD",
+            "editTitle": "Edit POD",
+            "magicTitle": "How do you want to enter data?",
+            "magicUploadBtn": "Use Magic Upload",
+            "magicUploadDesc": "Upload your latest bill. AI will extract data automatically.",
+            "manualBtn": "Enter data manually",
+            "separator": "or",
             "aiProgress": "AI Analysis in progress...",
             "aiReading": "E-surf is reading data from your bill.",
             "aiWait": "This operation may take a few seconds.",
@@ -277,6 +282,158 @@
             "deletePodConfirm": "Delete asset?",
             "revokeConfirm": "Revoke delegation?",
             "errorSigning": "Signature error"
+        },
+        "qrModal": {
+            "title": "POD Access QR Code",
+            "instruction": "Scan this code to quickly access the public data of this POD.",
+            "linkLabel": "Generated Link (SHA-256):",
+            "copyTooltip": "Click to copy link",
+            "copiedAlert": "Link copied to clipboard!"
+        }
+    },
+    "ownerDashboard": {
+        "sidebar": {
+            "role": "Owner",
+            "overview": "📊 Overview",
+            "managePods": "📍 POD Management & Upload",
+            "primarySubstations": "🏢 Grid & Substations",
+            "production": "⚡ Production (Soon)",
+            "participants": "👥 Participants (Soon)",
+            "logout": "Logout"
+        },
+        "topbar": {
+            "dashboardTitle": "{name} Dashboard",
+            "welcome": "Welcome, {name}",
+            "subtitle": "Energy overview and community management"
+        },
+        "status": {
+            "loading": "Loading data..."
+        },
+        "setup": {
+            "title": "Create your Energy Community",
+            "description": "To start managing PODs, define your REC configuration.",
+            "nameLabel": "Community / Plant Name",
+            "namePlaceholder": "E.g. REC Sunny Sicily",
+            "typeLabel": "Type",
+            "typePlaceholder": "Select type...",
+            "creating": "Creating...",
+            "createBtn": "Create Community"
+        },
+        "kpi": {
+            "totalPods": "Total PODs",
+            "managedBy": "Managed by REC",
+            "installedPower": "Installed Power",
+            "totalPv": "Total Photovoltaic",
+            "members": "Members",
+            "activeParticipants": "Active participants",
+            "selfConsumption": "Self-Consumption",
+            "sufficiencyIndex": "Self-Sufficiency Index (Simulated)"
+        },
+        "actions": {
+            "title": "Quick Actions",
+            "managePods": "POD Management",
+            "managePodsDesc": "Import Excel or add manually",
+            "contracts": "Contracts & Legal",
+            "contractsDesc": "Signature management (Coming soon)",
+            "config": "Configuration",
+            "configDesc": "REC Settings"
+        },
+        "chart": {
+            "title": "Energy Trend",
+            "placeholder": "Real-time production data will be available soon."
+        },
+        "alerts": {
+            "createError": "Error creating the community. Please try again."
+        }
+    },
+    "ownerPods": {
+        "title": "Mass POD Import",
+        "subtitle": "Upload, verify and confirm your plants",
+        "backToDash": "← Dashboard",
+        "uploadCard": {
+            "title": "📂 Data Import",
+            "downloadBtn": "⬇️ Download Template {type}",
+            "downloading": "Downloading...",
+            "helpText": "Download the pre-filled Excel template for {type} configurations, fill it out and re-upload it below.",
+            "uploadBtn": "Upload Filled Excel",
+            "uploading": "Uploading...",
+            "success": "✅ Import completed!",
+            "fileLoaded": "File uploaded successfully.",
+            "errorDownload": "Error downloading template.",
+            "errorUpload": "Upload error: "
+        },
+        "table": {
+            "title": "📋 Import History",
+            "records": "{count} records",
+            "filterAll": "All statuses",
+            "filterPending": "⏳ Pending",
+            "filterProcessed": "✅ Processed",
+            "filterFailed": "❌ Failed",
+            "selected": "{count} selected",
+            "confirmBtn": "Confirm Selected",
+            "processing": "Processing...",
+            "loading": "Loading data...",
+            "empty": "No data found for the selected filter.",
+            "colDate": "Date",
+            "colStatus": "Status / Error",
+            "colCode": "POD ID",
+            "colOwner": "Owner",
+            "colCity": "Location",
+            "colTech": "Tech Data",
+            "colActions": "Actions",
+            "statusPending": "Pending",
+            "statusProcessed": "Processed",
+            "statusFailed": "Failed"
+        },
+        "modal": {
+            "title": "Edit POD Data",
+            "registrySection": "Registry and Location",
+            "podCode": "POD ID (Code)",
+            "ownerName": "Owner Name",
+            "address": "Address",
+            "city": "City",
+            "province": "Province",
+            "ownerEmail": "Owner Email",
+            "opEmail": "Operational Email",
+            "techSection": "Technical Data",
+            "consumerPower": "Consumption Power (kW)",
+            "producerPower": "Production Power (kW)",
+            "storagePower": "Storage (kW)",
+            "remoteInverter": "Remote Inverter",
+            "pnrrSection": "PNRR and Plant Details",
+            "podType": "POD Type",
+            "plantType": "Plant Type",
+            "pnrr": "PNRR",
+            "select": "- Select -",
+            "yes": "Yes",
+            "no": "No",
+            "otherContributions": "Other Contributions",
+            "billFile": "Bill File (Archived)",
+            "billHelp": "The file will be automatically transferred to the final POD.",
+            "cancel": "Cancel",
+            "save": "Save Changes"
+        },
+        "alerts": {
+            "deleteConfirm": "Delete row?",
+            "processConfirm": "Confirm {count} PODs?",
+            "errorSave": "Save error",
+            "errorDelete": "Delete error",
+            "errorProcess": "Processing error"
+        }
+    },
+    "ownerCommunity": {
+        "title": "Grid & Substations",
+        "subtitle": "Map of users grouped by Primary Substation",
+        "backToDash": "← Dashboard",
+        "loading": "Loading grid map...",
+        "empty": "No PODs found in your community.",
+        "unassigned": "Substation Unassigned / Verifying",
+        "table": {
+            "code": "POD Code",
+            "role": "Role",
+            "owner": "Owner / Location",
+            "power": "Power",
+            "status": "Status"
         }
     }
 }

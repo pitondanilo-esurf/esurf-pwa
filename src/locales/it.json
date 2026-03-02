@@ -50,27 +50,27 @@
             "step1": {
                 "title": "1) Benvenuta/o nell'energia del futuro",
                 "subtitle": "Carica la tua bolletta in un clic",
-                "description": "Inizia il tuo percorso caricando una foto o un PDF della tua bolletta elettrica..."
+                "description": "Inizia il tuo percorso caricando una foto o un PDF della tua bolletta elettrica. La nostra Intelligenza Artificiale estrarrà automaticamente il tuo codice POD, la potenza impegnata e i tuoi profili di consumo, eliminando ogni inserimento manuale."
             },
             "step2": {
                 "title": "2) Identità Legale",
                 "subtitle": "Sicurezza e Privacy",
-                "description": "Firma digitalmente i consensi privacy e la delega di lettura..."
+                "description": "Per trasformare il tuo contatore in un nodo attivo, firma digitalmente i consensi privacy e la delega di lettura. Questi documenti \"paperless\" sono fondamentali per garantire la sicurezza dei tuoi dati e permetterti di operare legalmente sul mercato. Senza questi consensi, il tuo profilo non potrà superare il livello base."
             },
             "step3": {
                 "title": "3) Configurazione",
                 "subtitle": "Dai valore ai tuoi dispositivi",
-                "description": "Arricchisci il tuo profilo mappando i tuoi 'asset'..."
+                "description": "Arricchisci il tuo profilo mappando i dispositivi fisici collegati al tuo contatore. Hai un impianto fotovoltaico, una batteria d'accumulo, una pompa di calore o una wall box per l'auto elettrica? Inserisci i tuoi \"asset\" nel sistema: è il passaggio fondamentale per sbloccare il vero potenziale della tua utenza, calcolare i risparmi reali e prepararti a guadagnare scambiando energia."
             },
             "step4": {
                 "title": "4) Strategia",
                 "subtitle": "Potenziale di Mercato",
-                "description": "La nostra AI calcola il tuo potenziale per le CER..."
+                "description": "Una volta inseriti i dati, la nostra AI calcola istantaneamente il tuo potenziale per le Comunità Energetiche (CER) e per i servizi di flessibilità (D&R). Scoprirai se il tuo profilo ha un valore \"High\", \"Medium\" o \"Low\" in base a come e quando utilizzi l'elettricità."
             },
             "step5": {
                 "title": "5) Eccellenza",
                 "subtitle": "Livello Platinum",
-                "description": "Monitora il tuo indice di compliance e raggiungi il livello Platinum..."
+                "description": "Monitora il tuo indice di compliance per vedere quanto sei vicino alla piena operatività. Caricando le curve di carico e censendo i tuoi asset (come il fotovoltaico), potrai raggiungere il livello Platinum, il massimo grado di prontezza per iniziare a scambiare energia e guadagnare."
             }
         }
     },
@@ -231,8 +231,13 @@
             "consumptionAnalysis": "Analisi Consumi"
         },
         "formModal": {
-            "editTitle": "Modifica POD",
             "newTitle": "Nuovo POD",
+            "editTitle": "Modifica POD",
+            "magicTitle": "Come vuoi inserire i dati?",
+            "magicUploadBtn": "Usa Magic Upload",
+            "magicUploadDesc": "Carica l'ultima bolletta. L'AI estrarrà i dati in automatico.",
+            "manualBtn": "Inserisci dati manualmente",
+            "separator": "oppure",
             "aiProgress": "Analisi AI in corso...",
             "aiReading": "E-surf sta leggendo i dati dalla tua bolletta.",
             "aiWait": "L'operazione potrebbe richiedere alcuni secondi.",
@@ -281,6 +286,158 @@
             "deletePodConfirm": "Eliminare asset?",
             "revokeConfirm": "Revocare delega?",
             "errorSigning": "Errore firma"
+        },
+        "qrModal": {
+            "title": "QR Code Accesso POD",
+            "instruction": "Scansiona questo codice per accedere rapidamente ai dati pubblici di questo POD.",
+            "linkLabel": "Link generato (SHA-256):",
+            "copyTooltip": "Clicca per copiare il link",
+            "copiedAlert": "Link copiato negli appunti!"
+        }
+    },
+    "ownerDashboard": {
+        "sidebar": {
+            "role": "Proprietario",
+            "overview": "📊 Panoramica",
+            "managePods": "📍 Gestione POD & Upload",
+            "primarySubstations": "🏢 Rete e Cabine",
+            "production": "⚡ Produzione (Presto)",
+            "participants": "👥 Partecipanti (Presto)",
+            "logout": "Esci"
+        },
+        "topbar": {
+            "dashboardTitle": "Dashboard {name}",
+            "welcome": "Benvenuto, {name}",
+            "subtitle": "Panoramica energetica e gestione comunità"
+        },
+        "status": {
+            "loading": "Caricamento dati..."
+        },
+        "setup": {
+            "title": "Crea la tua Comunità Energetica",
+            "description": "Per iniziare a gestire i POD, definisci la configurazione della tua CER.",
+            "nameLabel": "Nome Comunità / Impianto",
+            "namePlaceholder": "Es. CER Sole Sicilia",
+            "typeLabel": "Tipologia",
+            "typePlaceholder": "Seleziona tipo...",
+            "creating": "Creazione in corso...",
+            "createBtn": "Crea Comunità"
+        },
+        "kpi": {
+            "totalPods": "Totale POD",
+            "managedBy": "Gestiti dalla CER",
+            "installedPower": "Potenza Installata",
+            "totalPv": "Fotovoltaico Totale",
+            "members": "Membri",
+            "activeParticipants": "Partecipanti attivi",
+            "selfConsumption": "Autoconsumo",
+            "sufficiencyIndex": "Indice Autosufficienza (Simulato)"
+        },
+        "actions": {
+            "title": "Azioni Rapide",
+            "managePods": "Gestione POD",
+            "managePodsDesc": "Importa Excel o aggiungi manuale",
+            "contracts": "Contratti & Legal",
+            "contractsDesc": "Gestione firme (In arrivo)",
+            "config": "Configurazione",
+            "configDesc": "Impostazioni CER"
+        },
+        "chart": {
+            "title": "Andamento Energetico",
+            "placeholder": "I dati di produzione in tempo reale saranno disponibili presto."
+        },
+        "alerts": {
+            "createError": "Errore durante la creazione della comunità. Riprova."
+        }
+    },
+    "ownerPods": {
+        "title": "Importazione Massiva POD",
+        "subtitle": "Carica, verifica e conferma i tuoi impianti",
+        "backToDash": "← Dashboard",
+        "uploadCard": {
+            "title": "📂 Importazione Dati",
+            "downloadBtn": "⬇️ Scarica Template {type}",
+            "downloading": "Scaricamento...",
+            "helpText": "Scarica il modello Excel precompilato per configurazioni {type}, compilalo e ricaricalo qui sotto.",
+            "uploadBtn": "Carica Excel Compilato",
+            "uploading": "Caricamento...",
+            "success": "✅ Importazione completata!",
+            "fileLoaded": "File caricato correttamente.",
+            "errorDownload": "Errore download template.",
+            "errorUpload": "Errore caricamento: "
+        },
+        "table": {
+            "title": "📋 Storico Importazioni",
+            "records": "{count} record",
+            "filterAll": "Tutti gli stati",
+            "filterPending": "⏳ In Elaborazione",
+            "filterProcessed": "✅ Completati",
+            "filterFailed": "❌ Errori",
+            "selected": "{count} selezionati",
+            "confirmBtn": "Conferma Selezionati",
+            "processing": "Elaborazione...",
+            "loading": "Caricamento dati...",
+            "empty": "Nessun dato trovato per il filtro selezionato.",
+            "colDate": "Data",
+            "colStatus": "Stato / Errore",
+            "colCode": "POD ID",
+            "colOwner": "Titolare",
+            "colCity": "Località",
+            "colTech": "Dati Tecnici",
+            "colActions": "Azioni",
+            "statusPending": "In Attesa",
+            "statusProcessed": "Completato",
+            "statusFailed": "Fallito"
+        },
+        "modal": {
+            "title": "Modifica Dati POD",
+            "registrySection": "Anagrafica e Localizzazione",
+            "podCode": "POD ID (Codice)",
+            "ownerName": "Nominativo Titolare",
+            "address": "Indirizzo",
+            "city": "Comune",
+            "province": "Provincia",
+            "ownerEmail": "Email Titolare",
+            "opEmail": "Email Operativa",
+            "techSection": "Dati Tecnici",
+            "consumerPower": "Potenza Prelievo (kW)",
+            "producerPower": "Potenza Immissione (kW)",
+            "storagePower": "Accumulo (kW)",
+            "remoteInverter": "Inverter Remoto",
+            "pnrrSection": "Dettagli PNRR e Impianto",
+            "podType": "Tipo POD",
+            "plantType": "Tipo Impianto",
+            "pnrr": "PNRR",
+            "select": "- Seleziona -",
+            "yes": "Sì",
+            "no": "No",
+            "otherContributions": "Altri Contributi",
+            "billFile": "File Bolletta (Archiviato)",
+            "billHelp": "Il file verrà trasferito automaticamente al POD definitivo.",
+            "cancel": "Annulla",
+            "save": "Salva Modifiche"
+        },
+        "alerts": {
+            "deleteConfirm": "Eliminare riga?",
+            "processConfirm": "Confermi {count} POD?",
+            "errorSave": "Errore salvataggio",
+            "errorDelete": "Errore cancellazione",
+            "errorProcess": "Errore elaborazione"
+        }
+    },
+    "ownerCommunity": {
+        "title": "Rete e Cabine",
+        "subtitle": "Mappa delle utenze raggruppate per Cabina Primaria",
+        "backToDash": "← Dashboard",
+        "loading": "Caricamento mappa di rete...",
+        "empty": "Nessun POD trovato nella tua comunità.",
+        "unassigned": "Cabina non assegnata / In verifica",
+        "table": {
+            "code": "Codice POD",
+            "role": "Ruolo",
+            "owner": "Titolare / Località",
+            "power": "Potenza",
+            "status": "Stato"
         }
     }
 }
