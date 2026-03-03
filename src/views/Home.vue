@@ -22,7 +22,6 @@
       </div>
 
       <div style="display:flex; gap: 12px; align-items: center;">
-        
         <button class="icon-btn hover-scale">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
         </button>
@@ -32,7 +31,7 @@
           <template v-if="isAuthenticated">
             <div class="desktop-actions">
                <div class="user-pill hover-scale" @click="goToProfile" :title="$t('common.profile')">
-                  {{ (user.profile?.first_name || user.first_name || 'U')[0].toUpperCase() }}
+                  {{ (user.name || user.first_name || 'U')[0].toUpperCase() }}
                </div>
                <button class="icon-btn hover-scale logout-icon" @click="handleLogout" :title="$t('common.logout')">
                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -48,7 +47,6 @@
             {{ $t('common.login') }}
           </button>
         </template>
-
       </div>
     </header>
 
@@ -84,14 +82,37 @@
 
       <hr class="section-divider">
 
+      <div style="background: #1e1e1e; border: 1px solid #f59e0b; padding: 15px; margin-bottom: 20px; border-radius: 8px; font-family: monospace; font-size: 11px; color: #eee;">
+        <strong style="color: #f59e0b;">🔍 DEBUG DASHBOARD</strong><br>
+        1. Blocchi attesi dal DB: <strong>{{ dashboardConfig.blocks.length }}</strong><br>
+        2. Chiavi ricevute (DB): <span v-for="b in dashboardConfig.blocks" :key="b.id" style="color: #4ade80;">[{{ b.component_key }}] </span><br>
+        3. Componenti pronti (Frontend): <span style="color: #60a5fa;">{{ Object.keys(availableBlocks).join(', ') }}</span>
+      </div>
       <h2 class="section-title fade-in delay-3">{{ $t('home.hero.suggestion') }}</h2>
 
-      <component
-        v-for="(blockName, index) in dashboardConfig.blocks"
-        :key="index"
-        :is="availableBlocks[blockName]"
-        :class="`fade-in delay-${4 + index}`"
-      />
+      <div v-if="loadingConfig" class="loading-blocks">
+          <div class="auth-spinner" style="width: 40px; height: 40px;"></div>
+      </div>
+
+      <div v-else class="dynamic-blocks">
+          <template v-for="(block, index) in dashboardConfig.blocks" :key="block.id || index">
+              
+              <component
+                v-if="availableBlocks[block.component_key]"
+                :is="availableBlocks[block.component_key]"
+                :class="`fade-in delay-${4 + index}`"
+              />
+
+              <div v-else class="debug-missing-block fade-in">
+                  <div style="font-size: 20px;">⚠️</div>
+                  <div>
+                    <strong>Errore Mapping:</strong> Il DB chiede <code>{{ block.component_key }}</code> ma in Home.vue non è importato.
+                  </div>
+              </div>
+
+          </template>
+      </div>
+
     </main>
 
     <footer class="app-footer fade-in delay-6">
@@ -103,32 +124,41 @@
 <script setup>
 import { ref, onMounted, shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
-// Importo useI18n per la logica di switch lingua nel setup
 import { useI18n } from 'vue-i18n'; 
 import AuthService from '@/services/AuthService';
+import axios from '@/services/axios';
 
+// --- IMPORT COMPONENTI BLOCCHI ---
+// ⚠️ CONTROLLA I PERCORSI! Se i file sono in "dashboard/blocks", aggiungi "dashboard/" qui sotto.
 import FeatureActivation from '@/components/blocks/FeatureActivation.vue';
 import FeatureNotifications from '@/components/blocks/FeatureNotifications.vue';
+import FeaturesMarketNewsBlock from '@/components/blocks/FeaturesMarketNewsBlock.vue'; // Percorso del nuovo file creato
 
 const router = useRouter();
-const { locale } = useI18n(); // Inizializzo l'istanza della lingua attiva
+const { locale } = useI18n(); 
 
-// --- BLOCCHI DINAMICI ---
+// --- REGISTRY DEI BLOCCHI (Frontend Mapping) ---
 const availableBlocks = shallowRef({
   'FeatureActivation': FeatureActivation,
-  'FeatureNotifications': FeatureNotifications
+  'FeatureNotifications': FeatureNotifications,
+  
+  // 🟢 CORREZIONE FONDAMENTALE
+  // La chiave deve essere "MarketEvolution" (come nel DB), non "MarketNewsBlock"
+  'FeaturesMarketNewsBlock': FeaturesMarketNewsBlock, 
 });
+
 const dashboardConfig = ref({
-  blocks: ['FeatureActivation', 'FeatureNotifications']
+  blocks: [] 
 });
+const loadingConfig = ref(false);
 
 // --- STATO TEMA E LINGUA ---
 const isLightMode = ref(false);
 
 const toggleLanguage = () => {
   const newLang = locale.value === 'it' ? 'en' : 'it';
-  locale.value = newLang; // Cambia la lingua reattivamente in tutta l'app
-  localStorage.setItem('locale', newLang); // Salva la preferenza
+  locale.value = newLang; 
+  localStorage.setItem('locale', newLang);
 };
 
 const toggleTheme = () => {
@@ -158,14 +188,50 @@ onMounted(async () => {
     const response = await AuthService.getUser();
     user.value = response.data;
     isAuthenticated.value = true;
+    
+    // LOG DI DEBUG
+    console.log("Utente autenticato, inizio fetchDashboardConfig...");
+    await fetchDashboardConfig();
+
   } catch (error) {
+    console.warn("Utente non loggato, caricamento fallback.");
     isAuthenticated.value = false;
     user.value = {};
-    try { await AuthService.logout(); } catch(e) {}
+    dashboardConfig.value.blocks = [
+      { id: 1, component_key: 'FeatureActivation' },
+      { id: 2, component_key: 'FeatureNotifications' }
+    ];
   } finally {
     loadingAuth.value = false;
   }
 });
+
+// Funzione per scaricare la configurazione dinamica dal Backend
+const fetchDashboardConfig = async () => {
+    loadingConfig.value = true;
+    try {
+        const res = await axios.get('/api/user/dashboard-config');
+        
+        console.log("📥 Risposta API Dashboard:", res.data);
+        
+        // Verifica che la risposta contenga l'array
+        if (res.data.blocks) {
+             dashboardConfig.value.blocks = res.data.blocks;
+        } else {
+             console.error("Struttura risposta API errata:", res.data);
+        }
+
+    } catch (e) {
+        console.error("Errore API Dashboard", e);
+        // Fallback robusto
+        dashboardConfig.value.blocks = [
+            { id: 1, component_key: 'FeatureActivation' },
+            { id: 2, component_key: 'FeatureNotifications' }
+        ];
+    } finally {
+        loadingConfig.value = false;
+    }
+};
 
 // --- NAVIGAZIONE ---
 const goToProfile = () => router.push('/profilo'); 
@@ -184,6 +250,10 @@ const handleLogout = async () => {
     isAuthenticated.value = false;
     user.value = {};
     loadingAuth.value = false;
+    dashboardConfig.value.blocks = [
+      { id: 1, component_key: 'FeatureActivation' },
+      { id: 2, component_key: 'FeatureNotifications' }
+    ];
     router.push('/');
   }
 };
@@ -191,9 +261,32 @@ const handleLogout = async () => {
 
 <style src="@/assets/css/main.css"></style>
 <style scoped>
-/* ... (altri stili invariati) ... */
+/* STILI DEBUG ERROR */
+.debug-missing-block {
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid #ff4444;
+  color: #ff4444;
+  padding: 15px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
 
-/* Stile per il pulsante testuale del toggle lingua */
+/* Stili esistenti */
+.loading-blocks {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.dynamic-blocks {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 40px;
+}
+
 .lang-toggle {
   font-weight: 800;
   font-size: 14px;

@@ -21,6 +21,7 @@ import OwnerSetupView from '../views/auth/OwnerSetupView.vue'
 import OwnerDashboard from '../views/owner/OwnerDashboard.vue'
 import OwnerPodsView from '../views/owner/OwnerPodsView.vue'
 import OwnerCommunityView from '@/views/owner/OwnerCommunityView.vue';
+import OwnerEducationView from '@/views/owner/OwnerEducationView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -107,11 +108,23 @@ const router = createRouter({
       component: () => import('../views/guide/Notifiche.vue')
     },
     {
+      path: '/guide/mercato',
+      name: 'mercato-guida',
+      // Assicurati che il file sia salvato in src/views/guide/Notifiche.vue
+      component: () => import('../views/guide/MarketGuide.vue')
+    },
+    {
       path: '/owner/cabine',
       name: 'OwnerCabine',
       component: OwnerCommunityView,
       meta: { requiresAuth: true } // Mantieni i tuoi meta tag di protezione se li usi
     },
+    {
+      path: '/owner/education',
+      name: 'OwnerEducation',
+      component: OwnerEducationView,
+      meta: { requiresAuth: true, role: 'owner' }
+    }
 
   ]
 })

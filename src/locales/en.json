@@ -4,7 +4,9 @@
         "logout": "Logout",
         "profile": "Profile",
         "faq": "F.A.Q.",
-        "back": "Back"
+        "back": "Back",
+        "changeTheme": "Change theme",
+        "loading": "Loading..."
     },
     "home": {
         "hero": {
@@ -293,6 +295,7 @@
     },
     "ownerDashboard": {
         "sidebar": {
+            "education": "🎓 User Education",
             "role": "Owner",
             "overview": "📊 Overview",
             "managePods": "📍 POD Management & Upload",
@@ -435,5 +438,10 @@
             "power": "Power",
             "status": "Status"
         }
+    },
+    "ownerEducation": {
+        "title": "Education Catalog",
+        "subtitle": "Manage educational widgets visible on your users' Dashboard",
+        "backToDash": "← Dashboard"
     }
 }

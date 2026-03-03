@@ -9,9 +9,23 @@
         </div>
         
         <div class="header-toggles">
-          <button @click="toggleTheme" class="clean-toggle-btn" :title="isLightMode ? 'Passa a Dark Mode' : 'Passa a Light Mode'">
-            {{ isLightMode ? '🌙' : '☀️' }}
+          <button class="icon-btn hover-scale" @click="toggleTheme" :aria-label="$t('common.changeTheme')" :title="$t('common.changeTheme')">
+            <svg v-if="isLightMode" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <svg v-else viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
           </button>
+
           <button @click="toggleLanguage" class="clean-toggle-btn lang-text" title="Cambia lingua">
             {{ locale === 'it' ? 'EN' : 'IT' }}
           </button>
@@ -26,7 +40,7 @@
         </div>
       </div>
 
-<ul class="nav-links">
+      <ul class="nav-links">
         <li 
           :class="{ active: $route.path === '/owner/dashboard' }" 
           @click="goTo('/owner/dashboard')"
@@ -47,6 +61,12 @@
         >
             {{ $t('ownerDashboard.sidebar.primarySubstations') }}
         </li>
+        <li 
+            :class="{ active: $route.path === '/owner/education', disabled: !hasCommunity }" 
+            @click="hasCommunity && goTo('/owner/education')"
+        >
+            {{ $t('ownerDashboard.sidebar.education') }}
+        </li>
         
         <li class="disabled">{{ $t('ownerDashboard.sidebar.production') }}</li>
         <li class="disabled">{{ $t('ownerDashboard.sidebar.participants') }}</li>
@@ -62,9 +82,14 @@
     <main class="main-content">
       
       <header class="top-bar fade-in delay-0">
-        <div>
-            <h1 v-if="hasCommunity">{{ $t('ownerDashboard.topbar.dashboardTitle', { name: community.name }) }}</h1>
+        <div class="header-titles">
+            <div v-if="hasCommunity" class="title-with-badge">
+                <h1>{{ $t('ownerDashboard.topbar.dashboardTitle', { name: community.name }) }}</h1>
+                <span class="type-badge" v-if="community.type">{{ community.type }}</span>
+            </div>
+            
             <h1 v-else>{{ $t('ownerDashboard.topbar.welcome', { name: user.name }) }}</h1>
+            
             <p class="subtitle">{{ $t('ownerDashboard.topbar.subtitle') }}</p>
         </div>
         <span class="date">{{ currentDate }}</span>
@@ -374,6 +399,24 @@ const handleLogout = async () => {
     align-items: center;
     padding-left: 5px;
 }
+
+/* STILE PER I PULSANTI ICONA (NUOVO) */
+.icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease, transform 0.2s ease;
+    padding: 0;
+}
+.icon-btn:hover {
+    color: var(--accent-blue);
+    transform: scale(1.1);
+}
+
 .clean-toggle-btn {
     background: none;
     border: none;
@@ -415,6 +458,11 @@ const handleLogout = async () => {
 .main-content { flex: 1; padding: 2.5rem; overflow-y: auto; }
 .top-bar { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; }
 .top-bar h1 { margin: 0; font-size: 2rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.02em; }
+
+/* STILE NUOVO: TITOLO CON BADGE */
+.title-with-badge { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.type-badge { font-size: 0.8rem; background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); border: 1px solid var(--accent-blue); padding: 4px 10px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;}
+
 .subtitle { margin: 5px 0 0 0; color: var(--text-muted); font-size: 1rem; }
 .date { font-weight: 500; color: var(--text-muted); background: var(--bg-card); padding: 8px 16px; border-radius: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); text-transform: capitalize; border: 1px solid var(--border-color); }
 
@@ -484,6 +532,7 @@ const handleLogout = async () => {
     .owner-layout { flex-direction: column; }
     .sidebar { width: 100%; padding: 1rem; border-right: none; border-bottom: 1px solid var(--border-color); }
     .nav-links { flex-direction: row; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px;}
+    .preferences-toggles { justify-content: flex-start; }
     .main-content { padding: 1.5rem; }
     .kpi-grid { grid-template-columns: 1fr; }
     .brand-header { flex-direction: row; align-items: center; justify-content: space-between; border-bottom: none; margin-bottom: 1.5rem; padding-bottom: 0; }

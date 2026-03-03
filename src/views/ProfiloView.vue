@@ -17,7 +17,8 @@
         />
       </div>
       
-      <div style="width: 36px;"></div> </header>
+      <div style="width: 36px;"></div> 
+    </header>
 
     <main class="main-content">
       
@@ -93,7 +94,22 @@
           </div>
         </section>
 
-        <section v-else class="card fade-in">
+        <section v-if="!isEditing && communities.length > 0" class="card fade-in delay-25">
+            <h2 class="card-title">Le mie Community</h2>
+            <p class="card-text">Sei membro attivo delle seguenti comunità energetiche.</p>
+            
+            <div class="community-list">
+                <div v-for="comm in communities" :key="comm.id" class="community-item">
+                    <div class="comm-icon">🌱</div>
+                    <div class="comm-info">
+                        <strong>{{ comm.name }}</strong>
+                        <span class="comm-type">{{ comm.type }} &bull; {{ comm.address }}</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section v-if="isEditing" class="card fade-in">
           <h2 class="card-title">Modifica Profilo</h2>
           
           <form @submit.prevent="saveProfileChanges" class="edit-form">
@@ -208,6 +224,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AuthService from '@/services/AuthService';
+import axios from '@/services/axios'; // Importa Axios
 
 const router = useRouter();
 
@@ -215,6 +232,7 @@ const router = useRouter();
 const isLightMode = ref(false);
 const loading = ref(true);
 const user = ref({});
+const communities = ref([]); 
 const profileIncomplete = ref(false);
 
 // --- STATI EDIT PROFILO ---
@@ -236,6 +254,7 @@ onMounted(async () => {
 
   // Caricamento Dati
   await fetchUserData();
+  await fetchCommunities(); 
 });
 
 const goBack = () => router.back();
@@ -268,6 +287,15 @@ const fetchUserData = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const fetchCommunities = async () => {
+    try {
+        const res = await axios.get('/api/user/communities');
+        communities.value = res.data;
+    } catch (e) {
+        console.error("Errore caricamento community", e);
+    }
 };
 
 const startEdit = () => {
@@ -362,6 +390,15 @@ const closePdfModal = () => {
 .alert-icon { font-size: 24px; }
 .alert-title { margin: 0 0 4px 0; font-size: 16px; color: #ff9f0a; }
 .alert-text { margin: 0; font-size: 13px; color: var(--text-muted); }
+
+/* LISTA COMMUNITY */
+.delay-25 { animation-delay: 0.25s; }
+.community-list { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+.community-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 12px; }
+.comm-icon { width: 36px; height: 36px; background: rgba(16, 185, 129, 0.1); color: #10b981; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.comm-info { display: flex; flex-direction: column; }
+.comm-info strong { font-size: 0.95rem; color: var(--text-main); }
+.comm-type { font-size: 0.8rem; color: var(--text-muted); }
 
 /* Form Styles */
 .form-group { margin-bottom: 16px; }

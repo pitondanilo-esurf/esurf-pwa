@@ -4,7 +4,9 @@
         "logout": "Esci",
         "profile": "Profilo",
         "faq": "F.A.Q.",
-        "back": "Torna indietro"
+        "back": "Torna indietro",
+        "changeTheme": "Cambia tema",
+        "loading": "Caricamento..."
     },
     "home": {
         "hero": {
@@ -42,6 +44,11 @@
                 "title": "Identità energetica digitale: attivala ora.",
                 "description": "Evolvi da semplice consumatore a protagonista attivo della transizione energetica.",
                 "button": "Scopri di più"
+            },
+            "market": {
+                "title": "Osservatorio Mercato",
+                "description": "Resta informato sulle tendenze che influenzano la tua bolletta.",
+                "button": "Vedi Analisi Completa"
             }
         }
     },
@@ -297,6 +304,7 @@
     },
     "ownerDashboard": {
         "sidebar": {
+            "education": "🎓 Formazione Utenti",
             "role": "Proprietario",
             "overview": "📊 Panoramica",
             "managePods": "📍 Gestione POD & Upload",
@@ -438,6 +446,27 @@
             "owner": "Titolare / Località",
             "power": "Potenza",
             "status": "Stato"
+        }
+    },
+    "ownerEducation": {
+        "title": "Catalogo Formazione",
+        "subtitle": "Gestisci i widget educativi visibili nella Dashboard dei tuoi utenti",
+        "backToDash": "← Dashboard"
+    },
+    "guide_market": {
+        "dates": {
+            "today": "Oggi",
+            "yesterday": "Ieri"
+        },
+        "news": {
+            "item1": {
+                "title": "Nuovi Incentivi CER approvati",
+                "desc": "Il Ministero ha pubblicato il decreto attuativo per le Comunità Energetiche Rinnovabili."
+            },
+            "item2": {
+                "title": "Bollette in discesa",
+                "desc": "ARERA comunica l'aggiornamento delle tariffe per il prossimo trimestre."
+            }
         }
     }
 }
