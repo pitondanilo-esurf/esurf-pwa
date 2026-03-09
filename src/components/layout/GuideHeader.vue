@@ -8,11 +8,11 @@
     </button>
 
     <div class="header-center">
-      <img 
-        :src="isLightMode ? '/src/assets/img/logo-light.svg' : '/src/assets/img/logo-dark.svg'" 
-        alt="E-surf Logo" 
-        class="app-logo" 
-      />
+<img 
+  :src="isLightMode ? logoLight : logoDark" 
+  alt="E-surf Logo" 
+  class="app-logo" 
+/>
     </div>
     
     <div style="width: 36px;"></div>
@@ -21,6 +21,8 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
+import logoLight from '@/assets/img/logo-light.svg';
+import logoDark from '@/assets/img/logo-dark.svg';
 
 // Riceve lo stato del tema come prop per la reattività
 defineProps({
@@ -39,9 +41,8 @@ const router = useRouter();
   justify-content: space-between;
   align-items: center;
   padding: 20px 0;
-  border-bottom: 1px solid var(--border-color); /* */
-  margin-bottom: 20px;
 }
+
 
 .back-btn {
   background: none;

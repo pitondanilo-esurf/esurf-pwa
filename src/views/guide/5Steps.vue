@@ -2,12 +2,16 @@
   <div class="app-container onboarding-view">
     <GuideHeader :isLightMode="isLightMode" />
 
-    <main class="main-content slider-wrapper">
+    <main 
+      class="main-content slider-wrapper"
+      @touchstart="handleTouchStart"
+      @touchend="handleTouchEnd"
+    >
       <div v-if="loadingAuth" class="auth-spinner-container">
         <div class="auth-spinner"></div>
       </div>
 
-      <transition v-else name="slide-fade" mode="out-in">
+      <transition v-else :name="transitionName" mode="out-in">
         <div :key="currentStep" class="slide-body">
           <div class="illustration-container">
              <div v-html="steps[currentStep].svg" class="svg-render"></div>
@@ -40,19 +44,21 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-// Importo useI18n per accedere alle traduzioni dinamiche
 import { useI18n } from 'vue-i18n'; 
 import AuthService from '@/services/AuthService';
 import GuideHeader from '@/components/layout/GuideHeader.vue';
 
 const router = useRouter();
-const { t } = useI18n(); // Inizializzo i18n
+const { t } = useI18n();
 
 const currentStep = ref(0);
 const isLightMode = ref(false);
 const loadingAuth = ref(true);
 
-// Trasformato 'steps' in una Computed Property per supportare il cambio lingua dinamico
+const touchStartX = ref(0);
+const touchEndX = ref(0);
+const transitionName = ref('slide-fade');
+
 const steps = computed(() => [
   {
     title: t('guides.steps.step1.title'),
@@ -86,12 +92,44 @@ const steps = computed(() => [
   }
 ]);
 
+const handleTouchStart = (e) => {
+  touchStartX.value = e.touches[0].clientX;
+};
+
+const handleTouchEnd = (e) => {
+  touchEndX.value = e.changedTouches[0].clientX;
+  handleSwipe();
+};
+
+const handleSwipe = () => {
+  const swipeThreshold = 50; 
+  const diff = touchStartX.value - touchEndX.value;
+
+  if (Math.abs(diff) > swipeThreshold) {
+    if (diff > 0) {
+      if (currentStep.value < steps.value.length - 1) {
+        transitionName.value = 'slide-next';
+        currentStep.value++;
+      }
+    } else {
+      if (currentStep.value > 0) {
+        transitionName.value = 'slide-prev';
+        currentStep.value--;
+      }
+    }
+  }
+};
+
+const goToStep = (index) => {
+  transitionName.value = index > currentStep.value ? 'slide-next' : 'slide-prev';
+  currentStep.value = index;
+};
+
 onMounted(async () => {
   try {
     await AuthService.getUser();
   } catch (error) {
     localStorage.clear();
-    sessionStorage.clear();
     router.push('/login');
     return;
   } finally {
@@ -103,27 +141,144 @@ onMounted(async () => {
   if (isLightMode.value) document.body.classList.add('light-mode');
   window.scrollTo(0, 0);
 });
-
-const goToStep = (index) => { currentStep.value = index; };
 </script>
 
 <style src="@/assets/css/main.css"></style>
 <style scoped>
-/* Stili invariati */
-.onboarding-view { height: 100vh; display: flex; flex-direction: column; background-color: var(--bg-app); position: relative; }
-.slider-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding-bottom: 100px; }
-.illustration-container { height: 200px; display: flex; justify-content: center; align-items: center; margin-bottom: 2rem; }
-.headline { font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; }
-.subheadline { font-size: 16px; color: var(--accent-cyan); margin-bottom: 1.5rem; font-weight: 600; }
-.body-text { font-size: 15px; color: var(--text-muted); line-height: 1.6; max-width: 90%; margin: 0 auto; }
-.footer-fixed { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; padding: 40px 24px; background: var(--bg-app); z-index: 100; }
-.nav-dots { display: flex; justify-content: center; gap: 12px; }
-.dot-indicator { width: 12px; height: 12px; border-radius: 6px; background: var(--text-muted); opacity: 0.4; cursor: pointer; transition: all 0.3s ease; border: 1px solid var(--border-color); }
-.dot-indicator.active { width: 32px; background: var(--accent-cyan); opacity: 1; border: none; }
-.auth-spinner-container { display: flex; justify-content: center; align-items: center; }
-.auth-spinner { width: 30px; height: 30px; border: 3px solid var(--border-color); border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+/* =========================================
+   LAYOUT PRINCIPALE
+   ========================================= */
+.onboarding-view { 
+  height: 100vh; 
+  display: flex; 
+  flex-direction: column; 
+  background-color: var(--bg-app); 
+  position: relative; 
+  overflow: hidden; 
+}
+
+.slider-wrapper { 
+  flex: 1; 
+  display: flex; 
+  justify-content: center; 
+  touch-action: pan-y; /* Permette lo scroll verticale nativo, ma cattura l'orizzontale in JS */
+} 
+
+.slide-body { 
+  width: 100%; 
+  max-width: 400px; 
+  padding: 0 20px; 
+}
+
+/* =========================================
+   CONTENUTO SLIDE (Testi e SVG)
+   ========================================= */
+.illustration-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.svg-render {
+  width: 100%;
+  max-width: 250px;
+}
+
+.info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.headline { 
+  font-size: 24px; 
+  font-weight: 700; 
+  color: var(--text-main); 
+  margin: 0;
+}
+
+.subheadline {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent-blue);
+  margin: 0;
+}
+
+.body-text { 
+  font-size: 14px; 
+  color: var(--text-muted); 
+  line-height: 1.5; 
+  margin: 0;
+}
+
+/* =========================================
+   FOOTER FISSO E PALLINI DI NAVIGAZIONE
+   ========================================= */
+.footer-fixed {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 20px 0 40px 0; /* Spazio extra in basso per i dispositivi mobile */
+  background: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.nav-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.dot-indicator { 
+  width: 12px; 
+  height: 12px; 
+  border-radius: 6px; 
+  background: var(--text-muted); 
+  opacity: 0.4; 
+  cursor: pointer; 
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+  border: 1px solid var(--border-color); 
+}
+
+.dot-indicator.active { 
+  width: 32px; 
+  background: var(--accent-cyan); 
+  opacity: 1; 
+  border: none; 
+}
+
+/* =========================================
+   ANIMAZIONI SWIPE
+   ========================================= */
+.slide-next-enter-active, .slide-next-leave-active,
+.slide-prev-enter-active, .slide-prev-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-next-enter-from { opacity: 0; transform: translateX(50px); }
+.slide-next-leave-to { opacity: 0; transform: translateX(-50px); }
+
+.slide-prev-enter-from { opacity: 0; transform: translateX(-50px); }
+.slide-prev-leave-to { opacity: 0; transform: translateX(50px); }
+
+/* SPINNER */
+.auth-spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+.auth-spinner { 
+  width: 40px; 
+  height: 40px; 
+  border: 3px solid var(--border-color); 
+  border-top-color: var(--accent-blue); 
+  border-radius: 50%; 
+  animation: spin 1s linear infinite; 
+}
 @keyframes spin { to { transform: rotate(360deg); } }
-.slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.3s ease; }
-.slide-fade-enter-from { opacity: 0; transform: translateX(20px); }
-.slide-fade-leave-to { opacity: 0; transform: translateX(-20px); }
 </style>

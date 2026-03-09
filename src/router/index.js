@@ -100,6 +100,7 @@ const router = createRouter({
       name: 'FiveSteps',
       component: FiveSteps
     },
+    { path: '/guide/monitoraggio-elettrico', component: () => import('@/views/guide/MonitoraggioElettrico.vue') },
     // Rotta per la guida alle Notifiche Strategiche
     {
       path: '/guide/notifiche',
@@ -127,6 +128,27 @@ const router = createRouter({
     }
 
   ]
-})
+});
+
+router.afterEach((to, from) => {
+  // Aspettiamo un istante minimo che Vue monti la nuova pagina
+  setTimeout(() => {
+    // 1. Proviamo a scorrere il contenitore principale della tua app
+    const appContainer = document.querySelector('.app-container');
+    if (appContainer) {
+      appContainer.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    // 2. Proviamo a scorrere l'area dei contenuti (spesso è questa che scrolla)
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+      mainContent.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    // 3. Fallback sul window classico
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    
+  }, 10); // 10ms sono sufficienti
+});
 
 export default router

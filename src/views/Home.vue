@@ -15,7 +15,7 @@
 
       <div class="header-center">
         <img 
-          :src="isLightMode ? '/src/assets/img/logo-light.svg' : '/src/assets/img/logo-dark.svg'" 
+          :src="currentLogo" 
           alt="E-surf Logo" 
           class="app-logo" 
         />
@@ -122,30 +122,24 @@
 </template>
 
 <script setup>
-import { ref, onMounted, shallowRef } from 'vue';
+import { ref, onMounted, shallowRef, computed } from 'vue'; // Aggiungi computed
+import logoLight from '@/assets/img/logo-light.svg';
+import logoDark from '@/assets/img/logo-dark.svg';
+
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n'; 
 import AuthService from '@/services/AuthService';
 import axios from '@/services/axios';
 
-// --- IMPORT COMPONENTI BLOCCHI ---
-// ⚠️ CONTROLLA I PERCORSI! Se i file sono in "dashboard/blocks", aggiungi "dashboard/" qui sotto.
-import FeatureActivation from '@/components/blocks/FeatureActivation.vue';
-import FeatureNotifications from '@/components/blocks/FeatureNotifications.vue';
-import FeaturesMarketNewsBlock from '@/components/blocks/FeaturesMarketNewsBlock.vue'; // Percorso del nuovo file creato
+// --- IMPORTA IL REGISTRO BLOCCHI ---
+import { availableBlocks } from '@/config/blockRegistry';
 
+
+
+const currentLogo = computed(() => isLightMode.value ? logoLight : logoDark)
 const router = useRouter();
 const { locale } = useI18n(); 
 
-// --- REGISTRY DEI BLOCCHI (Frontend Mapping) ---
-const availableBlocks = shallowRef({
-  'FeatureActivation': FeatureActivation,
-  'FeatureNotifications': FeatureNotifications,
-  
-  // 🟢 CORREZIONE FONDAMENTALE
-  // La chiave deve essere "MarketEvolution" (come nel DB), non "MarketNewsBlock"
-  'FeaturesMarketNewsBlock': FeaturesMarketNewsBlock, 
-});
 
 const dashboardConfig = ref({
   blocks: [] 
