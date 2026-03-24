@@ -123,8 +123,8 @@
 
 <script setup>
 import { ref, onMounted, shallowRef, computed } from 'vue'; // Aggiungi computed
-import logoLight from '@/assets/img/logo-light.svg';
-import logoDark from '@/assets/img/logo-dark.svg';
+const logoLight = new URL('@/assets/img/logo-light.svg', import.meta.url).href;
+const logoDark = new URL('@/assets/img/logo-dark.svg', import.meta.url).href;
 
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n'; 
