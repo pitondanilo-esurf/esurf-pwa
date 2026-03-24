@@ -251,6 +251,45 @@
                     </div>
 
                     <form v-else id="podForm" @submit.prevent class="compact-form fade-in">
+                        
+                        <div v-if="parsedAiAnalysis && !isEditing" class="ai-insights-panel mb-3">
+                            <div class="panel-header">
+                                <span class="icon">✨</span>
+                                <strong>Analisi Strategica AI Completata</strong>
+                                <span class="confidence-score" v-if="parsedAiAnalysis.confidence">
+                                    Affidabilità: {{ Math.round(parsedAiAnalysis.confidence * 100) }}%
+                                </span>
+                            </div>
+                            <div class="panel-grid">
+                                <div class="insight-item">
+                                    <label>Mercato</label>
+                                    <span :class="['badge', 'badge-' + (parsedAiAnalysis.market_potential?.toLowerCase() || 'neutral')]">
+                                        {{ parsedAiAnalysis.market_potential || 'N/A' }}
+                                    </span>
+                                </div>
+                                <div class="insight-item">
+                                    <label>CER</label>
+                                    <span :class="['badge', 'badge-' + (parsedAiAnalysis.CER_potential?.toLowerCase() || 'neutral')]">
+                                        {{ parsedAiAnalysis.CER_potential || 'N/A' }}
+                                    </span>
+                                </div>
+                                <div class="insight-item">
+                                    <label>Flessibilità (D&R)</label>
+                                    <span :class="['badge', 'badge-' + (parsedAiAnalysis['D&R_potential']?.toLowerCase() || 'neutral')]">
+                                        {{ parsedAiAnalysis['D&R_potential'] || 'N/A' }}
+                                    </span>
+                                </div>
+                                <div class="insight-item">
+                                    <label>Contratto</label>
+                                    <span class="badge badge-neutral" :title="parsedAiAnalysis.contract_type">
+                                        {{ parsedAiAnalysis.price_type === 'FIXED' ? '🔒 Fisso' : (parsedAiAnalysis.price_type === 'VARIABLE' ? '📈 Variabile' : 'Sconosciuto') }}
+                                    </span>
+                                </div>
+                            </div>
+                            <p v-if="parsedAiAnalysis.market_notes" class="ai-notes">
+                                💡 <em>{{ parsedAiAnalysis.market_notes }}</em>
+                            </p>
+                        </div>
                         <div class="role-selector-tiny">
                             <label class="role-opt" :class="{ active: form.pod_role === 'consumer' }"><input type="radio" v-model="form.pod_role" value="consumer"> Consumer</label>
                             <label class="role-opt" :class="{ active: form.pod_role === 'producer' }"><input type="radio" v-model="form.pod_role" value="producer"> Producer</label>
@@ -319,7 +358,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n'; 
 import apiClient from '@/services/axios'; 
@@ -384,6 +423,12 @@ const signingPod = ref(null);
 const currentDocType = ref('delegation_pod_read');
 const previewHtml = ref('');
 const signForm = ref({ accept_delegation: false, accept_data_policy: false });
+
+// Parsa la cache AI per poterla usare nel template in tempo reale
+const parsedAiAnalysis = computed(() => {
+    if (!cachedAiAnalysis.value) return null;
+    try { return JSON.parse(cachedAiAnalysis.value); } catch(e) { return null; }
+});
 
 onMounted(async () => {
     const savedTheme = localStorage.getItem('theme');
@@ -550,20 +595,36 @@ const handleMagicUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
     billFile.value = file; formMode.value = 'ai_loading'; errorMsg.value = '';
+    
     try {
         const formData = new FormData(); formData.append('bill_file', file);
         if (PodService.extractFromBill) {
             const res = await PodService.extractFromBill(formData);
             const extracted = res.data.data; 
+            
             if (extracted) {
-                cachedAiAnalysis.value = JSON.stringify(extracted.raw_analysis);
-                form.value.pod_code = extracted.pod_code || form.value.pod_code;
-                form.value.address = extracted.address || form.value.address;
-                form.value.city = extracted.city || form.value.city;
-                form.value.province = extracted.province || form.value.province;
-                form.value.zip_code = extracted.zip_code || form.value.zip_code;
-                form.value.contract_power = extracted.contract_power || form.value.contract_power;
-                form.value.annual_consumption_kwh = extracted.annual_consumption_kwh || form.value.annual_consumption_kwh;
+                // Assicuriamoci di prendere il JSON grezzo
+                const rawData = extracted.raw_analysis || extracted; 
+                cachedAiAnalysis.value = JSON.stringify(rawData);
+
+                // Mappatura con il NUOVO JSON
+                form.value.pod_code = rawData.pod_id || form.value.pod_code;
+                
+                // Gestione oggetto annidato 'indirizzo'
+                if (rawData.indirizzo) {
+                    const via = rawData.indirizzo.Via || '';
+                    const civico = rawData.indirizzo.NumeroCivico || '';
+                    form.value.address = `${via} ${civico}`.trim() || form.value.address;
+                    form.value.city = rawData.indirizzo.Città || form.value.city;
+                    form.value.zip_code = rawData.indirizzo.Cap || form.value.zip_code;
+                }
+                
+                // Dati Tecnici
+                form.value.contract_power = rawData.committed_power_kw || form.value.contract_power;
+                
+                if (rawData.consumption_bands && rawData.consumption_bands.total_annual) {
+                    form.value.annual_consumption_kwh = rawData.consumption_bands.total_annual;
+                }
             }
             alert(t('pods.alerts.extractionSuccess'));
         } else { alert(t('pods.alerts.extractionFailed')); }
@@ -813,7 +874,7 @@ a.hover-link:hover { opacity: 0.7; text-decoration: underline; color: var(--acce
 @keyframes load-bar { 0% { left: -50%; width: 50%; } 50% { left: 25%; width: 50%; } 100% { left: 100%; width: 50%; } }
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
-/* PDF VIEWER E FALLBACK MOBILE (Ripristinato in locale) */
+/* PDF VIEWER E FALLBACK MOBILE */
 .pdf-viewer-modal { max-width: 900px; height: 85vh; }
 .modal-body-pdf { flex: 1; height: 100%; background: var(--bg-app); color: var(--text-main); }
 .pdf-iframe { width: 100%; height: 100%; border: none; }
@@ -843,6 +904,69 @@ a.hover-link:hover { opacity: 0.7; text-decoration: underline; color: var(--acce
     color: var(--accent-blue);
 }
 
+/* --- STILI PANNELLO INSIGHTS AI --- */
+.ai-insights-panel {
+    background: linear-gradient(to right, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 15px;
+}
+.ai-insights-panel .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    color: var(--accent-blue);
+    font-size: 0.9rem;
+}
+.confidence-score {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--bg-card);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.panel-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.insight-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.insight-item label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+    display: inline-block;
+}
+.badge-high { background: rgba(22, 163, 74, 0.15); color: #16a34a; border: 1px solid rgba(22, 163, 74, 0.3); }
+.badge-medium { background: rgba(217, 119, 6, 0.15); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.3); }
+.badge-low { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+.badge-neutral { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); }
+.ai-notes {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(99, 102, 241, 0.2);
+    line-height: 1.4;
+}
+
 @media (max-width: 768px) {
     .main-content { padding: 1rem 1rem 2rem 1rem; }
     .page-header-compact { flex-direction: column; align-items: stretch; gap: 15px; }
@@ -852,6 +976,7 @@ a.hover-link:hover { opacity: 0.7; text-decoration: underline; color: var(--acce
     .header-main-info { gap: 6px; }
     .pdf-mobile-fallback { display: block; }
     .pdf-iframe { flex: 1; height: calc(100% - 80px); }
+    .panel-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 </style>

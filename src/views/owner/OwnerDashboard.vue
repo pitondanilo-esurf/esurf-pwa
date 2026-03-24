@@ -47,7 +47,16 @@
         >
             {{ $t('ownerDashboard.sidebar.overview') }}
         </li>
-        
+
+        <li 
+          :class="{ active: $route.path === '/survey/strategia_business_2026' }" 
+          @click="goTo('/survey/strategia_business_2026')"
+          class="highlight-nav-item"
+        >
+            <span class="nav-icon">📊</span>
+            {{ $t('ownerDashboard.sidebar.strategicSurvey', 'Sondaggio Strategico') }}
+        </li>
+
         <li 
           :class="{ active: $route.path === '/owner/pods', disabled: !hasCommunity }" 
           @click="hasCommunity && goTo('/owner/pods')"

@@ -22,6 +22,7 @@ import OwnerDashboard from '../views/owner/OwnerDashboard.vue'
 import OwnerPodsView from '../views/owner/OwnerPodsView.vue'
 import OwnerCommunityView from '@/views/owner/OwnerCommunityView.vue';
 import OwnerEducationView from '@/views/owner/OwnerEducationView.vue';
+import StrategicSurvey from '@/views/survey/StrategicSurvey.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -125,6 +126,14 @@ const router = createRouter({
       name: 'OwnerEducation',
       component: OwnerEducationView,
       meta: { requiresAuth: true, role: 'owner' }
+    },
+
+    {
+      // Usiamo :schemaName come parametro dinamico
+      path: '/survey/:schemaName',
+      name: 'StrategicSurvey',
+      component: () => import('@/views/survey/StrategicSurvey.vue'),
+      meta: { requiresAuth: true }
     }
 
   ]
@@ -147,7 +156,7 @@ router.afterEach((to, from) => {
 
     // 3. Fallback sul window classico
     window.scrollTo({ top: 0, behavior: 'instant' });
-    
+
   }, 10); // 10ms sono sufficienti
 });
 
