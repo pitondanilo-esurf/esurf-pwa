@@ -76,7 +76,16 @@
         >
             {{ $t('ownerDashboard.sidebar.education') }}
         </li>
-        
+
+        <li 
+                :class="{ active: $route.path === '/owner/bollette' }" 
+                @click="goTo('/owner/bollette')"
+                class="highlight-nav-item"
+                >
+                    <span class="nav-icon">🧾</span>
+                    {{ $t('ownerDashboard.sidebar.historyBills', 'Storico Bollette') }}
+        </li>
+
         <li class="disabled">{{ $t('ownerDashboard.sidebar.production') }}</li>
         <li class="disabled">{{ $t('ownerDashboard.sidebar.participants') }}</li>
       </ul>

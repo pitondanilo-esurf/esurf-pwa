@@ -9,9 +9,6 @@
                 <h2 style="margin:0; font-size: 1.8rem;">{{ $t('ownerPods.title') }}</h2>
                 <p style="margin: 5px 0 0 0; color: var(--text-muted);">{{ $t('ownerPods.subtitle') }}</p>
             </div>
-            <button @click="$router.push('/owner/dashboard')" class="btn-ghost-small">
-                {{ $t('ownerPods.backToDash') }}
-            </button>
         </header>
 
         <div class="content-area fade-in delay-2">
@@ -49,10 +46,11 @@
                     
                     <div class="header-actions">
                         <select v-model="filterStatus" class="status-filter compact-input">
-                            <option value="all">{{ $t('ownerPods.table.filterAll') }}</option>
-                            <option value="pending">{{ $t('ownerPods.table.filterPending') }}</option>
-                            <option value="processed">{{ $t('ownerPods.table.filterProcessed') }}</option>
-                            <option value="failed">{{ $t('ownerPods.table.filterFailed') }}</option>
+                            <option value="all">{{ $t('ownerPods.table.filterAll', 'Tutti') }}</option>
+                            <option value="pending">{{ $t('ownerPods.table.filterPending', 'In Attesa (Pronti)') }}</option>
+                            <option value="incomplete">{{ $t('ownerPods.table.filterIncomplete', 'Incompleti') }}</option>
+                            <option value="processed">{{ $t('ownerPods.table.filterProcessed', 'Completati') }}</option>
+                            <option value="failed">{{ $t('ownerPods.table.filterFailed', 'Falliti') }}</option>
                         </select>
 
                         <div v-if="hasPendingSelection" class="bulk-actions">
@@ -85,7 +83,7 @@
                                         type="checkbox" 
                                         :checked="isAllSelected" 
                                         @change="toggleSelectAll"
-                                        :disabled="filterStatus === 'processed' || filterStatus === 'failed'"
+                                        :disabled="selectablePods.length === 0"
                                     >
                                 </th>
                                 <th>{{ $t('ownerPods.table.colDate') }}</th> 
@@ -105,7 +103,7 @@
                                         type="checkbox" 
                                         :value="pod.id" 
                                         v-model="selectedIds"
-                                        :disabled="pod.status !== 'pending'"
+                                        :disabled="pod.status !== 'pending' || isPodIncomplete(pod)"
                                     >
                                 </td>
 
@@ -114,8 +112,8 @@
                                 </td>
 
                                 <td>
-                                    <span :class="['status-badge', pod.status]">
-                                        {{ getStatusLabel(pod.status) }}
+                                    <span :class="['status-badge', getDisplayStatus(pod)]">
+                                        {{ getStatusLabel(getDisplayStatus(pod)) }}
                                     </span>
                                     <div v-if="pod.status === 'failed'" class="error-text" :title="pod.error_log">
                                         {{ pod.error_log }}
@@ -126,7 +124,8 @@
                                 
                                 <td>
                                     <div class="fw-bold">{{ pod.titolare_nominativo }}</div>
-                                    <div class="text-xs text-muted">{{ pod.titolare_email }}</div>
+                                    <div class="text-xs text-muted">{{ pod.titolare_email || '⚠️ Email mancante' }}</div>
+                                    <div v-if="!pod.operative_email" class="text-xs error-text">⚠️ Op. Email mancante</div>
                                 </td>
                                 
                                 <td>
@@ -331,7 +330,6 @@ const communityType = ref('Standard');
 
 // --- INIT ---
 onMounted(async () => {
-    // Inizializza tema per il GuideHeader
     const savedTheme = localStorage.getItem('theme');
     isLightMode.value = savedTheme === 'light';
     if (isLightMode.value) document.body.classList.add('light-mode');
@@ -454,6 +452,21 @@ const deletePod = async (id) => {
 
 const confirmSelection = async () => {
     if (selectedIds.value.length === 0) return;
+
+    const selectedPodsList = pendingPods.value.filter(p => selectedIds.value.includes(p.id));
+    const invalidPods = selectedPodsList.filter(p => isPodIncomplete(p));
+
+    if (invalidPods.length > 0) {
+        const codes = invalidPods.map(p => p.pod_code || 'Codice Mancante').join('\n- ');
+        alert(
+            `Impossibile procedere.\n\n` +
+            `I seguenti POD hanno dati mancanti o non validi (Manca Email Titolare, Manca Email Operatore, o Nome = "Da verificare"):\n\n` +
+            `- ${codes}\n\n` +
+            `Modifica questi record tramite l'icona della matita prima di confermarli.`
+        );
+        return;
+    }
+
     if(!confirm(t('ownerPods.alerts.processConfirm', { count: selectedIds.value.length }))) return;
 
     isProcessing.value = true;
@@ -468,11 +481,41 @@ const confirmSelection = async () => {
     } finally { isProcessing.value = false; }
 };
 
-// --- COMPUTED ---
+// --- LOGICA DI VALIDAZIONE INCOMPLETEZZA ---
+const isPodIncomplete = (pod) => {
+    const hasTitolareEmail = pod.titolare_email && pod.titolare_email.trim() !== '';
+    const hasOperativeEmail = pod.operative_email && pod.operative_email.trim() !== '';
+    const isNameValid = pod.titolare_nominativo && pod.titolare_nominativo.trim().toLowerCase() !== 'da verificare';
+    
+    return !(hasTitolareEmail && hasOperativeEmail && isNameValid);
+};
+
+const getDisplayStatus = (pod) => {
+    if (pod.status === 'pending' && isPodIncomplete(pod)) return 'incomplete';
+    return pod.status;
+};
+
+// --- COMPUTED AGGIORNATI CON LOGICA INCOMPLETO ---
 const filteredPods = computed(() => {
     if (!Array.isArray(pendingPods.value)) return [];
     if (filterStatus.value === 'all') return pendingPods.value;
+    
+    // Gestione status "virtuale" incompleto
+    if (filterStatus.value === 'incomplete') {
+        return pendingPods.value.filter(pod => pod.status === 'pending' && isPodIncomplete(pod));
+    }
+    
+    // Gestione status pending (mostra solo quelli completi se scelgo "In attesa")
+    if (filterStatus.value === 'pending') {
+        return pendingPods.value.filter(pod => pod.status === 'pending' && !isPodIncomplete(pod));
+    }
+
     return pendingPods.value.filter(pod => pod.status === filterStatus.value);
+});
+
+const selectablePods = computed(() => {
+    const pods = filteredPods.value || [];
+    return pods.filter(p => p.status === 'pending' && !isPodIncomplete(p));
 });
 
 const formatDate = (dateString) => {
@@ -485,24 +528,24 @@ const formatDate = (dateString) => {
 
 const getStatusLabel = (status) => {
     const map = { 
-        'pending': t('ownerPods.table.statusPending'), 
-        'processed': t('ownerPods.table.statusProcessed'), 
-        'failed': t('ownerPods.table.statusFailed') 
+        'pending': t('ownerPods.table.statusPending', 'In Attesa'), 
+        'incomplete': 'Incompleto',
+        'processed': t('ownerPods.table.statusProcessed', 'Completato'), 
+        'failed': t('ownerPods.table.statusFailed', 'Fallito') 
     };
     return map[status] || status;
 };
 
 const hasPendingSelection = computed(() => selectedIds.value.length > 0);
+
 const isAllSelected = computed(() => {
-    const pods = filteredPods.value || [];
-    const selectable = pods.filter(p => p.status === 'pending');
+    const selectable = selectablePods.value;
     if (selectable.length === 0) return false;
     return selectable.every(p => selectedIds.value.includes(p.id));
 });
 
 const toggleSelectAll = () => {
-    const pods = filteredPods.value || [];
-    const selectable = pods.filter(p => p.status === 'pending');
+    const selectable = selectablePods.value;
     if (selectable.length === 0) return;
 
     if (isAllSelected.value) {
@@ -569,6 +612,7 @@ td { padding: 12px 16px; border-bottom: 1px solid var(--border-color); color: va
 /* STATI E COLORI TABELLA */
 .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; display: inline-block;}
 .status-badge.pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+.status-badge.incomplete { background: rgba(100, 116, 139, 0.1); color: #64748b; border: 1px solid rgba(100, 116, 139, 0.2); }
 .status-badge.processed { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
 .status-badge.failed { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
 

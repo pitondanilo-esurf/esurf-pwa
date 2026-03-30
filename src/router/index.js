@@ -134,6 +134,15 @@ const router = createRouter({
       name: 'StrategicSurvey',
       component: () => import('@/views/survey/StrategicSurvey.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/owner/bollette', // L'URL che l'utente vedrà nel browser
+      name: 'OwnerCommunityBills',
+      component: () => import('@/views/owner/CommunityBillsViewer.vue'), // Percorso esatto del tuo file
+      meta: { 
+        requiresAuth: true, // Se hai un sistema di login per proteggere la pagina
+        // role: 'owner' // (Opzionale) se gestisci i ruoli a livello di frontend
+      }
     }
 
   ]

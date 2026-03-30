@@ -9,9 +9,6 @@
                 <h2 style="margin:0; font-size: 1.8rem;">{{ $t('ownerCommunity.title') }}</h2>
                 <p style="margin: 5px 0 0 0; color: var(--text-muted);">{{ $t('ownerCommunity.subtitle') }}</p>
             </div>
-            <button @click="$router.push('/owner/dashboard')" class="btn-ghost-small">
-                {{ $t('ownerCommunity.backToDash') }}
-            </button>
         </header>
 
         <div class="content-area fade-in delay-2">
