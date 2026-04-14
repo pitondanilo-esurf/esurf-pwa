@@ -74,7 +74,16 @@
                       <div class="ai-section-box">
                           <div class="sec-head"><h4>📜 Contratto & Affidabilità</h4></div>
                           <div class="ai-grid-compact">
-                              <div class="ai-item full-width">
+                               <div class="ai-item">
+                                  <label>{{ $t('pods.aiModal.billDate') || 'Data Emissione' }}</label>
+                                  <div class="ai-value">{{ aiData.bill_date || 'N/D' }}</div>
+                              </div>
+                              <div class="ai-item">
+                                  <label>{{ $t('pods.aiModal.period') || 'Periodo' }}</label>
+                                  <div class="ai-value text-cap" style="font-size: 0.8rem;">{{ aiData.period || 'N/D' }}</div>
+                              </div>
+
+                            <div class="ai-item full-width">
                                   <label>{{ $t('pods.aiModal.activeOffer') || 'Offerta Attiva' }}</label>
                                   <div class="ai-value text-cap">{{ aiData.contract_type || 'N/D' }}</div>
                               </div>

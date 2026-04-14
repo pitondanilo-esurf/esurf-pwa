@@ -83,28 +83,30 @@
               <thead>
                 <tr>
                   <th>Codice POD/PDR</th>
-                  <th>Tipo</th>
+                  <th>Tipo (Clicca per Report)</th>
                   <th>Periodo</th>
                   <th>Data Bolletta</th>
-                  <!--<th>Costo AI</th>-->
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="loading">
-                  <td colspan="5" class="empty-state">
+                  <td colspan="4" class="empty-state">
                     <div class="spinner"></div>
                     <p>Caricamento in corso...</p>
                   </td>
                 </tr>
                 <tr v-else-if="bills.length === 0">
-                  <td colspan="5" class="empty-state">Nessuna bolletta trovata.</td>
+                  <td colspan="4" class="empty-state">Nessuna bolletta trovata.</td>
                 </tr>
                 <tr v-for="bill in bills" :key="bill.id">
                   <td class="code-cell">{{ bill.pod_code }}</td>
-                  <td><span :class="['type-badge', getTypeBadgeClass(bill.type)]">{{ formatType(bill.type) }}</span></td>
+                  <td>
+                      <button @click="openAiModal(bill)" :class="['type-badge-btn', getTypeBadgeClass(bill.type)]" title="Visualizza Report AI">
+                          {{ formatType(bill.type) }} 🔍
+                      </button>
+                  </td>
                   <td>{{ bill.period || 'N/D' }}</td>
                   <td><span class="date-chip">{{ formatDate(bill.bill_date) }}</span></td>
-                  <!--<td class="cost-cell">{{ bill.cost ? `$ ${Number(bill.cost).toFixed(6)}` : '-' }}</td>-->
                 </tr>
               </tbody>
             </table>
@@ -148,6 +150,22 @@
       </div>
     </div>
 
+    <PodAiModal 
+        :show="showAiModal" 
+        :aiData="selectedAiData" 
+        @close="showAiModal = false" 
+    />
+    <PdrAiModal 
+        :show="showPdrAiModal" 
+        :aiData="selectedAiData" 
+        @close="showPdrAiModal = false" 
+    />
+    <WaterAiModal 
+        :show="showWaterAiModal" 
+        :aiData="selectedAiData" 
+        @close="showWaterAiModal = false" 
+    />
+
   </div>
 </template>
 
@@ -156,6 +174,11 @@ import { ref, onMounted, watch } from 'vue';
 import axios from '@/services/axios'; 
 import CommunityService from '@/services/CommunityService'; 
 import GuideHeader from '@/components/layout/GuideHeader.vue'; 
+
+// Importa i componenti Modali
+import PodAiModal from '@/components/pods/PodAiModal.vue';
+import PdrAiModal from '@/components/pods/PdrAiModal.vue';
+import WaterAiModal from '@/components/pods/WaterAiModal.vue';
 
 const isLightMode = ref(false); 
 
@@ -178,6 +201,12 @@ const filters = ref({
 const showExportModal = ref(false);
 const exportData = ref([]);
 const exportColumns = ref([]);
+
+// Variabili per la gestione delle Modali AI
+const showAiModal = ref(false);
+const showPdrAiModal = ref(false);
+const showWaterAiModal = ref(false);
+const selectedAiData = ref(null);
 
 onMounted(async () => {
     const savedTheme = localStorage.getItem('theme');
@@ -251,6 +280,34 @@ const resetFilters = () => {
   filters.value = { type: '', period: '', date_from: '', date_to: '', logic: 'AND' };
   fetchPeriods(); 
   fetchBills();
+};
+
+/* =========================================================
+   APERTURA MODALE AI
+========================================================= */
+const openAiModal = (bill) => {
+    let parsedData = bill.ai_analysis;
+    
+    // Assicuriamoci che i dati siano un oggetto JSON
+    if (typeof parsedData === 'string') {
+        try {
+            parsedData = JSON.parse(parsedData);
+        } catch (e) {
+            console.error("Errore nel parsing ai_analysis", e);
+            parsedData = {};
+        }
+    }
+    
+    selectedAiData.value = parsedData;
+
+    // Apri la modale corrispondente al tipo
+    if (bill.type === 'energia_elettrica') {
+        showAiModal.value = true;
+    } else if (bill.type === 'gas') {
+        showPdrAiModal.value = true;
+    } else if (bill.type === 'acqua') {
+        showWaterAiModal.value = true;
+    }
 };
 
 /* =========================================================
@@ -554,7 +611,7 @@ const formatDate = (dateString) => {
 .btn-secondary:hover:not(:disabled) { border-color: var(--accent-blue); color: var(--accent-blue); }
 .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* TABELLA CUSTOM */
+/* TABELLA CUSTOM E BOTTONI BADGE */
 .table-container { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
 th { padding: 12px 16px; border-bottom: 2px solid var(--border-color); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
@@ -562,10 +619,27 @@ td { padding: 16px; border-bottom: 1px solid var(--border-color); color: var(--t
 tr:hover td { background-color: var(--bg-app); }
 tr:last-child td { border-bottom: none; }
 .code-cell { color: var(--text-main); font-weight: 700; letter-spacing: 0.5px; }
-.cost-cell { font-family: monospace; font-size: 1.05rem; color: var(--text-main); }
 
-/* CHIPS E BADGES */
-.type-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid transparent; }
+/* Stile per i badge trasformati in bottoni */
+.type-badge-btn { 
+    font-size: 0.75rem; 
+    padding: 6px 12px; 
+    border-radius: 20px; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px; 
+    border: 1px solid transparent; 
+    cursor: pointer; 
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.type-badge-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
 .badge-luce { background: rgba(245, 158, 11, 0.1); color: #d97706; border-color: rgba(245, 158, 11, 0.3); }
 .badge-gas { background: rgba(249, 115, 22, 0.1); color: #ea580c; border-color: rgba(249, 115, 22, 0.3); }
 .badge-acqua { background: rgba(59, 130, 246, 0.1); color: #2563eb; border-color: rgba(59, 130, 246, 0.3); }

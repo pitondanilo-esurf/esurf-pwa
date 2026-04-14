@@ -87,13 +87,12 @@ const router = createRouter({
     {
       path: '/owner/pods',
       name: 'owner-pods',
-      component: OwnerPodsView // Questo file ora usa PodBulkLoader
+      component: OwnerPodsView
     },
     {
       path: '/profilo',
       name: 'Profilo',
       component: ProfiloView,
-      // Se vuoi proteggere la rotta in modo che ci si acceda solo da loggati:
       meta: { requiresAuth: true }
     },
     {
@@ -102,24 +101,21 @@ const router = createRouter({
       component: FiveSteps
     },
     { path: '/guide/monitoraggio-elettrico', component: () => import('@/views/guide/MonitoraggioElettrico.vue') },
-    // Rotta per la guida alle Notifiche Strategiche
     {
       path: '/guide/notifiche',
       name: 'notifiche-guida',
-      // Assicurati che il file sia salvato in src/views/guide/Notifiche.vue
       component: () => import('../views/guide/Notifiche.vue')
     },
     {
       path: '/guide/mercato',
       name: 'mercato-guida',
-      // Assicurati che il file sia salvato in src/views/guide/Notifiche.vue
       component: () => import('../views/guide/MarketGuide.vue')
     },
     {
       path: '/owner/cabine',
       name: 'OwnerCabine',
       component: OwnerCommunityView,
-      meta: { requiresAuth: true } // Mantieni i tuoi meta tag di protezione se li usi
+      meta: { requiresAuth: true }
     },
     {
       path: '/owner/education',
@@ -127,46 +123,42 @@ const router = createRouter({
       component: OwnerEducationView,
       meta: { requiresAuth: true, role: 'owner' }
     },
-
     {
-      // Usiamo :schemaName come parametro dinamico
       path: '/survey/:schemaName',
       name: 'StrategicSurvey',
       component: () => import('@/views/survey/StrategicSurvey.vue'),
       meta: { requiresAuth: true }
     },
     {
-      path: '/owner/bollette', // L'URL che l'utente vedrà nel browser
+      path: '/owner/bollette',
       name: 'OwnerCommunityBills',
-      component: () => import('@/views/owner/CommunityBillsViewer.vue'), // Percorso esatto del tuo file
-      meta: { 
-        requiresAuth: true, // Se hai un sistema di login per proteggere la pagina
-        // role: 'owner' // (Opzionale) se gestisci i ruoli a livello di frontend
-      }
+      component: () => import('@/views/owner/CommunityBillsViewer.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/onboarding-risorse',
+      name: 'ResourceOnboarding',
+      component: () => import('@/views/ResourceOnboarding.vue'),
+      meta: { requiresAuth: true }
     }
-
   ]
 });
 
 router.afterEach((to, from) => {
-  // Aspettiamo un istante minimo che Vue monti la nuova pagina
   setTimeout(() => {
-    // 1. Proviamo a scorrere il contenitore principale della tua app
     const appContainer = document.querySelector('.app-container');
     if (appContainer) {
       appContainer.scrollTo({ top: 0, behavior: 'instant' });
     }
 
-    // 2. Proviamo a scorrere l'area dei contenuti (spesso è questa che scrolla)
     const mainContent = document.querySelector('.main-content');
     if (mainContent) {
       mainContent.scrollTo({ top: 0, behavior: 'instant' });
     }
 
-    // 3. Fallback sul window classico
     window.scrollTo({ top: 0, behavior: 'instant' });
 
-  }, 10); // 10ms sono sufficienti
+  }, 10);
 });
 
 export default router
