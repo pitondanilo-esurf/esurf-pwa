@@ -1,23 +1,25 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-// Import delle Viste
+// Import delle Viste principali
 import HomeView from '../views/HomeView.vue'
 import RegisterView from '../views/auth/RegisterView.vue'
 import LoginView from '../views/auth/LoginView.vue'
 import DashboardView from '../views/DashboardView.vue'
+
+// VECCHIA GESTIONE PODS (Mantenuta come richiesto)
 import PodsView from '../views/PodsView.vue'
 
 import Home from '../views/Home.vue'
 import ProfiloView from '@/views/ProfiloView.vue'
 import FiveSteps from '@/views/guide/5Steps.vue'
 
-// [NUOVO] Import Dashboard Admin
+// Import Dashboard Admin
 import AdminDashboard from '../views/admin/AdminDashboard.vue'
 
-// [NUOVO] Import Setup Owner (Magic Link)
+// Import Setup Owner (Magic Link)
 import OwnerSetupView from '../views/auth/OwnerSetupView.vue'
 
-// [NUOVO] Import Dashboard Owner
+// Import Dashboard Owner
 import OwnerDashboard from '../views/owner/OwnerDashboard.vue'
 import OwnerPodsView from '../views/owner/OwnerPodsView.vue'
 import OwnerCommunityView from '@/views/owner/OwnerCommunityView.vue';
@@ -52,33 +54,35 @@ const router = createRouter({
       name: 'Home',
       component: Home
     },
-    // [NUOVO] Rotta Guida Identità Digitale
+    // Rotta Guida Identità Digitale
     {
       path: '/guide/identita-digitale',
       name: 'identita-digitale',
       component: () => import('../views/guide/IdentitaDigitale.vue')
     },
+    
+    // --- VECCHIA ROTTA PODS (MANTENUTA ATTIVA) ---
     {
       path: '/pods',
       name: 'pods',
       component: PodsView
     },
 
-    // [NUOVO] Rotta Admin
+    // Rotta Admin
     {
       path: '/admin',
       name: 'admin',
       component: AdminDashboard
     },
 
-    // [NUOVO] Rotta Setup Owner (Atterraggio dal link email)
+    // Rotta Setup Owner (Atterraggio dal link email)
     {
       path: '/owner/setup',
       name: 'owner-setup',
       component: OwnerSetupView
     },
 
-    // [NUOVO] Rotta Dashboard Owner
+    // Rotte Dashboard Owner
     {
       path: '/owner/dashboard',
       name: 'owner-dashboard',
@@ -88,28 +92,6 @@ const router = createRouter({
       path: '/owner/pods',
       name: 'owner-pods',
       component: OwnerPodsView
-    },
-    {
-      path: '/profilo',
-      name: 'Profilo',
-      component: ProfiloView,
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/guide/5-steps',
-      name: 'FiveSteps',
-      component: FiveSteps
-    },
-    { path: '/guide/monitoraggio-elettrico', component: () => import('@/views/guide/MonitoraggioElettrico.vue') },
-    {
-      path: '/guide/notifiche',
-      name: 'notifiche-guida',
-      component: () => import('../views/guide/Notifiche.vue')
-    },
-    {
-      path: '/guide/mercato',
-      name: 'mercato-guida',
-      component: () => import('../views/guide/MarketGuide.vue')
     },
     {
       path: '/owner/cabine',
@@ -124,26 +106,65 @@ const router = createRouter({
       meta: { requiresAuth: true, role: 'owner' }
     },
     {
-      path: '/survey/:schemaName',
-      name: 'StrategicSurvey',
-      component: () => import('@/views/survey/StrategicSurvey.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
       path: '/owner/bollette',
       name: 'OwnerCommunityBills',
       component: () => import('@/views/owner/CommunityBillsViewer.vue'),
       meta: { requiresAuth: true }
     },
+
+    // Altre rotte
+    {
+      path: '/profilo',
+      name: 'Profilo',
+      component: ProfiloView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/guide/5-steps',
+      name: 'FiveSteps',
+      component: FiveSteps
+    },
+    { 
+      path: '/guide/monitoraggio-elettrico', 
+      component: () => import('@/views/guide/MonitoraggioElettrico.vue') 
+    },
+    {
+      path: '/guide/notifiche',
+      name: 'notifiche-guida',
+      component: () => import('../views/guide/Notifiche.vue')
+    },
+    {
+      path: '/guide/mercato',
+      name: 'mercato-guida',
+      component: () => import('../views/guide/MarketGuide.vue')
+    },
+    {
+      path: '/survey/:schemaName',
+      name: 'StrategicSurvey',
+      component: () => import('@/views/survey/StrategicSurvey.vue'),
+      meta: { requiresAuth: true }
+    },
+    
+    // --- NUOVE ROTTE RISORSE E ONBOARDING ---
     {
       path: '/onboarding-risorse',
       name: 'ResourceOnboarding',
       component: () => import('@/views/ResourceOnboarding.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/resources',
+      name: 'Resources',
+      component: () => import('@/views/ResourceView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Gestione Risorse'
+      }
     }
   ]
 });
 
+// Gestione dello scroll dopo ogni cambio pagina
 router.afterEach((to, from) => {
   setTimeout(() => {
     const appContainer = document.querySelector('.app-container');
@@ -159,6 +180,13 @@ router.afterEach((to, from) => {
     window.scrollTo({ top: 0, behavior: 'instant' });
 
   }, 10);
+  
+  // Aggiorna il titolo del tab del browser
+  if (to.meta.title) {
+    document.title = `${to.meta.title} - eSurf`;
+  } else {
+    document.title = 'eSurf';
+  }
 });
 
 export default router

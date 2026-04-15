@@ -5,7 +5,7 @@
         
         <div class="modal-header compact-header">
           <h3>{{ $t('onboarding.title') }}</h3>
-          <button @click="$router.push('/')" class="btn-close-modal">✕</button>
+          <button @click="$router.push('/resources')" class="btn-close-modal">✕</button>
         </div>
         
         <div class="modal-body compact-body">
@@ -260,11 +260,12 @@ const confirmAndSave = async () => {
         
         successMsg.value = res.data.message || 'Risorsa salvata con successo!';
 
-        // Aspettiamo 1.5 secondi prima di cambiare pagina, così hai il tempo di leggere il successo
+        // Aspettiamo 2.5 secondi prima di cambiare pagina, così hai il tempo di leggere il successo
         setTimeout(() => {
-            console.log("🔄 Reindirizzamento a /pods...");
-            router.push('/pods'); 
-        }, 1500);
+            console.log("🔄 Reindirizzamento a /resources...");
+            // MODIFICA QUI: Da '/pods' a '/resources'
+            router.push('/resources'); 
+        }, 2500);
         
     } catch (e) {
         // Se c'è un errore di rotta (404) o validazione (422), lo becchiamo qui!

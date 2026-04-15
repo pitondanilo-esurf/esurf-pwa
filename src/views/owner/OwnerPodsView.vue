@@ -120,7 +120,25 @@
                                     </div>
                                 </td>
 
-                                <td class="font-mono">{{ pod.pod_code }}</td>
+                                <td>
+                                    <div class="font-mono">{{ pod.pod_code }}</div>
+                                    <button 
+                                        v-if="pod.ai_analysis"
+                                        :class="['type-badge', 'badge-btn', getTypeBadgeClass(pod.resource_type)]"
+                                        @click="openAiModal(pod)"
+                                        title="Clicca per visualizzare l'Analisi AI"
+                                    >
+                                        {{ formatType(pod.resource_type) }} ✨
+                                    </button>
+                                    
+                                    <span 
+                                        v-else 
+                                        :class="['type-badge', getTypeBadgeClass(pod.resource_type)]"
+                                        title="Dati inseriti manualmente"
+                                    >
+                                        {{ formatType(pod.resource_type) }}
+                                    </span>
+                                </td>
                                 
                                 <td>
                                     <div class="fw-bold">{{ pod.titolare_nominativo }}</div>
@@ -137,24 +155,27 @@
                                 
                                 <td class="text-right">
                                     <div class="tech-grid">
-                                        <span title="Prelievo">📉 {{ pod.consumer_power_kw }}</span>
-                                        <span title="Immissione" v-if="Number(pod.producer_power_kw) > 0" class="text-green">📈 {{ pod.producer_power_kw }}</span>
-                                        <span title="Accumulo" v-if="Number(pod.storage_power_kw) > 0" class="text-blue">🔋 {{ pod.storage_power_kw }}</span>
+                                        <span title="Prelievo" v-if="pod.resource_type === 'energia_elettrica' || !pod.resource_type">📉 {{ pod.consumer_power_kw }} kW</span>
+                                        <span title="Immissione" v-if="Number(pod.producer_power_kw) > 0" class="text-green">📈 {{ pod.producer_power_kw }} kW</span>
+                                        <span title="Accumulo" v-if="Number(pod.storage_power_kw) > 0" class="text-blue">🔋 {{ pod.storage_power_kw }} kW</span>
                                         <span title="Remoto" v-if="pod.remote_control_inverter">📡</span>
-                                        <span v-if="pod.bill_file" title="Bolletta Presente" class="text-purple" style="cursor:help">📄 PDF</span>
                                     </div>
                                 </td>
 
                                 <td class="text-center actions-cell">
-                                    <div v-if="pod.status === 'pending'" style="display: flex; justify-content: center; gap: 5px;">
-                                        <button @click="openEditModal(pod)" class="btn-icon" title="Modifica">✏️</button>
-                                        <button @click="deletePod(pod.id)" class="btn-icon danger" title="Elimina">🗑️</button>
-                                    </div>
-                                    <div v-else-if="pod.status === 'failed'" style="display: flex; justify-content: center;">
-                                        <button @click="deletePod(pod.id)" class="btn-icon danger" title="Elimina Riga Fallita">🗑️</button>
-                                    </div>
-                                    <div v-else class="text-green text-xs">
-                                        OK
+                                    <div style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
+                                        
+                                        <button v-if="pod.bill_file" @click="openPdfModal(pod.bill_file)" class="btn-icon" title="Visualizza PDF Originale" style="color: #8b5cf6;">📄</button>
+                                        <template v-if="pod.status === 'pending'">
+                                            <button @click="openEditModal(pod)" class="btn-icon" title="Modifica">✏️</button>
+                                            <button @click="deletePod(pod.id)" class="btn-icon danger" title="Elimina">🗑️</button>
+                                        </template>
+                                        <template v-else-if="pod.status === 'failed'">
+                                            <button @click="deletePod(pod.id)" class="btn-icon danger" title="Elimina Riga Fallita">🗑️</button>
+                                        </template>
+                                        <template v-else>
+                                            <span class="text-green text-xs" style="align-self: center;">OK</span>
+                                        </template>
                                     </div>
                                 </td>
                             </tr>
@@ -270,19 +291,6 @@
                             </div>
                         </div>
 
-                        <div v-if="editingPod.bill_file" class="upload-section">
-                            <label>{{ $t('ownerPods.modal.billFile') }}</label>
-                            <div class="compact-input readonly-field" style="display: flex; align-items: center; gap: 8px;">
-                                <span>📄</span> 
-                                <span style="font-family: monospace; font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis;">
-                                    {{ editingPod.bill_file.split('/').pop() }}
-                                </span>
-                            </div>
-                            <small class="text-muted" style="font-size: 0.7rem; margin-top: 4px; display: block;">
-                                {{ $t('ownerPods.modal.billHelp') }}
-                            </small>
-                        </div>
-
                     </form>
                 </div>
 
@@ -294,7 +302,51 @@
         </div>
     </transition>
 
+    <PodAiModal 
+        v-if="activeResourceType === 'energia_elettrica'"
+        :show="showAiModal" 
+        :aiData="activeAiData" 
+        @close="showAiModal = false" 
+    />
+
+    <PdrAiModal 
+        v-if="activeResourceType === 'gas'"
+        :show="showPdrAiModal" 
+        :aiData="activeAiData" 
+        @close="showPdrAiModal = false" 
+    />
+
+    <WaterAiModal 
+        v-if="activeResourceType === 'acqua'"
+        :show="showWaterAiModal" 
+        :aiData="activeAiData" 
+        @close="showWaterAiModal = false" 
+    />
+
   </div>
+
+    <transition name="modal-fade">
+        <div v-if="showPdfModal" class="modal-backdrop" @click.self="closePdfModal">
+            <div class="glass-modal pdf-modal">
+                <div class="modal-header">
+                    <h3>Documento Originale</h3>
+                    <button @click="closePdfModal" class="btn-close-modal">✕</button>
+                </div>
+                <div class="modal-body" style="padding: 0; display: flex; flex-direction: column;">
+                    <iframe 
+                        v-if="currentPdfUrl" 
+                        :src="currentPdfUrl" 
+                        width="100%" 
+                        height="100%" 
+                        style="border: none; flex-grow: 1;"
+                        title="Visualizzatore PDF"
+                    ></iframe>
+                </div>
+            </div>
+        </div>
+    </transition>
+
+
 </template>
 
 <script setup>
@@ -304,6 +356,15 @@ import axios from '@/services/axios';
 import CommunityService from '@/services/CommunityService';
 import PodBulkLoader from '@/services/PodBulkLoader';
 import GuideHeader from '@/components/layout/GuideHeader.vue';
+
+// Importazione Modali AI
+import PodAiModal from '@/components/pods/PodAiModal.vue';
+import PdrAiModal from '@/components/pods/PdrAiModal.vue';
+import WaterAiModal from '@/components/pods/WaterAiModal.vue';
+
+// --- STATO MODALE PDF ---
+const showPdfModal = ref(false);
+const currentPdfUrl = ref('');
 
 const { t } = useI18n();
 
@@ -327,6 +388,13 @@ const editingPod = ref({});
 
 const filterStatus = ref('all');
 const communityType = ref('Standard'); 
+
+// --- STATO MODALI AI ---
+const activeAiData = ref(null);
+const activeResourceType = ref('energia_elettrica');
+const showAiModal = ref(false);
+const showPdrAiModal = ref(false);
+const showWaterAiModal = ref(false);
 
 // --- INIT ---
 onMounted(async () => {
@@ -425,6 +493,60 @@ const uploadFile = async () => {
     }
 };
 
+// --- GESTIONE VISUALIZZAZIONE AI & PDF ---
+const openPdfModal = (path) => {
+    if (!path) return;
+    const baseUrl = axios.defaults.baseURL || '';
+    
+    // Costruisce l'URL completo del file
+    if (path.startsWith('http')) {
+        currentPdfUrl.value = path;
+    } else {
+        const cleanPath = path.replace('public/', '');
+        currentPdfUrl.value = `${baseUrl}/storage/${cleanPath}`;
+    }
+    
+    // Apre la modale
+    showPdfModal.value = true;
+};
+
+const closePdfModal = () => {
+    showPdfModal.value = false;
+    setTimeout(() => { currentPdfUrl.value = ''; }, 300); // Pulisce l'url dopo l'animazione
+};
+
+const openAiModal = (pod) => {
+    try {
+        // Parsifica il JSON dell'AI che si trova nel database
+        activeAiData.value = typeof pod.ai_analysis === 'string' ? JSON.parse(pod.ai_analysis) : pod.ai_analysis;
+        activeResourceType.value = pod.resource_type || 'energia_elettrica';
+
+        // Attiva la modale giusta in base al tipo
+        if (activeResourceType.value === 'energia_elettrica') showAiModal.value = true;
+        else if (activeResourceType.value === 'gas') showPdrAiModal.value = true;
+        else if (activeResourceType.value === 'acqua') showWaterAiModal.value = true;
+
+    } catch (e) {
+        console.error("Errore apertura Report AI:", e);
+        alert("Dati AI non formattati correttamente nel database.");
+    }
+};
+
+const formatType = (type) => {
+  if (!type) return 'Luce';
+  return type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+};
+
+const getTypeBadgeClass = (type) => {
+  switch (type) {
+    case 'energia_elettrica': return 'badge-luce';
+    case 'gas': return 'badge-gas';
+    case 'acqua': return 'badge-acqua';
+    default: return 'badge-luce'; // Valore di default
+  }
+};
+
+// --- LOGICA MODIFICA E CONFERMA ---
 const openEditModal = (pod) => {
     editingPod.value = JSON.parse(JSON.stringify(pod));
     editingPod.value.remote_control_inverter = !!editingPod.value.remote_control_inverter;
@@ -500,12 +622,10 @@ const filteredPods = computed(() => {
     if (!Array.isArray(pendingPods.value)) return [];
     if (filterStatus.value === 'all') return pendingPods.value;
     
-    // Gestione status "virtuale" incompleto
     if (filterStatus.value === 'incomplete') {
         return pendingPods.value.filter(pod => pod.status === 'pending' && isPodIncomplete(pod));
     }
     
-    // Gestione status pending (mostra solo quelli completi se scelgo "In attesa")
     if (filterStatus.value === 'pending') {
         return pendingPods.value.filter(pod => pod.status === 'pending' && !isPodIncomplete(pod));
     }
@@ -584,8 +704,8 @@ const toggleSelectAll = () => {
 .btn-save-small { background-color: var(--accent-blue); color: white; padding: 8px 16px; border-radius: 6px; border: none; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
 .btn-success-small { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; }
 .btn-success-small:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-icon { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 4px; border-radius: 4px; transition: 0.2s; }
-.btn-icon:hover { background: var(--bg-app); }
+.btn-icon { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 4px; border-radius: 4px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center;}
+.btn-icon:hover { background: var(--bg-app); transform: scale(1.1); }
 .btn-icon.danger { color: #ef4444; }
 
 .compact-input { width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.9rem; background: var(--bg-app); color: var(--text-main); transition: border 0.2s; }
@@ -599,6 +719,34 @@ const toggleSelectAll = () => {
 .header-left { display: flex; align-items: center; gap: 10px; }
 .header-left h3 { margin: 0; color: var(--text-main); font-size: 1.1rem; }
 .badge { background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+/* BADGE CLICCABILE COME BOTTONE */
+button.type-badge {
+    cursor: pointer;
+    transition: transform 0.2s, filter 0.2s;
+    font-family: inherit;
+    line-height: normal;
+}
+button.badge-btn:hover {
+    transform: translateY(-1px) scale(1.02);
+    filter: brightness(0.9);
+}
+
+/* STILE SPECIFICO PER LA MODALE PDF (A TUTTO SCHERMO) */
+.pdf-modal {
+    width: 95vw !important;         /* 95% della larghezza dello schermo */
+    max-width: 1600px !important;   /* Limite larghissimo per schermi grandi */
+    height: 92vh !important;        /* 92% dell'altezza dello schermo */
+    max-height: 95vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.pdf-modal .modal-body {
+    flex: 1 !important;             /* Costringe il body a occupare tutto lo spazio verticale */
+    padding: 0 !important;
+    overflow: hidden !important;    /* Rimuove le scrollbar esterne, lasciando solo quella del PDF */
+}
+
 .header-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;}
 .bulk-actions { display: flex; align-items: center; gap: 10px; }
 .selection-info { font-size: 0.85rem; color: var(--text-muted); }
@@ -618,6 +766,12 @@ td { padding: 12px 16px; border-bottom: 1px solid var(--border-color); color: va
 
 .row-error td { background-color: rgba(239, 68, 68, 0.03) !important; }
 .error-text { color: #ef4444; font-size: 0.7rem; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; cursor: help; }
+
+/* BADGES TIPO RISORSA */
+.type-badge { font-size: 0.65rem; padding: 2px 8px; border-radius: 12px; font-weight: 800; text-transform: uppercase; display: inline-block; margin-top: 4px; border: 1px solid transparent;}
+.badge-luce { background: rgba(245, 158, 11, 0.1); color: #d97706; border-color: rgba(245, 158, 11, 0.3); }
+.badge-gas { background: rgba(249, 115, 22, 0.1); color: #ea580c; border-color: rgba(249, 115, 22, 0.3); }
+.badge-acqua { background: rgba(59, 130, 246, 0.1); color: #2563eb; border-color: rgba(59, 130, 246, 0.3); }
 
 .tech-grid { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 0.75rem; }
 .text-green { color: #10b981; font-weight: 600; }
@@ -644,8 +798,6 @@ td { padding: 12px 16px; border-bottom: 1px solid var(--border-color); color: va
 .form-group label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
 .checkbox-wrapper { justify-content: flex-end; padding-bottom: 8px;}
 .check-label { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; color: var(--text-main); }
-.upload-section { background: rgba(59, 130, 246, 0.05); padding: 12px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.1); margin-top: 10px;}
-.readonly-field { opacity: 0.7; cursor: not-allowed; }
 
 /* UTILS */
 .alert { padding: 12px; margin-top: 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; }
