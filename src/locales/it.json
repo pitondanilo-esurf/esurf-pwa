@@ -212,33 +212,97 @@
             "empty": "Nessun dispositivo configurato.",
             "addBtn": "Aggiungi Dispositivo",
             "addAnotherBtn": "Aggiungi un altro dispositivo",
-            "editTitle": "Modifica Dispositivo",
             "newTitle": "Nuovo Dispositivo",
+            "editTitle": "Modifica Dispositivo",
             "form": {
-                "type": "Tipo",
+                "type": "Tipologia",
                 "name": "Nome (Opzionale)",
+                "namePlaceholder": "Es. Pompa di Calore Daikin",
                 "power": "Potenza (kW)",
                 "priority": "Priorità (0-5)",
                 "usage": "Utilizzo",
                 "control": "Controllo"
+            },
+            "types": {
+                "heatPump": "Pompa di Calore 🌡️",
+                "ev": "Wallbox / Auto Elettrica 🚗",
+                "washingMachine": "Lavatrice 👕",
+                "dishwasher": "Lavastoviglie 🍽️",
+                "dryer": "Asciugatrice 💨",
+                "ac": "Condizionatore ❄️",
+                "boiler": "Boiler / Scaldabagno 💧",
+                "photovoltaic": "Fotovoltaico ☀️",
+                "storage": "Accumulo / Batteria 🔋",
+                "inverter": "Inverter ⚡",
+                "other": "Altro Dispositivo ⚙️"
+            },
+            "usages": {
+                "always": "Sempre attivo (24h/7)",
+                "summer": "Prevalentemente Estivo",
+                "winter": "Prevalentemente Invernale"
+            },
+            "controls": {
+                "manual": "Manuale",
+                "remote": "Remoto (IoT)",
+                "uncontrollable": "Non controllabile"
             }
         },
         "aiModal": {
-            "title": "Analisi Energetica",
-            "reliability": "AFFIDABILITÀ",
+            "title": "Analisi Bolletta AI",
+            "podNotFound": "POD NON RILEVATO",
+            "nd": "N/D",
+            "holderName": "Nominativo Intestatario",
+            "email": "E-mail",
+            "reliability": "Affidabilità",
+            "registry": "Anagrafica & Fornitura",
+            "type": "Tipologia",
+            "company": "🏢 Azienda",
+            "private": "🏠 Privato",
+            "usage": "Uso",
+            "energyProfile": "Profilo Energetico",
+            "supplyAddress": "Indirizzo di Fornitura",
+            "vat": "P.IVA / CF",
+            "dso": "Distributore Locale",
+            "supplier": "Fornitore Attuale",
+            "contractTitle": "Contratto & Affidabilità",
             "billDate": "Data Emissione",
             "period": "Periodo",
-            "registry": "Anagrafica",
-            "type": "Tipologia",
-            "company": "Azienda",
-            "private": "Privato",
-            "supplyAddress": "Indirizzo Fornitura",
             "activeOffer": "Offerta Attiva",
-            "techData": "DATI TECNICI",
+            "price": "Prezzo",
+            "fixed": "Fisso",
+            "variable": "Variabile",
+            "unknown": "Sconosciuto",
+            "expiry": "Scadenza",
+            "payments": "Pagamenti",
+            "regular": "Regolari",
+            "arrears": "Insoluti",
+            "methodEsg": "Metodo / ESG",
+            "greenEnergy": "Energia 100% Green",
+            "green": "Green",
+            "techData": "Dati Tecnici",
+            "committedPower": "Potenza Imp.",
             "voltage": "Tensione",
-            "meter": "Misuratore",
-            "materialCosts": "COSTI MATERIA (€/kWh)",
-            "consumptionAnalysis": "Analisi Consumi"
+            "meter": "Contatore",
+            "storageDeduced": "Accumulo (AI)",
+            "deduced": "Dedotto",
+            "absent": "Assente",
+            "reactivePenalties": "Penali Reattiva",
+            "costBreakdown": "Ripartizione Spesa",
+            "avgTotal": "Media(Tot)",
+            "energy": "Energia",
+            "network": "Rete",
+            "taxes": "Imp/IVA",
+            "costsByBand": "Costi per Fascia",
+            "consumptionAnalysis": "Analisi Consumi",
+            "year": "anno",
+            "f1Desc": "Lun-Ven 8-19",
+            "f2Desc": "Lun-Ven 7-8 / 19-23, Sab 7-23",
+            "f3Desc": "Notte (23-7), Dom e Festivi",
+            "monthlyHistory": "Storico Totale Mensile (kWh)",
+            "monthlyBands": "Dettaglio Mensile per Fasce (kWh)",
+            "month": "Mese",
+            "powerPeaks": "Picchi di Potenza Mensili (kW)",
+            "powerExceeded": "Superamenti della potenza impegnata rilevati."
         },
         "formModal": {
             "newTitle": "Nuovo POD",
@@ -590,5 +654,134 @@
         "totalAnnualConsumption": "Consumo Annuo (Ca)",
         "periodConsumption": "Consumo Periodo",
         "referenceVolume": "Volume di Riferimento"
+    },
+    "resources": {
+        "header": {
+            "title": "Gestione Risorse per Indirizzo",
+            "subtitle": "Gestisci i tuoi contatori Luce, Gas e Acqua",
+            "titleTower": "Gestione Risorse",
+            "subtitleTower": "Amministrazione e conduzione dell'infrastruttura energetica.",
+            "addBtn": "+ Aggiungi Risorsa"
+        },
+        "status": {
+            "loading": "Caricamento risorse..."
+        },
+        "empty": {
+            "title": "Nessun risorsa trovata",
+            "desc": "Inizia aggiungendo il tuo primo contatore di luce, gas o acqua.",
+            "addNowBtn": "Aggiungi ora"
+        },
+        "list": {
+            "resourceSingular": "Risorsa",
+            "resourcePlural": "Risorse",
+            "unknownLocation": "Indirizzo non specificato"
+        },
+        "actions": {
+            "cancel": "Annulla",
+            "close": "Chiudi"
+        },
+        "signModal": {
+            "title": "Firma Documenti Legali",
+            "resourceLabel": "Risorsa:",
+            "defaultType": "Energia Elettrica",
+            "tabDelegation": "📄 Mandato / Delega",
+            "tabPolicy": "🔒 Informativa Privacy",
+            "loadingDoc": "Caricamento documento in corso...",
+            "acceptDelegation": "Dichiaro di aver letto e accettato il Mandato / Delega di lettura.",
+            "acceptPolicy": "Dichiaro di aver letto e accettato l'Informativa sul Trattamento dei Dati.",
+            "signing": "Firma in corso...",
+            "signBtn": "✍️ Firma Entrambi i Documenti",
+            "previewError": "⚠️ Impossibile caricare l'anteprima. Il documento verrà comunque generato con i tuoi dati reali al momento della firma."
+        },
+        "qrModal": {
+            "title": "QR Code Risorsa",
+            "instruction": "Inquadra il QR Code per accedere rapidamente alla risorsa"
+        },
+        "revokeModal": {
+            "title": "Revoca Mandato",
+            "prompt": "Sei sicuro di voler revocare il mandato per la risorsa",
+            "warningLabel": "Attenzione:",
+            "warningDesc": "La revoca disabiliterà l'aggiornamento automatico dei dati e l'analisi IA per questa fornitura.",
+            "revoking": "Revoca in corso...",
+            "confirmBtn": "Conferma Revoca"
+        },
+        "alerts": {
+            "gasEditComingSoon": "La modifica per le risorse Gas è in arrivo!",
+            "waterEditComingSoon": "La modifica per le risorse Acqua è in arrivo!",
+            "revokeError": "Errore durante la revoca del mandato.",
+            "deleteConfirm": "Sei sicuro di voler eliminare la risorsa {code}?",
+            "deleteError": "Errore durante l'eliminazione.",
+            "pdfLoadError": "Impossibile caricare il documento.",
+            "aiReadError": "Impossibile leggere i dati dell'Intelligenza Artificiale.",
+            "signSuccess": "Documenti firmati con successo!",
+            "signError": "Errore durante la firma del documento."
+        },
+        "accordion": {
+            "energyProfile": "Profilo Energetico",
+            "error": "Errore:",
+            "noDetails": "Nessun dettaglio disponibile.",
+            "showQrTooltip": "Mostra QR Code",
+            "viewAiTooltip": "Visualizza Analisi AI",
+            "aiAnalysisBtn": "Analisi AI",
+            "manageAssetsTooltip": "Gestisci Dispositivi e Asset",
+            "assetBtn": "Asset",
+            "missingHolder": "Intestatario mancante",
+            "missingEmail": "Email mancante",
+            "power": "Potenza",
+            "consumption": "Consumo",
+            "substation": "Cabina",
+            "resource": "Risorsa",
+            "gasSupply": "Fornitura Gas",
+            "waterSupply": "Rete Idrica",
+            "bill": "Bolletta",
+            "viewBillTooltip": "Visualizza Bolletta",
+            "present": "Presente",
+            "absent": "Assente",
+            "editBtn": "Modifica",
+            "delegation": "Delega",
+            "privacy": "Privacy",
+            "revokeBtn": "Revoca",
+            "signBtn": "Firma Delega",
+            "deleteTooltip": "Elimina Risorsa",
+            "levelTooltip": "Livello {level} - Clicca per dettagli",
+            "na": "N/D"
+        },
+        "statusMap": {
+            "pending": "In Attesa",
+            "incomplete": "Incompleto",
+            "active": "Attivo",
+            "processed": "Completato",
+            "failed": "Fallito"
+        },
+        "types": {
+            "energia_elettrica": "Energia Elettrica",
+            "gas": "Gas",
+            "acqua": "Acqua"
+        },
+        "filters": {
+            "all": "Tutti",
+            "actions": "Azioni Richieste",
+            "opportunities": "Opportunità",
+            "allCompliance": "Tutti i livelli",
+            "noCompliance": "Senza compliace"
+        },
+        "tower": {
+            "actionRequired": "Richiesta Azione",
+            "opportunity": "Opportunità CER"
+        },
+        "swipe": {
+            "selectionTitle": "Modalità Swipe",
+            "selectionSubtitle": "Naviga i tuoi asset in modo immersivo",
+            "close": "Chiudi",
+            "compliance": "Compliance",
+            "power": "Potenza",
+            "status": "Stato",
+            "aiTitle": "AI Insight",
+            "cerPotential": "Potenziale CER",
+            "manageBtn": "Gestisci Asset",
+            "reportBtn": "Report Completo",
+            "emptyAi": "Analisi in corso per ottimizzare i tuoi consumi...",
+            "hint": "Fai swipe o usa le frecce per navigare"
+        }       
     }
 }

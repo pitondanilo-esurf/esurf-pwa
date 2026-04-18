@@ -1,9 +1,4 @@
 /* =========================================
-   IMPORT FONT ESTERNI (Più leggeri e moderni)
-   ========================================= */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Exo+2:wght@400;500;600&display=swap');
-
-/* =========================================
    VARIABILI DI TEMA (Dark di default)
    ========================================= */
 :root {
@@ -26,48 +21,43 @@
   --accent-green: #34C759;
   
   /* Bottoni e Bordi */
-  --btn-bg: #3A3A3C;
+  --btn-bg: #48484A;
   --btn-hover: #5C5C5E;
-  --border-color: rgba(255, 255, 255, 0.08); /* Bordo leggermente più tenue */
-  --shadow-card: 0 8px 24px rgba(0,0,0,0.4); /* Ombra più morbida */
+  --border-color: rgba(255, 255, 255, 0.05);
+  --shadow-card: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 /* =========================================
    MODALITÀ LIGHT
    ========================================= */
 body.light-mode {
-  --bg-app: #f5f5f7;
+  --bg-app: #f2f2f7;
   --bg-app-alt: #ffffff;
   --bg-card: #ffffff;
   --bg-card-alt: #f8f9fa;
-  --text-main: #1d1d1f;
-  --text-muted: #86868b;
+  --text-main: #1c1c1e;
+  --text-muted: #636366;
   --text-inverse: #ffffff;
   --accent-blue: #007aff;
   --accent-cyan: #00a8ff;
   --accent-green: #28a745;
   --btn-bg: #e5e5ea;
   --btn-hover: #d1d1d6;
-  --border-color: rgba(0, 0, 0, 0.06);
-  --shadow-card: 0 8px 24px rgba(0,0,0,0.04);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 10px 30px rgba(0,0,0,0.05);
 }
 
 /* =========================================
-   RESET E TYPOGRAPHY BASE
+   RESET E REGOLE BASE
    ========================================= */
 body {
   margin: 0;
   background-color: var(--bg-app);
   transition: background-color 0.3s ease;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 .app-container {
-  /* Font Inter: estremamente pulito e leggero */
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-weight: 300; /* Testo base alleggerito */
-  letter-spacing: 0.2px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--bg-app);
   color: var(--text-main);
   min-height: 100vh;
@@ -76,17 +66,6 @@ body {
   margin: 0 auto;
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Reset globale per i titoli per evitare che i componenti Vue li forzino troppo in grassetto */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 500; /* Passato da 700/800 a 500 per un look più raffinato */
-  letter-spacing: -0.3px;
-  margin-top: 0;
-}
-
-strong, b {
-  font-weight: 500;
 }
 
 /* =========================================
@@ -99,6 +78,7 @@ strong, b {
   align-items: center;
 }
 
+/* --- Se usi il logo come Testo --- */
 .logo-group {
   display: flex;
   flex-direction: column;
@@ -108,7 +88,7 @@ strong, b {
 .logo-title {
   font-family: 'Exo 2', sans-serif !important;
   font-size: 26px;
-  font-weight: 500; /* Alleggerito anche il logo */
+  font-weight: 700;
   color: var(--text-main);
   margin: 0;
   line-height: 1;
@@ -118,13 +98,13 @@ strong, b {
 .logo-subtitle {
   font-family: 'Exo 2', sans-serif !important;
   font-size: 11px;
-  font-weight: 400;
   color: var(--accent-blue);
   text-transform: uppercase;
   letter-spacing: 2px;
-  margin-top: -4px;
+  margin-top: -4px; /* Unisce la scritta al titolo */
 }
 
+/* --- Se usi il logo come PNG/SVG --- */
 .app-logo {
   height: 38px;
   width: auto;
@@ -136,7 +116,7 @@ strong, b {
    ========================================= */
 .card {
   background-color: var(--bg-card);
-  border-radius: 16px; /* Bordo leggermente meno tondo, più elegante */
+  border-radius: 20px;
   padding: 24px;
   margin-bottom: 20px;
   border: 1px solid var(--border-color);
@@ -144,21 +124,8 @@ strong, b {
   transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.card-title { 
-  font-size: 18px; 
-  font-weight: 500; 
-  margin: 0 0 12px 0; 
-  color: var(--text-main); 
-}
-
-.card-text { 
-  font-size: 14px; 
-  font-weight: 300; /* Testo descrittivo leggero */
-  color: var(--text-muted); 
-  line-height: 1.6; /* Più spazio tra le righe */
-  margin: 0 0 16px 0; 
-}
-
+.card-title { font-size: 18px; font-weight: 600; margin: 0 0 12px 0; color: var(--text-main); }
+.card-text { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin: 0 0 16px 0; }
 .text-center { text-align: center; }
 
 /* =========================================
@@ -182,64 +149,60 @@ strong, b {
   width: 100%; 
   background-color: var(--btn-bg); 
   color: var(--text-main); 
-  border: 1px solid var(--border-color); /* Aggiunto un bordo tenue */
-  border-radius: 12px; /* Bottoni meno a pillola, più moderni */
-  padding: 14px 16px; 
-  font-size: 15px; 
-  font-family: 'Inter', sans-serif;
-  font-weight: 500; /* Grassetto ma non troppo */
-  letter-spacing: 0.3px;
+  border: none; 
+  border-radius: 24px; 
+  padding: 16px; 
+  font-size: 16px; 
+  font-weight: 600; 
   cursor: pointer; 
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
 }
 .btn-primary:hover { 
   background-color: var(--btn-hover); 
   transform: translateY(-2px); 
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 .btn-primary:active { transform: translateY(0); }
 
+/* Questa è la classe che mancava per sistemare il bottone rotto! */
 .btn-text-only {
   background: transparent;
   border: none;
   color: var(--accent-blue);
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   width: 100%;
   padding: 12px;
   cursor: pointer;
-  transition: transform 0.2s, opacity 0.2s;
+  transition: transform 0.2s;
 }
 .btn-text-only:hover {
-  transform: scale(1.02);
-  opacity: 0.8;
+  transform: scale(1.05);
 }
 
 /* =========================================
    ANIMAZIONI E UTILITIES
    ========================================= */
-.hover-scale { transition: transform 0.2s ease-out; }
-.hover-scale:hover { transform: scale(1.03); } /* Ridotto l'effetto "rimbalzo" per più eleganza */
-.hover-scale:active { transform: scale(0.98); }
+.hover-scale { transition: transform 0.2s; }
+.hover-scale:hover { transform: scale(1.1); }
+.hover-scale:active { transform: scale(0.95); }
 
-.hover-bright { transition: color 0.2s ease; }
+.hover-bright { transition: color 0.2s; }
 .hover-bright:hover { color: var(--accent-blue); }
 
 @keyframes fadeInUp {
-  0% { opacity: 0; transform: translateY(20px); }
+  0% { opacity: 0; transform: translateY(30px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
 .fade-in { 
   opacity: 0; 
-  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
 }
 
 .delay-0 { animation-delay: 0.1s; }
-.delay-1 { animation-delay: 0.15s; }
-.delay-2 { animation-delay: 0.25s; }
-.delay-3 { animation-delay: 0.35s; }
-.delay-4 { animation-delay: 0.45s; }
-.delay-5 { animation-delay: 0.55s; }
-.delay-6 { animation-delay: 0.65s; }
+.delay-1 { animation-delay: 0.2s; }
+.delay-2 { animation-delay: 0.35s; }
+.delay-3 { animation-delay: 0.5s; }
+.delay-4 { animation-delay: 0.65s; }
+.delay-5 { animation-delay: 0.8s; }
+.delay-6 { animation-delay: 0.95s; }

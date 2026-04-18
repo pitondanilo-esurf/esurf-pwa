@@ -1,6 +1,7 @@
 <template>
   <header class="top-header fade-in delay-0">
-    <button class="back-btn" @click="router.back()" aria-label="Torna indietro">
+    <!--<button class="back-btn" @click="router.back()" aria-label="Torna indietro">-->
+      <button class="back-btn" @click="router.push('/home')" aria-label="Torna alla home">
       <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="19" y1="12" x2="5" y2="12"></line>
         <polyline points="12 19 5 12 12 5"></polyline>

@@ -71,6 +71,17 @@
                   </ul>
               </div>
 
+<button class="btn-admin-nav" @click="goToFlexAuctions">
+  📊 Gestione Aste Flessibilità (UVAM/MSD)
+</button>
+
+<div class="admin-card hover-scale" @click="goToFlexAuctions">
+  <div class="card-icon">⚡</div>
+  <h3>Aste di Flessibilità</h3>
+  <p>Gestisci plafond, baseline e raggruppamenti asset per i mercati UVAM/MSD.</p>
+</div>
+
+
           </div>
       </div>
   </div>
@@ -91,6 +102,10 @@ const successMsg = ref('');
 const debugLink = ref('');
 
 const form = ref({ name: '', surname: '', email: '' });
+
+const goToFlexAuctions = () => {
+  router.push({ name: 'admin-flex-auctions' });
+};
 
 onMounted(async () => {
     await fetchOwners();
@@ -163,6 +178,21 @@ const logout = async () => {
 .inp { padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; width: 100%; box-sizing: border-box; }
 .btn-admin { padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
 .btn-admin:hover { background: #2563eb; }
+
+.btn-admin-nav {
+  background-color: var(--bg-card);
+  border: 1px solid var(--accent-blue);
+  color: var(--text-main);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-admin-nav:hover {
+  background-color: var(--accent-blue);
+  color: white;
+}
 
 /* Messaggi */
 .error-msg { color: #fca5a5; background: rgba(127, 29, 29, 0.3); padding: 10px; border-radius: 6px; font-size: 0.9rem; }

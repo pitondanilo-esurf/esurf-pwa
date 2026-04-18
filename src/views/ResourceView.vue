@@ -5,35 +5,37 @@
     <main class="main-content">
       <div class="page-header-compact fade-in delay-1">
          <div class="header-left">
-            <h2>Gestione Risorse</h2>
-            <p>Gestisci i tuoi contatori Luce, Gas e Acqua</p>
+            <h2>{{ $t('resources.header.title') }}</h2>
+            <p>{{ $t('resources.header.subtitle') }}</p>
          </div>
          <button class="btn-add-compact hover-scale" @click="goToOnboarding">
-            + Aggiungi Risorsa
+            {{ $t('resources.header.addBtn') }}
          </button>
       </div>
 
       <div class="content-area fade-in delay-2">
         
         <div v-if="loading" class="loading-state">
-           <div class="spinner"></div><p>Caricamento risorse...</p>
+           <div class="spinner"></div><p>{{ $t('resources.status.loading') }}</p>
         </div>
         
         <div v-else class="pods-container">
             
             <div v-if="resources.length === 0" class="glass-card empty-state">
                 <div class="empty-icon">📊</div>
-                <h3>Nessuna risorsa trovata</h3>
-                <p>Inizia aggiungendo il tuo primo contatore di luce, gas o acqua.</p>
-                <button @click="goToOnboarding" class="btn-primary mt-3">Aggiungi ora</button>
+                <h3>{{ $t('resources.empty.title') }}</h3>
+                <p>{{ $t('resources.empty.desc') }}</p>
+                <button @click="goToOnboarding" class="btn-primary mt-3">{{ $t('resources.empty.addNowBtn') }}</button>
             </div>
             
             <div v-else class="locations-wrapper">
                 <div v-for="group in groupedResources" :key="group.address" class="location-group">
                     
                     <div class="location-header">
-                        <h3 class="location-title">📍 {{ group.address }}</h3>
-                        <span class="location-badge">{{ group.items.length }} {{ group.items.length === 1 ? 'Risorsa' : 'Risorse' }}</span>
+                        <h3 class="location-title"> {{ group.address }}</h3>
+                        <span class="location-badge">
+                            {{ group.items.length }} {{ group.items.length === 1 ? $t('resources.list.resourceSingular') : $t('resources.list.resourcePlural') }}
+                        </span>
                     </div>
 
                     <div class="accordion-container">
@@ -50,7 +52,8 @@
                             @open-sign="openSignModal"
                             @open-qr="openQrModal"
                             @open-revoke="openRevokeModal"
-                            @view-compliance="openComplianceModal"     
+                            @view-compliance="openComplianceModal"
+                            @manage-assets="openAssetModal"     
                         />
                     </div>
                 </div>
@@ -60,10 +63,17 @@
       </div>
     </main>
 
-    <ResourceFormModal 
-        :show="showFormModal"
-        :resourceToEdit="selectedResource"
-        @close="showFormModal = false"
+    <PodModify 
+        :show="showPodEditModal"
+        :podData="selectedResource"
+        @close="showPodEditModal = false"
+        @saved="fetchResources"
+    />
+
+    <PodAssetModal
+        :show="showAssetModal"
+        :pod="selectedPodForAssets"
+        @close="closeAssetModal"
         @saved="fetchResources"
     />
 
@@ -102,33 +112,33 @@
         <div v-if="showSignModal" class="modal-backdrop" @click.self="showSignModal = false">
             <div class="glass-modal preview-modal">
                 <div class="modal-header">
-                    <h3>Firma Documenti Legali</h3>
-                    <button @click="showSignModal = false" class="btn-close-modal" title="Chiudi">✕</button>
+                    <h3>{{ $t('resources.signModal.title') }}</h3>
+                    <button @click="showSignModal = false" class="btn-close-modal" :title="$t('resources.actions.close')">✕</button>
                 </div>
                 
                 <div class="modal-body" v-if="activeResource">
                     <p class="text-muted mb-2">
-                        Risorsa: <strong style="color: var(--accent-blue)">{{ activeResource.pod_code || activeResource.pdr_code || activeResource.pdp_code }}</strong> 
-                        ({{ activeResource.resource_type ? activeResource.resource_type.replace('_', ' ') : 'Energia Elettrica' }})
+                        {{ $t('resources.signModal.resourceLabel') }} <strong style="color: var(--accent-blue)">{{ activeResource.pod_code || activeResource.pdr_code || activeResource.pdp_code }}</strong> 
+                        ({{ activeResource.resource_type ? activeResource.resource_type.replace('_', ' ') : $t('resources.signModal.defaultType') }})
                     </p>
 
                     <div class="doc-tabs">
                         <button 
                             :class="{ active: currentDocType === 'delegation' }" 
                             @click="loadPreview('delegation')">
-                            📄 Mandato / Delega
+                            {{ $t('resources.signModal.tabDelegation') }}
                         </button>
                         <button 
                             :class="{ active: currentDocType === 'policy' }" 
                             @click="loadPreview('policy')">
-                            🔒 Informativa Privacy
+                            {{ $t('resources.signModal.tabPolicy') }}
                         </button>
                     </div>
 
                     <div class="html-preview-box">
                         <div v-if="previewLoading" class="preview-loading">
                             <div class="spinner-small"></div>
-                            <p>Caricamento documento in corso...</p>
+                            <p>{{ $t('resources.signModal.loadingDoc') }}</p>
                         </div>
                         <div v-else v-html="previewHtml" class="html-content"></div>
                     </div>
@@ -141,21 +151,21 @@
                     <div class="legal-checks">
                         <label class="check-container">
                             <input type="checkbox" v-model="signForm.accept_delegation">
-                            Dichiaro di aver letto e accettato il Mandato / Delega di lettura.
+                            {{ $t('resources.signModal.acceptDelegation') }}
                         </label>
                         <label class="check-container">
                             <input type="checkbox" v-model="signForm.accept_data_policy">
-                            Dichiaro di aver letto e accettato l'Informativa sul Trattamento dei Dati.
+                            {{ $t('resources.signModal.acceptPolicy') }}
                         </label>
                     </div>
 
                     <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                        <button @click="showSignModal = false" class="btn-ghost-small">Annulla</button>
+                        <button @click="showSignModal = false" class="btn-ghost-small">{{ $t('resources.actions.cancel') }}</button>
                         <button 
                             @click="confirmSignature" 
                             class="btn-primary" 
                             :disabled="isSigning || !signForm.accept_delegation || !signForm.accept_data_policy">
-                            {{ isSigning ? 'Firma in corso...' : '✍️ Firma Entrambi i Documenti' }}
+                            {{ isSigning ? $t('resources.signModal.signing') : $t('resources.signModal.signBtn') }}
                         </button>
                     </div>
                 </div>
@@ -167,11 +177,11 @@
         <div v-if="showQrModal" class="modal-backdrop" @click.self="showQrModal = false">
             <div class="glass-modal qr-modal">
                 <div class="modal-header">
-                    <h3>QR Code Risorsa</h3>
-                    <button @click="showQrModal = false" class="btn-close-modal" title="Chiudi">✕</button>
+                    <h3>{{ $t('resources.qrModal.title') }}</h3>
+                    <button @click="showQrModal = false" class="btn-close-modal" :title="$t('resources.actions.close')">✕</button>
                 </div>
                 <div class="modal-body text-center" v-if="activeResource">
-                    <p class="text-muted mb-3">Inquadra il QR Code per accedere rapidamente alla risorsa <strong>{{ activeResource.pod_code || activeResource.pdr_code || activeResource.pdp_code }}</strong>.</p>
+                    <p class="text-muted mb-3">{{ $t('resources.qrModal.instruction') }} <strong>{{ activeResource.pod_code || activeResource.pdr_code || activeResource.pdp_code }}</strong>.</p>
                     
                     <div class="qr-placeholder">
                         <img :src="getQrUrl(activeResource)" alt="QR Code" />
@@ -179,7 +189,7 @@
                     
                 </div>
                 <div class="modal-footer justify-center">
-                    <button @click="showQrModal = false" class="btn-ghost-small">Chiudi</button>
+                    <button @click="showQrModal = false" class="btn-ghost-small">{{ $t('resources.actions.close') }}</button>
                 </div>
             </div>
         </div>
@@ -189,19 +199,19 @@
         <div v-if="showRevokeModal" class="modal-backdrop" @click.self="showRevokeModal = false">
             <div class="glass-modal" style="max-width: 450px;">
                 <div class="modal-header">
-                    <h3 class="text-error">Revoca Mandato</h3>
+                    <h3 class="text-error">{{ $t('resources.revokeModal.title') }}</h3>
                     <button @click="showRevokeModal = false" class="btn-close-modal">✕</button>
                 </div>
                 <div class="modal-body" v-if="activeResource">
-                    <p>Sei sicuro di voler revocare il mandato per la risorsa <strong>{{ activeResource.pod_code || activeResource.pdr_code || activeResource.pdp_code }}</strong>?</p>
+                    <p>{{ $t('resources.revokeModal.prompt') }} <strong>{{ activeResource.pod_code || activeResource.pdr_code || activeResource.pdp_code }}</strong>?</p>
                     <div class="alert alert-error mt-3">
-                        <strong>Attenzione:</strong> La revoca disabiliterà l'aggiornamento automatico dei dati e l'analisi IA per questa fornitura.
+                        <strong>{{ $t('resources.revokeModal.warningLabel') }}</strong> {{ $t('resources.revokeModal.warningDesc') }}
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button @click="showRevokeModal = false" class="btn-ghost-small">Annulla</button>
+                    <button @click="showRevokeModal = false" class="btn-ghost-small">{{ $t('resources.actions.cancel') }}</button>
                     <button @click="confirmRevocation" class="btn-primary" style="background: #ef4444;" :disabled="isRevoking">
-                        {{ isRevoking ? 'Revoca in corso...' : 'Conferma Revoca' }}
+                        {{ isRevoking ? $t('resources.revokeModal.revoking') : $t('resources.revokeModal.confirmBtn') }}
                     </button>
                 </div>
             </div>
@@ -214,12 +224,14 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import axios from '@/services/axios'; 
 import GuideHeader from '@/components/layout/GuideHeader.vue';
 
-// Importazione dei nuovi sotto-componenti
+// Importazione dei sotto-componenti
 import ResourceAccordionItem from '@/components/resources/ResourceAccordionItem.vue';
-import ResourceFormModal from '@/components/resources/ResourceFormModal.vue';
+import PodModify from '@/components/pods/PodModify.vue';
+import PodAssetModal from '@/components/pods/PodAssetModal.vue';
 import PdfViewerModal from '@/components/common/PdfViewerModal.vue';
 
 // Importazione Modali AI
@@ -229,6 +241,7 @@ import WaterAiModal from '@/components/pods/WaterAiModal.vue';
 import ResourceComplianceModal from '@/components/resources/ResourceComplianceModal.vue';
 
 const router = useRouter();
+const { t } = useI18n();
 
 // --- STATO GLOBALE ---
 const isLightMode = ref(false);
@@ -241,17 +254,13 @@ const groupedResources = computed(() => {
     const groups = {};
     
     resources.value.forEach(r => {
-        // 1. Estrazione dati AI
         let aiData = {};
         try {
             aiData = typeof r.ai_analysis === 'string' ? JSON.parse(r.ai_analysis) : (r.ai_analysis || {});
-        } catch (e) {
-            console.warn("Errore parsing ai_analysis per la risorsa", r.id);
-        }
+        } catch (e) {}
 
         const aiAddr = aiData?.indirizzo || {};
         
-        // 2. Costruzione indirizzo pulito
         const via = aiAddr.Via ? aiAddr.Via.trim() : (r.address ? r.address.trim() : '');
         const civico = aiAddr.NumeroCivico ? aiAddr.NumeroCivico.trim() : '';
         const citta = aiAddr.Città ? aiAddr.Città.trim() : (r.city ? r.city.trim() : '');
@@ -264,14 +273,12 @@ const groupedResources = computed(() => {
         if (displayCity && displayStreet) {
             displayAddress = `${displayCity}, ${displayStreet}`;
         } else {
-            displayAddress = displayCity || displayStreet || 'Indirizzo non specificato';
+            displayAddress = displayCity || displayStreet || t('resources.list.unknownLocation');
         }
         
         displayAddress = displayAddress.replace(/\s+/g, ' ').trim();
 
-        // 3. NORMALIZZAZIONE FUZZY
         let normKey = `${citta} ${via}`.toLowerCase();
-        
         normKey = normKey.replace(/[^\w\s]/gi, ' ');
         normKey = normKey.replace(/\b(di|del|della|dei|degli|via|viale|piazza|corso)\b/g, ' ');
         normKey = normKey.replace(/\b[a-z]{2}\b/g, ' ');
@@ -280,7 +287,6 @@ const groupedResources = computed(() => {
 
         if (!normKey) normKey = 'unknown_location';
 
-        // 4. Raggruppa e tiene l'indirizzo più "dettagliato"
         if (!groups[normKey]) {
             groups[normKey] = {
                 address: displayAddress, 
@@ -298,9 +304,35 @@ const groupedResources = computed(() => {
     return Object.values(groups).sort((a, b) => a.address.localeCompare(b.address));
 });
 
-// --- STATO MODALI ---
-const showFormModal = ref(false);
+// --- STATO MODALI MODIFICA ---
 const selectedResource = ref(null);
+const showPodEditModal = ref(false);
+
+const openForm = (resource = null) => {
+    selectedResource.value = resource; 
+    
+    if (!resource.resource_type || resource.resource_type === 'energia_elettrica') {
+        showPodEditModal.value = true;
+    } else if (resource.resource_type === 'gas') {
+        alert(t('resources.alerts.gasEditComingSoon'));
+    } else if (resource.resource_type === 'acqua') {
+        alert(t('resources.alerts.waterEditComingSoon'));
+    }
+};
+
+// --- GESTIONE ASSET MODAL ---
+const showAssetModal = ref(false);
+const selectedPodForAssets = ref(null);
+
+const openAssetModal = (resource) => {
+    selectedPodForAssets.value = resource;
+    showAssetModal.value = true;
+};
+
+const closeAssetModal = () => { 
+    showAssetModal.value = false; 
+    setTimeout(() => { selectedPodForAssets.value = null; }, 300);
+};
 
 const showPdfModal = ref(false);
 const currentPdfUrl = ref('');
@@ -317,9 +349,8 @@ const openComplianceModal = (data) => {
     selectedComplianceData.value = data;
     showComplianceModal.value = true;
 };
-// ------------------------------------------------
 
-// --- STATO AZIONI AGGIUNTIVE (Firma & QR) ---
+// --- STATO AZIONI AGGIUNTIVE (Firma & QR & Revoca) ---
 const showSignModal = ref(false);
 const showQrModal = ref(false);
 const activeResource = ref(null);
@@ -350,7 +381,7 @@ const confirmRevocation = async () => {
         showRevokeModal.value = false;
         fetchResources(); 
     } catch (error) {
-        alert("Errore durante la revoca del mandato.");
+        alert(t('resources.alerts.revokeError'));
     } finally {
         isRevoking.value = false;
     }
@@ -381,12 +412,12 @@ const fetchResources = async () => {
 
 const deleteResource = async (resource) => {
     const code = resource.pod_code || resource.pdr_code || resource.pdp_code;
-    if (!confirm(`Sei sicuro di voler eliminare la risorsa ${code}?`)) return;
+    if (!confirm(t('resources.alerts.deleteConfirm', { code }))) return;
     try {
         await axios.delete(`/api/resources/${resource.id}?type=${resource.resource_type}`);
         await fetchResources();
     } catch (error) {
-        alert("Errore durante l'eliminazione.");
+        alert(t('resources.alerts.deleteError'));
     }
 };
 
@@ -397,11 +428,6 @@ const goToOnboarding = () => {
 
 const toggleAccordion = (id) => {
     expandedId.value = expandedId.value === id ? null : id;
-};
-
-const openForm = (resource = null) => {
-    selectedResource.value = resource; 
-    showFormModal.value = true;
 };
 
 // --- GESTIONE VISUALIZZAZIONE PDF PROTETTI ---
@@ -421,7 +447,7 @@ const openPdfModal = async (payload) => {
         currentPdfUrl.value = window.URL.createObjectURL(blob);
     } catch (error) {
         console.error("Errore download PDF:", error);
-        alert("Impossibile caricare il documento.");
+        alert(t('resources.alerts.pdfLoadError'));
         showPdfModal.value = false;
     }
 };
@@ -440,7 +466,7 @@ const openAiModal = (resource) => {
         activeResourceType.value = resource.resource_type || 'energia_elettrica';
         showAiModal.value = true;
     } catch (e) {
-        alert("Impossibile leggere i dati dell'Intelligenza Artificiale.");
+        alert(t('resources.alerts.aiReadError'));
     }
 };
 
@@ -468,7 +494,7 @@ const loadPreview = async (tab) => {
     } catch (e) {
         console.error("Errore fetch anteprima:", e);
         previewHtml.value = `<div style="color:red; text-align:center; padding: 20px;">
-                                ⚠️ Impossibile caricare l'anteprima. Il documento verrà comunque generato con i tuoi dati reali al momento della firma.
+                                ${t('resources.signModal.previewError')}
                              </div>`;
     } finally {
         previewLoading.value = false;
@@ -511,7 +537,7 @@ const confirmSignature = async () => {
             accept_data_policy: 'accepted'
         });
 
-        signSuccess.value = 'Documenti firmati con successo!';
+        signSuccess.value = t('resources.alerts.signSuccess');
         
         setTimeout(() => {
             showSignModal.value = false;
@@ -520,168 +546,83 @@ const confirmSignature = async () => {
 
     } catch (error) {
         console.error("Errore firma:", error);
-        signError.value = error.response?.data?.message || 'Errore durante la firma del documento.';
+        signError.value = error.response?.data?.message || t('resources.alerts.signError');
     } finally {
         isSigning.value = false;
     }
 };
-
 </script>
 
 <style src="@/assets/css/main.css"></style>
 <style scoped>
-/* --- STILI BASE LAYOUT --- */
+/* --- STILI BASE LAYOUT COMPATTO --- */
 .app-container { min-height: 100vh; background-color: var(--bg-app); color: var(--text-main); }
-.main-content { padding: 1rem 1.5rem 4rem 1.5rem; max-width: 1000px; margin: 0 auto; }
+.main-content { padding: 1rem 1rem 4rem 1rem; max-width: 1000px; margin: 0 auto; }
 
-.page-header-compact { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-.page-header-compact h2 { margin: 0; font-size: 1.8rem; font-weight: 800; }
-.page-header-compact p { margin: 5px 0 0 0; color: var(--text-muted); }
+/* HEADER PAGINA */
+.page-header-compact { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; gap: 10px; }
+.page-header-compact h2 { margin: 0; font-size: 1.3rem; font-weight: 700; letter-spacing: -0.5px; }
+.page-header-compact p { margin: 2px 0 0 0; color: var(--text-muted); font-size: 0.8rem; }
 
-.loading-state, .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
-.spinner { width: 30px; height: 30px; border: 3px solid var(--border-color); border-top: 3px solid var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px auto; }
+.btn-add-compact { background-color: var(--accent-blue); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; white-space: nowrap; }
+.btn-add-compact:hover { background-color: var(--accent-cyan); }
+
+/* STATI (Loading / Empty) */
+.loading-state, .empty-state { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem; }
+.spinner { width: 24px; height: 24px; border: 3px solid var(--border-color); border-top: 3px solid var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 10px auto; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.empty-icon { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5; }
 
-.btn-add-compact { background-color: var(--accent-blue); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-.btn-primary { background-color: var(--accent-blue); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-.btn-primary:hover:not(:disabled) { background-color: var(--accent-cyan); }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-.hover-scale:hover { transform: scale(1.05); }
+/* GRUPPI INDIRIZZO */
+.location-group { margin-bottom: 30px; }
+.location-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 4px; border-bottom: 2px solid var(--border-color); }
+.location-title { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
+.location-badge { background: var(--accent-blue); color: white; font-size: 0.65rem; font-weight: 600; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 
-.fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
-.delay-1 { animation-delay: 0.1s; }
-.delay-2 { animation-delay: 0.2s; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/* ACCORDION CONTAINER */
+.accordion-container { display: flex; flex-direction: column; gap: 8px; margin-left: 4px;} /* Gap ridotto tra le card */
 
-/* --- GRUPPI INDIRIZZO --- */
-.location-group {
-    margin-bottom: 30px;
-}
-.location-header {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid var(--border-color);
-}
-.location-title {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: var(--text-main);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.location-badge {
-    background: var(--accent-blue);
-    color: white;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 12px;
-}
+/* ANIMAZIONI */
+.fade-in { animation: fadeIn 0.4s ease forwards; opacity: 0; }
+.delay-1 { animation-delay: 0.05s; }
+.delay-2 { animation-delay: 0.1s; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* --- STILI MODALI --- */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-.glass-modal {
-  background: var(--bg-card, #ffffff);
-  width: 95%;
-  max-width: 500px;
-  border-radius: 12px;
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
+/* --- RIMANENTE STILE MODALI (Invariato per funzionalità) --- */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+.glass-modal { background: var(--bg-card, #ffffff); width: 95%; max-width: 500px; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; }
 .qr-modal { max-width: 400px; }
-.modal-header {
-  padding: 1.2rem 1.5rem;
-  border-bottom: 1px solid var(--border-color, #e5e7eb);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--bg-app, #f8fafc);
-}
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--text-main, #1e293b);
-}
-.btn-close-modal {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--text-muted, #64748b);
-  transition: 0.2s;
-}
-.btn-close-modal:hover { color: #ef4444; transform: scale(1.1); }
-.modal-body { padding: 1.5rem; color: var(--text-main, #1e293b); }
+.modal-header { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border-color, #e5e7eb); display: flex; justify-content: space-between; align-items: center; background: var(--bg-app, #f8fafc); }
+.modal-header h3 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--text-main, #1e293b); }
+.btn-close-modal { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted, #64748b); transition: 0.2s; }
+.modal-body { padding: 1.2rem; color: var(--text-main, #1e293b); font-size: 0.9rem; }
 .text-center { text-align: center; }
 .text-muted { color: var(--text-muted, #64748b); }
 .mb-2 { margin-bottom: 0.5rem; }
 .mb-3 { margin-bottom: 1rem; }
 .mt-3 { margin-top: 1rem; }
-.modal-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid var(--border-color, #e5e7eb);
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  background: var(--bg-app, #f8fafc);
-}
+.modal-footer { padding: 0.8rem 1.2rem; border-top: 1px solid var(--border-color, #e5e7eb); display: flex; justify-content: flex-end; gap: 10px; background: var(--bg-app, #f8fafc); }
 .justify-center { justify-content: center; }
-.btn-ghost-small {
-  background: var(--bg-card, #ffffff);
-  border: 1px solid var(--border-color, #e5e7eb);
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  color: var(--text-main, #1e293b);
-  transition: 0.2s;
-}
-.btn-ghost-small:hover { border-color: var(--text-muted, #64748b); }
-
-.alert { padding: 12px; border-radius: 8px; font-size: 0.9rem; }
+.btn-ghost-small { background: var(--bg-card, #ffffff); border: 1px solid var(--border-color, #e5e7eb); padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; color: var(--text-main, #1e293b); }
+.alert { padding: 10px; border-radius: 6px; font-size: 0.85rem; }
 .alert-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
 .alert-success { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
-
-.qr-placeholder { background: white; padding: 20px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-.qr-placeholder img { width: 200px; height: 200px; display: block; }
-
-.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.3s; }
+.qr-placeholder { background: white; padding: 15px; border-radius: 8px; display: inline-block; }
+.qr-placeholder img { width: 180px; height: 180px; display: block; }
+.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.2s; }
 .modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
-
-/* --- STILI ANTEPRIMA DOCUMENTI --- */
 .preview-modal { max-width: 700px !important; }
-.doc-tabs { display: flex; gap: 5px; margin-top: 15px; border-bottom: 2px solid var(--border-color); }
-.doc-tabs button {
-    background: none; border: none; padding: 10px 20px; font-weight: 600; color: var(--text-muted);
-    cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;
-}
-.doc-tabs button:hover { color: var(--accent-blue); }
+.doc-tabs { display: flex; gap: 5px; margin-top: 10px; border-bottom: 2px solid var(--border-color); }
+.doc-tabs button { background: none; border: none; padding: 8px 15px; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
 .doc-tabs button.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
-.html-preview-box {
-    margin-top: 15px; background: white; border: 1px solid var(--border-color);
-    border-radius: 8px; padding: 20px; height: 40vh; overflow-y: auto;
-    color: #333; box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
-}
-.preview-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); }
-.legal-checks { background: var(--bg-card); padding: 15px; border-radius: 8px; border: 1px dashed var(--border-color); display: flex; flex-direction: column; gap: 10px; }
-.check-container { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: 600; color: var(--text-main); cursor: pointer; }
-.check-container input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+.html-preview-box { margin-top: 10px; background: white; border: 1px solid var(--border-color); border-radius: 6px; padding: 15px; height: 40vh; overflow-y: auto; color: #333; }
+.preview-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.85rem; }
+.legal-checks { background: var(--bg-card); padding: 10px; border-radius: 6px; border: 1px dashed var(--border-color); display: flex; flex-direction: column; gap: 8px; }
+.check-container { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 600; color: var(--text-main); cursor: pointer; }
+.check-container input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
 
+@media (max-width: 768px) {
+    .page-header-compact { flex-direction: row; flex-wrap: wrap; }
+    .btn-add-compact { width: 100%; justify-content: center; padding: 10px; }
+}
 </style>

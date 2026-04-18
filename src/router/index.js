@@ -60,7 +60,7 @@ const router = createRouter({
       name: 'identita-digitale',
       component: () => import('../views/guide/IdentitaDigitale.vue')
     },
-    
+
     // --- VECCHIA ROTTA PODS (MANTENUTA ATTIVA) ---
     {
       path: '/pods',
@@ -124,9 +124,9 @@ const router = createRouter({
       name: 'FiveSteps',
       component: FiveSteps
     },
-    { 
-      path: '/guide/monitoraggio-elettrico', 
-      component: () => import('@/views/guide/MonitoraggioElettrico.vue') 
+    {
+      path: '/guide/monitoraggio-elettrico',
+      component: () => import('@/views/guide/MonitoraggioElettrico.vue')
     },
     {
       path: '/guide/notifiche',
@@ -144,7 +144,7 @@ const router = createRouter({
       component: () => import('@/views/survey/StrategicSurvey.vue'),
       meta: { requiresAuth: true }
     },
-    
+
     // --- NUOVE ROTTE RISORSE E ONBOARDING ---
     {
       path: '/onboarding-risorse',
@@ -160,6 +160,22 @@ const router = createRouter({
         requiresAuth: true,
         title: 'Gestione Risorse'
       }
+    },
+    {
+      path: '/control-tower',
+      name: 'control-tower',
+      component: () => import('@/views/ControlTowerView.vue')
+    },
+    {
+      path: '/triage',
+      name: 'triage',
+      component: () => import('@/views/TriageView.vue')
+    },
+    { path: '/swipe', name: 'swipe', component: () => import('@/views/SwipeableView.vue') },
+    {
+      path: '/admin/aste-flessibilita',
+      name: 'admin-flex-auctions',
+      component: () => import('@/views/admin/SuperAdminFlexAuctionView.vue'),
     }
   ]
 });
@@ -180,7 +196,7 @@ router.afterEach((to, from) => {
     window.scrollTo({ top: 0, behavior: 'instant' });
 
   }, 10);
-  
+
   // Aggiorna il titolo del tab del browser
   if (to.meta.title) {
     document.title = `${to.meta.title} - eSurf`;

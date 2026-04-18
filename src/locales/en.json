@@ -202,33 +202,97 @@
             "empty": "No devices configured.",
             "addBtn": "Add Device",
             "addAnotherBtn": "Add another device",
-            "editTitle": "Edit Device",
             "newTitle": "New Device",
+            "editTitle": "Edit Device",
             "form": {
                 "type": "Type",
                 "name": "Name (Optional)",
+                "namePlaceholder": "E.g. Daikin Heat Pump",
                 "power": "Power (kW)",
                 "priority": "Priority (0-5)",
-                "usage": "Usage",
-                "control": "Control"
+                "usage": "Usage Pattern",
+                "control": "Control Type"
+            },
+            "types": {
+                "heatPump": "Heat Pump 🌡️",
+                "ev": "Wallbox / EV Charger 🚗",
+                "washingMachine": "Washing Machine 👕",
+                "dishwasher": "Dishwasher 🍽️",
+                "dryer": "Dryer 💨",
+                "ac": "Air Conditioner ❄️",
+                "boiler": "Boiler / Water Heater 💧",
+                "photovoltaic": "Photovoltaic ☀️",
+                "storage": "Battery Storage 🔋",
+                "inverter": "Inverter ⚡",
+                "other": "Other Device ⚙️"
+            },
+            "usages": {
+                "always": "Always On (24/7)",
+                "summer": "Mostly Summer",
+                "winter": "Mostly Winter"
+            },
+            "controls": {
+                "manual": "Manual",
+                "remote": "Remote (IoT)",
+                "uncontrollable": "Uncontrollable"
             }
         },
         "aiModal": {
-            "title": "Energy Analysis",
-            "reliability": "RELIABILITY",
-            "registry": "Registry",
+            "title": "AI Bill Analysis",
+            "podNotFound": "POD NOT FOUND",
+            "nd": "N/A",
+            "reliability": "Reliability",
+            "registry": "Registry & Supply",
+            "type": "Type",
+            "company": "🏢 Company",
+            "private": "🏠 Private",
+            "usage": "Usage",
+            "energyProfile": "Energy Profile",
+            "supplyAddress": "Supply Address",
+            "vat": "VAT / Tax ID",
+            "dso": "Local Distributor",
+            "supplier": "Current Supplier",
+            "contractTitle": "Contract & Reliability",
             "billDate": "Issue Date",
             "period": "Period",
-            "type": "Type",
-            "company": "Company",
-            "private": "Private",
-            "supplyAddress": "Supply Address",
             "activeOffer": "Active Offer",
-            "techData": "TECHNICAL DATA",
+            "price": "Price",
+            "fixed": "Fixed",
+            "variable": "Variable",
+            "unknown": "Unknown",
+            "expiry": "Expiry",
+            "payments": "Payments",
+            "regular": "Regular",
+            "arrears": "Arrears",
+            "methodEsg": "Method / ESG",
+            "holderName": "Account Holder Name",
+            "email": "E-mail",
+            "greenEnergy": "100% Green Energy",
+            "green": "Green",
+            "techData": "Technical Data",
+            "committedPower": "Committed Power",
             "voltage": "Voltage",
             "meter": "Meter",
-            "materialCosts": "MATERIAL COSTS (€/kWh)",
-            "consumptionAnalysis": "Consumption Analysis"
+            "storageDeduced": "Storage (AI)",
+            "deduced": "Deduced",
+            "absent": "Absent",
+            "reactivePenalties": "Reactive Power Penalties",
+            "costBreakdown": "Cost Breakdown",
+            "avgTotal": "Avg(Total)",
+            "energy": "Energy",
+            "network": "Network",
+            "taxes": "Taxes/VAT",
+            "costsByBand": "Costs by Band",
+            "consumptionAnalysis": "Consumption Analysis",
+            "year": "year",
+            "f1Desc": "Mon-Fri 8am-7pm",
+            "f2Desc": "Mon-Fri 7-8am / 7-11pm, Sat 7am-11pm",
+            "f3Desc": "Night (11pm-7am), Sun & Holidays",
+            "monthlyHistory": "Total Monthly History (kWh)",
+            "monthlyBands": "Monthly Details by Bands (kWh)",
+            "month": "Month",
+            "powerPeaks": "Monthly Power Peaks (kW)",
+            "powerExceeded": "Committed power exceedances detected."
         },
         "formModal": {
             "newTitle": "New POD",
@@ -564,5 +628,134 @@
         "totalAnnualConsumption": "Annual Cons. (Ca)",
         "periodConsumption": "Period Cons.",
         "referenceVolume": "Reference Volume"
+    },
+    "resources": {
+        "header": {
+            "title": "Resource Management by Address",
+            "subtitle": "Manage your Electricity, Gas, and Water meters",
+            "titleTower": "Resource Management",
+            "subtitleTower": "Manage your energy Subsystem",
+            "addBtn": "+ Add Resource"
+        },
+        "status": {
+            "loading": "Loading resources..."
+        },
+        "empty": {
+            "title": "No resources found",
+            "desc": "Start by adding your first electricity, gas, or water meter.",
+            "addNowBtn": "Add now"
+        },
+        "list": {
+            "resourceSingular": "Resource",
+            "resourcePlural": "Resources",
+            "unknownLocation": "Address not specified"
+        },
+        "actions": {
+            "cancel": "Cancel",
+            "close": "Close"
+        },
+        "signModal": {
+            "title": "Sign Legal Documents",
+            "resourceLabel": "Resource:",
+            "defaultType": "Electricity",
+            "tabDelegation": "📄 Reading Delegation",
+            "tabPolicy": "🔒 Privacy Policy",
+            "loadingDoc": "Loading document...",
+            "acceptDelegation": "I declare that I have read and accepted the Reading Delegation.",
+            "acceptPolicy": "I declare that I have read and accepted the Data Processing Policy.",
+            "signing": "Signing...",
+            "signBtn": "✍️ Sign Both Documents",
+            "previewError": "⚠️ Unable to load preview. The document will still be generated with your real data upon signing."
+        },
+        "qrModal": {
+            "title": "Resource QR Code",
+            "instruction": "Scan the QR Code to quickly access the resource"
+        },
+        "revokeModal": {
+            "title": "Revoke Delegation",
+            "prompt": "Are you sure you want to revoke the delegation for the resource",
+            "warningLabel": "Warning:",
+            "warningDesc": "Revocation will disable automatic data updates and AI analysis for this supply.",
+            "revoking": "Revoking...",
+            "confirmBtn": "Confirm Revocation"
+        },
+        "alerts": {
+            "gasEditComingSoon": "Editing for Gas resources is coming soon!",
+            "waterEditComingSoon": "Editing for Water resources is coming soon!",
+            "revokeError": "Error during delegation revocation.",
+            "deleteConfirm": "Are you sure you want to delete resource {code}?",
+            "deleteError": "Error during deletion.",
+            "pdfLoadError": "Unable to load document.",
+            "aiReadError": "Unable to read Artificial Intelligence data.",
+            "signSuccess": "Documents signed successfully!",
+            "signError": "Error while signing the document."
+        },
+        "accordion": {
+            "energyProfile": "Energy Profile",
+            "error": "Error:",
+            "noDetails": "No details available.",
+            "showQrTooltip": "Show QR Code",
+            "viewAiTooltip": "View AI Analysis",
+            "aiAnalysisBtn": "AI Analysis",
+            "manageAssetsTooltip": "Manage Devices and Assets",
+            "assetBtn": "Assets",
+            "missingHolder": "Missing account holder",
+            "missingEmail": "Missing email",
+            "power": "Power",
+            "consumption": "Consumption",
+            "substation": "Substation",
+            "resource": "Resource",
+            "gasSupply": "Gas Supply",
+            "waterSupply": "Water Supply",
+            "bill": "Bill",
+            "viewBillTooltip": "View Bill",
+            "present": "Present",
+            "absent": "Absent",
+            "editBtn": "Edit",
+            "delegation": "Delegation",
+            "privacy": "Privacy",
+            "revokeBtn": "Revoke",
+            "signBtn": "Sign Delegation",
+            "deleteTooltip": "Delete Resource",
+            "levelTooltip": "Level {level} - Click for details",
+            "na": "N/A"
+        },
+        "statusMap": {
+            "pending": "Pending",
+            "incomplete": "Incomplete",
+            "active": "Active",
+            "processed": "Processed",
+            "failed": "Failed"
+        },
+        "types": {
+            "energia_elettrica": "Electricity",
+            "gas": "Gas",
+            "acqua": "Water"
+        },
+        "filters": {
+            "all": "All",
+            "actions": "Actions Needed",
+            "opportunities": "Opportunities",
+            "allCompliance": "All levels",
+            "noCompliance": "Without compiance"
+        },
+        "tower": {
+            "actionRequired": "Action Required",
+            "opportunity": "CER Opportunity"
+        },
+        "swipe": {
+            "selectionTitle": "Swipe Mode",
+            "selectionSubtitle": "Navigate your assets immersively",
+            "close": "Close",
+            "compliance": "Compliance",
+            "power": "Power",
+            "status": "Status",
+            "aiTitle": "AI Insight",
+            "cerPotential": "CER Potential",
+            "manageBtn": "Manage Asset",
+            "reportBtn": "Full Report",
+            "emptyAi": "Analysis in progress to optimize your consumption...",
+            "hint": "Swipe or use arrows to navigate"
+        }
     }
 }

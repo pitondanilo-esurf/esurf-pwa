@@ -1,3 +1,8 @@
+/* =========================================
+   IMPORT FONT ESTERNI (Urbanist)
+   ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&family=Exo+2:wght@400;500;600&display=swap');
+
 /* --- VARIABILI E TEMI --- */
 :root {
   /* Dark Mode (Default) */
@@ -37,10 +42,12 @@ body {
 }
 
 .app-container {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--bg-app);
   color: var(--text-main);
   min-height: 100vh;
+  font-weight: 400; /* Peso base leggibile e pulito */
+  letter-spacing: 0.2px;
   
   /* LA MAGIA DELLA RESPONSIVITÀ È QUI: */
   width: 100%; /* Su smartphone prende tutto lo spazio */

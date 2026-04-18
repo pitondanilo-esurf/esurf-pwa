@@ -77,6 +77,15 @@
         <button class="btn-primary hover-scale" @click="goToResources">
           {{ $t('home.hero.btnAll') }}
         </button>
+<button class="btn-primary hover-scale" style="margin-top: 10px;" @click="goToControlTower">
+  {{ $t('home.hero.btnControlTower') }}
+</button>
+<button class="btn-primary hover-scale" style="margin-top: 10px;" @click="goToTriage">
+  {{ $t('home.hero.btnTriage') }}
+</button>
+<button class="btn-primary hover-scale" style="margin-top: 10px;" @click="goToSwipe">
+  {{ $t('home.hero.btnSwipe') }}
+</button>
         <p class="hero-subtitle">{{ $t('home.hero.subtitle2') }}</p>
         <button class="btn-primary hover-scale" @click="goTo5Steps">
           {{ $t('home.hero.btnGuide') }}
@@ -235,7 +244,10 @@ const goToProfile = () => router.push('/profilo');
 const goToLogin = () => router.push('/login');
 // E rimuovi (o sostituisci) la vecchia goToPods con goToResources:
 const goToPods = () => router.push('/pods');
-const goToResources = () => router.push('/onboarding-risorse');
+const goToResources = () => router.push('/resources');
+const goToControlTower = () => router.push('/control-tower');
+const goToTriage = () => router.push('/triage');
+const goToSwipe = () => router.push('/swipe');
 //---------------------------------------------------------------------
 
 const goToIdentitaDigitale = () => router.push('/guide/identita-digitale');

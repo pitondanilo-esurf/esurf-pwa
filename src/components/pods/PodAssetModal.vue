@@ -4,7 +4,7 @@
             <div class="glass-modal asset-modal">
                 <div class="modal-header">
                     <div class="header-title">
-                        <h3>{{ $t('pods.assetModal.title') }}</h3>
+                        <h3>{{ $t('pods.assetModal.title') || 'Dispositivi & Asset' }}</h3>
                         <span class="subtitle-pod">{{ pod?.pod_code }}</span>
                     </div>
                     <button @click="closeModal" class="btn-close-modal">✕</button>
@@ -13,14 +13,14 @@
                 <div class="modal-body asset-body">
                     <div v-if="!isAddingAsset" class="asset-list-view">
                         <div v-if="loadingAssets" class="loading-state-small">
-                            <div class="spinner-small"></div> {{ $t('pods.status.loading') }}
+                            <div class="spinner-small"></div> {{ $t('pods.status.loading') || 'Caricamento...' }}
                         </div>
                         
                         <div v-else-if="!assetList || assetList.length === 0" class="empty-assets">
                             <span class="empty-icon-small">🔌</span>
-                            <p>{{ $t('pods.assetModal.empty') }}</p>
+                            <p>{{ $t('pods.assetModal.empty') || 'Nessun dispositivo configurato.' }}</p>
                             <button @click="startAddAsset" class="btn-primary-small mt-2">
-                                + {{ $t('pods.assetModal.addBtn') }}
+                                + {{ $t('pods.assetModal.addBtn') || 'Aggiungi Dispositivo' }}
                             </button>
                         </div>
   
@@ -28,69 +28,69 @@
                             <div v-for="asset in assetList" :key="asset.id" class="asset-row">
                                 <div class="asset-icon-box">⚡</div>
                                 <div class="asset-info">
-                                    <div class="asset-name">{{ asset.name }}</div>
+                                    <div class="asset-name">{{ asset.name || formatAssetType(asset.asset_type) }}</div>
                                     <div class="asset-meta">
-                                        <span class="badge-type">{{ asset.asset_type }}</span>
-                                        <span>{{ asset.nominal_power }} kW</span>
+                                        <span class="badge-type">{{ formatAssetType(asset.asset_type) }}</span>
+                                        <span>{{ asset.nominal_power || asset.capacity_kw || 0 }} kW</span>
                                     </div>
                                 </div>
                                 <div class="asset-actions" style="display: flex; gap: 5px;">
-                                    <button @click="startEditAsset(asset)" class="btn-icon-action edit" title="Modifica">✏️</button>
-                                    <button @click="deleteAsset(asset.id)" class="btn-icon-action delete" title="Elimina">🗑</button>
+                                    <button @click="startEditAsset(asset)" class="btn-icon-action edit" :title="$t('pods.actions.edit') || 'Modifica'">✏️</button>
+                                    <button @click="deleteAsset(asset.id)" class="btn-icon-action delete" :title="$t('pods.actions.deleteAsset') || 'Elimina'">🗑</button>
                                 </div>
                             </div>
                             <button @click="startAddAsset" class="btn-dashed-add mt-3">
-                                + {{ $t('pods.assetModal.addAnotherBtn') }}
+                                + {{ $t('pods.assetModal.addAnotherBtn') || 'Aggiungi un altro dispositivo' }}
                             </button>
                         </div>
                     </div>
   
                     <div v-else class="asset-form-view animate-up">
-                        <h4 class="form-title">{{ isEditingAsset ? $t('pods.assetModal.editTitle') : $t('pods.assetModal.newTitle') }}</h4>
+                        <h4 class="form-title">{{ isEditingAsset ? ($t('pods.assetModal.editTitle') || 'Modifica') : ($t('pods.assetModal.newTitle') || 'Nuovo Dispositivo') }}</h4>
                         
                         <form @submit.prevent="saveAsset" class="compact-form">
                             <div class="form-group">
-                                <label>{{ $t('pods.assetModal.form.type') }}</label>
+                                <label>{{ $t('pods.assetModal.form.type') || 'Tipologia' }}</label>
                                 <select v-model="assetForm.asset_type" class="compact-input" required>
-                                    <option v-for="t in assetConfig.types" :key="t" :value="t">{{ t }}</option>
+                                    <option v-for="t in assetConfig.types" :key="t" :value="t">{{ formatAssetType(t) }}</option>
                                 </select>
                             </div>
                             
                             <div class="form-group">
-                                <label>{{ $t('pods.assetModal.form.name') }}</label>
-                                <input v-model="assetForm.name" placeholder="Es. Pompa Samsung" class="compact-input">
+                                <label>{{ $t('pods.assetModal.form.name') || 'Nome (Opzionale)' }}</label>
+                                <input v-model="assetForm.name" :placeholder="$t('pods.assetModal.form.namePlaceholder') || 'Es. Pompa di Calore Daikin'" class="compact-input">
                             </div>
   
                             <div class="form-grid-2">
                                 <div class="form-group">
-                                    <label>{{ $t('pods.assetModal.form.power') }}</label>
+                                    <label>{{ $t('pods.assetModal.form.power') || 'Potenza (kW)' }}</label>
                                     <input v-model.number="assetForm.nominal_power" type="number" step="0.1" class="compact-input" required>
                                 </div>
                                 <div class="form-group">
-                                    <label>{{ $t('pods.assetModal.form.priority') }}</label>
+                                    <label>{{ $t('pods.assetModal.form.priority') || 'Priorità (0-5)' }}</label>
                                     <input v-model.number="assetForm.priority" type="number" min="0" max="5" class="compact-input" required>
                                 </div>
                             </div>
   
                             <div class="form-grid-2">
                                 <div class="form-group">
-                                    <label>{{ $t('pods.assetModal.form.usage') }}</label>
+                                    <label>{{ $t('pods.assetModal.form.usage') || 'Utilizzo' }}</label>
                                     <select v-model="assetForm.typical_usage" class="compact-input">
-                                        <option v-for="u in assetConfig.usages" :key="u" :value="u">{{ u }}</option>
+                                        <option v-for="u in assetConfig.usages" :key="u" :value="u">{{ formatUsage(u) }}</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label>{{ $t('pods.assetModal.form.control') }}</label>
+                                    <label>{{ $t('pods.assetModal.form.control') || 'Controllo' }}</label>
                                     <select v-model="assetForm.control" class="compact-input">
-                                        <option v-for="c in assetConfig.controls" :key="c" :value="c">{{ c }}</option>
+                                        <option v-for="c in assetConfig.controls" :key="c" :value="c">{{ formatControl(c) }}</option>
                                     </select>
                                 </div>
                             </div>
   
                             <div class="form-actions mt-3">
-                                <button type="button" @click="cancelAddAsset" class="btn-ghost-small">{{ $t('pods.actions.cancel') }}</button>
+                                <button type="button" @click="cancelAddAsset" class="btn-ghost-small">{{ $t('pods.actions.cancel') || 'Annulla' }}</button>
                                 <button type="submit" class="btn-save-small" :disabled="submittingAsset">
-                                    {{ submittingAsset ? $t('pods.status.saving') : (isEditingAsset ? $t('pods.actions.update') : $t('pods.actions.save')) }}
+                                    {{ submittingAsset ? ($t('pods.status.saving') || 'Salvataggio...') : (isEditingAsset ? ($t('pods.actions.update') || 'Aggiorna') : ($t('pods.actions.save') || 'Salva')) }}
                                 </button>
                             </div>
                         </form>
@@ -111,10 +111,9 @@ const props = defineProps({
     pod: Object
 });
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'saved']);
 const { t } = useI18n();
 
-// Stato locale solo per gli asset!
 const assetList = ref([]);
 const loadingAssets = ref(false);
 const isAddingAsset = ref(false);
@@ -125,22 +124,41 @@ const editingAssetId = ref(null);
 const assetConfig = reactive({ types: [], usages: [], controls: [] });
 const assetForm = reactive({ name: '', asset_type: '', priority: 0, nominal_power: 0, typical_usage: 'always', control: 'Manuale' });
 
-// Quando la modale viene aperta (show diventa true), scarica i dati
+// VALORI ESATTI PRESI DAL TUO ENUM MYSQL
+const fallbackConfig = {
+    types: ['Heat Pump', 'EV', 'Washing Machine', 'Dishwasher', 'Dryer', 'AC', 'Boiler', 'Photovoltaic', 'Storage', 'Other', 'Inverter'],
+    usages: ['always', 'summer', 'winter'], 
+    controls: ['Remoto', 'Manuale', 'Non controllabile'] // ORA CORRETTO RISPETTO AL DB!
+};
+
 watch(() => props.show, async (isOpen) => {
     if (isOpen && props.pod) {
         isAddingAsset.value = false;
         loadingAssets.value = true;
         try {
             if (assetConfig.types.length === 0) {
-                const confRes = await PodService.getAssetTypes();
-                assetConfig.types = confRes.data.asset_types;
-                assetConfig.usages = confRes.data.usages;
-                assetConfig.controls = confRes.data.controls;
+                try {
+                    const confRes = await PodService.getAssetTypes();
+                    
+                    let apiTypes = [];
+                    if (Array.isArray(confRes.data)) apiTypes = confRes.data;
+                    else if (confRes.data && Array.isArray(confRes.data.asset_types)) apiTypes = confRes.data.asset_types;
+                    
+                    assetConfig.types = [...new Set([...apiTypes, ...fallbackConfig.types])];
+                    assetConfig.usages = fallbackConfig.usages;
+                    assetConfig.controls = fallbackConfig.controls;
+                } catch (apiError) {
+                    assetConfig.types = fallbackConfig.types;
+                    assetConfig.usages = fallbackConfig.usages;
+                    assetConfig.controls = fallbackConfig.controls;
+                }
             }
+            
             const res = await PodService.getAssets(props.pod.id);
-            assetList.value = res.data;
+            assetList.value = res.data?.data || res.data || [];
         } catch (e) {
-            alert(t('pods.alerts.assetLoadError') || "Errore durante il caricamento degli asset");
+            console.warn("Errore caricamento lista asset.");
+            assetList.value = []; 
         } finally {
             loadingAssets.value = false;
         }
@@ -154,13 +172,22 @@ const closeModal = () => {
 
 const startAddAsset = () => {
     assetForm.name = ''; assetForm.priority = 0; assetForm.nominal_power = 0;
-    assetForm.asset_type = assetConfig.types[0] || 'Other'; assetForm.typical_usage = 'always'; assetForm.control = 'Manuale';
+    assetForm.asset_type = assetConfig.types.includes('Photovoltaic') ? 'Photovoltaic' : assetConfig.types[0]; 
+    assetForm.typical_usage = assetConfig.usages[0]; 
+    assetForm.control = assetConfig.controls.includes('Manuale') ? 'Manuale' : assetConfig.controls[0];
     isEditingAsset.value = false; editingAssetId.value = null; isAddingAsset.value = true;
 };
 
 const startEditAsset = (asset) => {
-    assetForm.name = asset.name; assetForm.priority = asset.priority; assetForm.nominal_power = asset.nominal_power;
-    assetForm.asset_type = asset.asset_type; assetForm.typical_usage = asset.typical_usage; assetForm.control = asset.control;
+    assetForm.name = asset.name || ''; 
+    assetForm.priority = asset.priority || 0; 
+    assetForm.nominal_power = asset.nominal_power || asset.capacity_kw || 0;
+    
+    const matchedType = assetConfig.types.find(t => t.toLowerCase() === String(asset.asset_type).toLowerCase());
+    assetForm.asset_type = matchedType || assetConfig.types[0]; 
+    
+    assetForm.typical_usage = asset.typical_usage || assetConfig.usages[0]; 
+    assetForm.control = asset.control || assetConfig.controls[0];
     isEditingAsset.value = true; editingAssetId.value = asset.id; isAddingAsset.value = true;
 };
 
@@ -169,13 +196,23 @@ const cancelAddAsset = () => { isAddingAsset.value = false; isEditingAsset.value
 const saveAsset = async () => {
     submittingAsset.value = true;
     try {
-        const payload = { ...assetForm, pod_id: props.pod.id };
-        if (isEditingAsset.value) { await PodService.updateAsset(editingAssetId.value, payload); } 
-        else { await PodService.createAsset(payload); }
+        const payload = { 
+            ...assetForm, 
+            pod_id: props.pod.id
+        };
+        
+        if (isEditingAsset.value) { 
+            await PodService.updateAsset(editingAssetId.value, payload); 
+        } else { 
+            await PodService.createAsset(payload); 
+        }
         
         const res = await PodService.getAssets(props.pod.id);
-        assetList.value = res.data;
+        assetList.value = res.data?.data || res.data || [];
+        
         isAddingAsset.value = false; isEditingAsset.value = false; editingAssetId.value = null;
+        emit('saved');
+        
     } catch (e) {
         alert((t('pods.alerts.saveError') || "Errore") + ": " + (e.response?.data?.message || e.message));
     } finally { submittingAsset.value = false; }
@@ -186,7 +223,50 @@ const deleteAsset = async (id) => {
     try {
         await PodService.deleteAsset(id);
         assetList.value = assetList.value.filter(a => a.id !== id);
-    } catch (e) { alert(t('pods.alerts.deleteError') || "Errore eliminazione"); }
+        emit('saved');
+    } catch (e) { 
+        alert(t('pods.alerts.deleteError') || "Errore eliminazione"); 
+    }
+};
+
+// --- FORMATTAZIONE VISIVA UI & I18N ---
+// Usa vue-i18n se la chiave esiste, altrimenti mostra l'italiano con emoji
+const formatAssetType = (type) => {
+    if (!type) return '';
+    const map = {
+        'Heat Pump': t('pods.assetModal.types.heatPump') || 'Pompa di Calore 🌡️',
+        'EV': t('pods.assetModal.types.ev') || 'Wallbox / Auto Elettrica 🚗',
+        'Washing Machine': t('pods.assetModal.types.washingMachine') || 'Lavatrice 👕',
+        'Dishwasher': t('pods.assetModal.types.dishwasher') || 'Lavastoviglie 🍽️',
+        'Dryer': t('pods.assetModal.types.dryer') || 'Asciugatrice 💨',
+        'AC': t('pods.assetModal.types.ac') || 'Condizionatore ❄️',
+        'Boiler': t('pods.assetModal.types.boiler') || 'Boiler / Scaldabagno 💧',
+        'Photovoltaic': t('pods.assetModal.types.photovoltaic') || 'Fotovoltaico ☀️',
+        'Storage': t('pods.assetModal.types.storage') || 'Accumulo / Batteria 🔋',
+        'Inverter': t('pods.assetModal.types.inverter') || 'Inverter ⚡',
+        'Other': t('pods.assetModal.types.other') || 'Altro Dispositivo ⚙️'
+    };
+    return map[type] || type;
+};
+
+const formatUsage = (usage) => {
+    if (!usage) return '';
+    const map = {
+        'always': t('pods.assetModal.usages.always') || 'Sempre attivo (24h/7)',
+        'summer': t('pods.assetModal.usages.summer') || 'Prevalentemente Estivo',
+        'winter': t('pods.assetModal.usages.winter') || 'Prevalentemente Invernale'
+    };
+    return map[usage] || usage;
+};
+
+const formatControl = (control) => {
+    if (!control) return '';
+    const map = {
+        'Manuale': t('pods.assetModal.controls.manual') || 'Manuale',
+        'Remoto': t('pods.assetModal.controls.remote') || 'Remoto (IoT)',
+        'Non controllabile': t('pods.assetModal.controls.uncontrollable') || 'Non controllabile'
+    };
+    return map[control] || control;
 };
 </script>
   
@@ -220,7 +300,8 @@ const deleteAsset = async (id) => {
 
 .empty-assets { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); }
 .empty-icon-small { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5; }
-.btn-primary-small { background-color: var(--accent-blue); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.9rem; margin-top: 15px; }
+.btn-primary-small { background-color: var(--accent-blue); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.9rem; margin-top: 15px; transition: 0.2s; }
+.btn-primary-small:hover { background-color: var(--accent-cyan); }
 
 /* FORM STYLES */
 .asset-form-view { padding: 1.5rem; background: var(--bg-card); height: 100%; color: var(--text-main); }
@@ -232,7 +313,9 @@ const deleteAsset = async (id) => {
 .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; }
 .btn-save-small { background-color: var(--accent-blue); color: white; padding: 8px 16px; border-radius: 6px; border: none; font-weight: 600; font-size: 0.9rem; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.btn-ghost-small { background: var(--bg-card); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; font-size: 0.9rem; cursor: pointer; color: var(--text-muted); }
+.btn-save-small:disabled { opacity: 0.7; cursor: not-allowed; }
+.btn-ghost-small { background: var(--bg-card); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; font-size: 0.9rem; cursor: pointer; color: var(--text-muted); transition: 0.2s;}
+.btn-ghost-small:hover { background: var(--bg-app); }
 
 /* UTIL & ANIMATION */
 .animate-up { animation: slideUp 0.3s ease-out; }
