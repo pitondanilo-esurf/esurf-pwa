@@ -30,6 +30,8 @@
         <template v-else>
           <template v-if="isAuthenticated">
             <div class="desktop-actions">
+               <span v-if="user.power_user" class="power-badge" title="Power User">⚡ PRO</span>
+               
                <div class="user-pill hover-scale" @click="goToProfile" :title="$t('common.profile')">
                   {{ (user.name || user.first_name || 'U')[0].toUpperCase() }}
                </div>
@@ -70,23 +72,27 @@
         
         <h1 class="hero-title" v-html="$t('home.hero.title').replace('Digitale', '<br>Digitale')"></h1>
         <p class="hero-subtitle">{{ $t('home.hero.subtitle1') }}</p>
-        <!--<button class="btn-primary hover-scale" @click="goToPods">-->
-        <button class="btn-primary hover-scale" @click="goToPods">
-          {{ $t('home.hero.btnPods') }}
-        </button>
+        
         <button class="btn-primary hover-scale" @click="goToResources">
           {{ $t('home.hero.btnAll') }}
         </button>
-<button class="btn-primary hover-scale" style="margin-top: 10px;" @click="goToControlTower">
-  {{ $t('home.hero.btnControlTower') }}
-</button>
-<button class="btn-primary hover-scale" style="margin-top: 10px;" @click="goToTriage">
-  {{ $t('home.hero.btnTriage') }}
-</button>
-<button class="btn-primary hover-scale" style="margin-top: 10px;" @click="goToSwipe">
-  {{ $t('home.hero.btnSwipe') }}
-</button>
-        <p class="hero-subtitle">{{ $t('home.hero.subtitle2') }}</p>
+
+        <template v-if="user.power_user">
+            <button class="btn-primary hover-scale" style="margin-top: 10px;" @click="goToPods">
+              {{ $t('home.hero.btnPods') }}
+            </button>
+            <button class="btn-primary hover-scale" style="margin-top: 10px;" @click="goToControlTower">
+              {{ $t('home.hero.btnControlTower') }}
+            </button>
+            <button class="btn-primary hover-scale" style="margin-top: 10px;" @click="goToTriage">
+              {{ $t('home.hero.btnTriage') }}
+            </button>
+            <button class="btn-primary hover-scale" style="margin-top: 10px;" @click="goToSwipe">
+              {{ $t('home.hero.btnSwipe') }}
+            </button>
+        </template>
+
+        <p class="hero-subtitle" style="margin-top: 20px;">{{ $t('home.hero.subtitle2') }}</p>
         <button class="btn-primary hover-scale" @click="goTo5Steps">
           {{ $t('home.hero.btnGuide') }}
         </button>
@@ -134,7 +140,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, shallowRef, computed } from 'vue'; // Aggiungi computed
+import { ref, onMounted, shallowRef, computed } from 'vue'; 
 const logoLight = new URL('@/assets/img/logo-light.svg', import.meta.url).href;
 const logoDark = new URL('@/assets/img/logo-dark.svg', import.meta.url).href;
 
@@ -146,16 +152,11 @@ import axios from '@/services/axios';
 // --- IMPORTA IL REGISTRO BLOCCHI ---
 import { availableBlocks } from '@/config/blockRegistry';
 
-
-
 const currentLogo = computed(() => isLightMode.value ? logoLight : logoDark)
 const router = useRouter();
 const { locale } = useI18n(); 
 
-
-const dashboardConfig = ref({
-  blocks: [] 
-});
+const dashboardConfig = ref({ blocks: [] });
 const loadingConfig = ref(false);
 
 // --- STATO TEMA E LINGUA ---
@@ -195,7 +196,6 @@ onMounted(async () => {
     user.value = response.data;
     isAuthenticated.value = true;
     
-    // LOG DI DEBUG
     console.log("Utente autenticato, inizio fetchDashboardConfig...");
     await fetchDashboardConfig();
 
@@ -217,19 +217,13 @@ const fetchDashboardConfig = async () => {
     loadingConfig.value = true;
     try {
         const res = await axios.get('/api/user/dashboard-config');
-        
-        console.log("📥 Risposta API Dashboard:", res.data);
-        
-        // Verifica che la risposta contenga l'array
         if (res.data.blocks) {
              dashboardConfig.value.blocks = res.data.blocks;
         } else {
              console.error("Struttura risposta API errata:", res.data);
         }
-
     } catch (e) {
         console.error("Errore API Dashboard", e);
-        // Fallback robusto
         dashboardConfig.value.blocks = [
             { id: 1, component_key: 'FeatureActivation' },
             { id: 2, component_key: 'FeatureNotifications' }
@@ -242,14 +236,11 @@ const fetchDashboardConfig = async () => {
 // --- NAVIGAZIONE ---
 const goToProfile = () => router.push('/profilo'); 
 const goToLogin = () => router.push('/login');
-// E rimuovi (o sostituisci) la vecchia goToPods con goToResources:
 const goToPods = () => router.push('/pods');
 const goToResources = () => router.push('/resources');
 const goToControlTower = () => router.push('/control-tower');
 const goToTriage = () => router.push('/triage');
 const goToSwipe = () => router.push('/swipe');
-//---------------------------------------------------------------------
-
 const goToIdentitaDigitale = () => router.push('/guide/identita-digitale');
 const goTo5Steps = () => router.push('/guide/5-steps');
 
@@ -274,6 +265,20 @@ const handleLogout = async () => {
 
 <style src="@/assets/css/main.css"></style>
 <style scoped>
+/* STILE POWER BADGE */
+.power-badge {
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+    margin-right: -4px;
+    z-index: 10;
+}
+
 /* STILI DEBUG ERROR */
 .debug-missing-block {
   background: rgba(255, 68, 68, 0.1);

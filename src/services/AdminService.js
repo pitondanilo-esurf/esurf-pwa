@@ -24,5 +24,18 @@ export default {
    */
   getStats() {
     return apiClient.get('/api/admin/stats');
+  },
+
+  // --- GESTIONE POWER USER ---
+  searchUserByEmail(email) {
+    return apiClient.post('/api/admin/users/search', { email });
+  },
+
+  togglePowerUser(userId) {
+    return apiClient.patch(`/api/admin/users/${userId}/toggle-power`);
+  },
+
+  getPowerUsers() {
+    return apiClient.get('/api/admin/power-users');
   }
 };

@@ -91,6 +91,15 @@
                   <div class="card-arrow">→</div>
               </div>
 
+              <div class="admin-card module-card hover-scale" @click="$router.push({ name: 'admin-power-users' })">
+                  <div class="card-icon">⚡</div>
+                  <div class="card-info">
+                      <h3>Gestione Power User</h3>
+                      <p>Assegna o revoca i privilegi speciali agli utenti e visualizza l'elenco degli attivi.</p>
+                  </div>
+                  <div class="card-arrow">→</div>
+              </div>              
+
           </div>
 
       </div>

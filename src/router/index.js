@@ -185,7 +185,13 @@ const router = createRouter({
          requiresAuth: true, 
          role: 'admin' // Usa la stessa logica di permessi che usi per la Dashboard
       }
-    }
+    },
+    {
+        path: '/admin/power-users',
+        name: 'admin-power-users',
+        component: () => import('@/views/admin/CreaPowerUser.vue'),
+        meta: { requiresAuth: true, requiresRole: 'admin' }
+      }
   ]
 });
 
