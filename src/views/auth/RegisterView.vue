@@ -211,7 +211,6 @@ const showModal = ref(false);
 const modalContent = ref('');
 const modalLoading = ref(false);
 
-// Step 1
 const form = reactive({
   first_name: '',
   last_name: '',
@@ -220,10 +219,8 @@ const form = reactive({
   password_confirmation: ''
 });
 
-// Step 2
 const otpCode = ref('');
 
-// Step 3
 const profile = reactive({
   subject_type: 'private', 
   city: '',
@@ -248,7 +245,13 @@ const handleRegister = async () => {
   generalError.value = '';
 
   try {
-    await AuthService.register(form);
+    const response = await AuthService.register(form);
+    
+    // 🔥 FIX 401: SALVIAMO IL TOKEN NEL LOCALSTORAGE SUBITO DOPO LA REGISTRAZIONE!
+    if (response.data && response.data.access_token) {
+        localStorage.setItem('auth_token', response.data.access_token);
+    }
+    
     step.value = 2;
   } catch (error) {
     if (error.response) {
@@ -280,23 +283,11 @@ const handleVerifyOtp = async () => {
       otp_code: otpCode.value
     });
     
-    // 1. Salviamo il token se il backend lo restituisce
+    // Sostituiamo il token temporaneo con quello definitivo fornito dopo l'OTP
     if (response.data && response.data.access_token) {
         localStorage.setItem('auth_token', response.data.access_token);
     }
     
-    // 2. Facciamo un tentativo di login silenzioso per assicurarci la sessione CSRF
-    // Nota: Avvolgiamo in try-catch per evitare che un errore qui blocchi l'avanzamento allo step 3
-    try {
-       await AuthService.login({
-           email: form.email,
-           password: form.password
-       });
-    } catch (e) {
-       console.warn("Login automatico post-OTP fallito (potrebbe essere già loggato o backend stateless). Procedo comunque.");
-    }
-
-    // 3. Andiamo allo step 3. Grazie al fix in AuthService.js, non verremo reindirizzati
     step.value = 3; 
 
   } catch (error) {
@@ -311,7 +302,6 @@ const handleCompleteProfile = async () => {
   generalError.value = '';
 
   try {
-    // 1. Salvataggio Anagrafica
     const profilePayload = {
       subject_type: profile.subject_type,
       first_name: form.first_name, 
@@ -321,14 +311,12 @@ const handleCompleteProfile = async () => {
       vat_number: profile.vat_number,
       city: profile.city,
       province: profile.province,
-      // Inviamo 1 (intero) per evitare errori di validazione booleani/stringhe
       accept_esurf: profile.accept_esurf ? 1 : 0,
       accept_concernet: profile.accept_concernet ? 1 : 0
     };
     
     await AuthService.saveProfile(profilePayload);
 
-    // 2. Firma Legale
     if (profile.accept_esurf && profile.accept_concernet) {
         await AuthService.signGlobal({
             accept_esurf: 1,      
@@ -337,7 +325,7 @@ const handleCompleteProfile = async () => {
     }
 
     alert("Benvenuto! Account attivato con successo.");
-    router.push('/dashboard');
+    router.push('/home');
 
   } catch (error) {
     console.error(error);

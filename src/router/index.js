@@ -176,6 +176,15 @@ const router = createRouter({
       path: '/admin/aste-flessibilita',
       name: 'admin-flex-auctions',
       component: () => import('@/views/admin/SuperAdminFlexAuctionView.vue'),
+    },
+    {
+      path: '/admin/pod-orfani',
+      name: 'admin-pod-orfani', // <--- Questo deve essere ESATTAMENTE uguale a quello usato nel router.push
+      component: () => import('@/views/admin/PodOrfani.vue'), // Assicurati che il percorso del file sia corretto
+      meta: { 
+         requiresAuth: true, 
+         role: 'admin' // Usa la stessa logica di permessi che usi per la Dashboard
+      }
     }
   ]
 });

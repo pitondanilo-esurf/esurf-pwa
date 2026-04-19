@@ -8,11 +8,10 @@
       <div class="content">
           <header class="page-header">
               <h1>Gestione Piattaforma</h1>
-              <p>Gestione Owner e Monitoraggio Attivazioni</p>
+              <p>Pannello di controllo centralizzato</p>
           </header>
 
-          <div class="dashboard-grid">
-              
+          <div class="dashboard-grid mb-4">
               <div class="admin-card create-box">
                   <h3>📧 Invita Nuovo Owner</h3>
                   <p>Invia una mail di attivazione. L'Owner imposterà password e OTP al primo accesso.</p>
@@ -43,7 +42,7 @@
               <div class="admin-card list-box">
                   <div class="list-header">
                       <h3>📋 Lista Owner</h3>
-                      <button @click="fetchOwners" class="btn-refresh">🔄</button>
+                      <button @click="fetchOwners" class="btn-refresh" title="Aggiorna lista">🔄</button>
                   </div>
                   
                   <div v-if="loadingList" class="loading-text">Caricamento...</div>
@@ -66,23 +65,34 @@
                                   {{ owner.status === 'active' ? 'ATTIVO' : 'PENDING' }}
                               </span>
                           </div>
-
                       </li>
                   </ul>
               </div>
+          </div>
 
-<button class="btn-admin-nav" @click="goToFlexAuctions">
-  📊 Gestione Aste Flessibilità (UVAM/MSD)
-</button>
+          <h2 class="section-title mt-5">Moduli Operativi</h2>
+          <div class="dashboard-grid">
+              
+              <div class="admin-card module-card hover-scale" @click="goToFlexAuctions">
+                  <div class="card-icon">⚡</div>
+                  <div class="card-info">
+                      <h3>Aste di Flessibilità</h3>
+                      <p>Gestisci plafond, baseline e raggruppamenti asset per i mercati UVAM e DSO.</p>
+                  </div>
+                  <div class="card-arrow">→</div>
+              </div>
 
-<div class="admin-card hover-scale" @click="goToFlexAuctions">
-  <div class="card-icon">⚡</div>
-  <h3>Aste di Flessibilità</h3>
-  <p>Gestisci plafond, baseline e raggruppamenti asset per i mercati UVAM/MSD.</p>
-</div>
-
+              <div class="admin-card module-card hover-scale" @click="goToOrphanPods">
+                  <div class="card-icon">🔍</div>
+                  <div class="card-info">
+                      <h3>Rilevamento POD Orfani</h3>
+                      <p>Visualizza e gestisci i POD non ancora assegnati ad alcuna Comunità Energetica.</p>
+                  </div>
+                  <div class="card-arrow">→</div>
+              </div>
 
           </div>
+
       </div>
   </div>
 </template>
@@ -103,8 +113,15 @@ const debugLink = ref('');
 
 const form = ref({ name: '', surname: '', email: '' });
 
+// --- NAVIGAZIONE MODULI ---
 const goToFlexAuctions = () => {
+  // Assicurati che il nome della rotta corrisponda a quello nel tuo router/index.js
   router.push({ name: 'admin-flex-auctions' });
+};
+
+const goToOrphanPods = () => {
+  // Naviga alla nuova pagina dei POD Orfani
+  router.push({ name: 'admin-pod-orfani' });
 };
 
 onMounted(async () => {
@@ -133,12 +150,10 @@ const handleCreateOwner = async () => {
         const res = await AdminService.createOwner(form.value);
         successMsg.value = `Invito inviato con successo a ${form.value.email}`;
         
-        // Se il backend restituisce il link (admin controller), lo mostriamo
         if(res.data.activation_link) {
             debugLink.value = res.data.activation_link;
         }
 
-        // Reset form e aggiorna lista
         form.value = { name: '', surname: '', email: '' };
         await fetchOwners(); 
 
@@ -167,7 +182,12 @@ const logout = async () => {
 .page-header { margin-bottom: 2.5rem; }
 .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
 
-/* Cards */
+/* Utilities Spaziatura */
+.mb-4 { margin-bottom: 2rem; }
+.mt-5 { margin-top: 3rem; }
+.section-title { font-size: 1.2rem; color: #94a3b8; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 1.5rem; }
+
+/* Cards Generiche */
 .admin-card { background: #1e293b; padding: 2rem; border-radius: 12px; border: 1px solid #334155; }
 .admin-card h3 { margin-top: 0; color: #f8fafc; }
 .admin-card p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem; }
@@ -176,23 +196,17 @@ const logout = async () => {
 .admin-form { display: flex; flex-direction: column; gap: 15px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 .inp { padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; width: 100%; box-sizing: border-box; }
-.btn-admin { padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+.btn-admin { padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: 0.2s; }
 .btn-admin:hover { background: #2563eb; }
 
-.btn-admin-nav {
-  background-color: var(--bg-card);
-  border: 1px solid var(--accent-blue);
-  color: var(--text-main);
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-admin-nav:hover {
-  background-color: var(--accent-blue);
-  color: white;
-}
+/* Moduli Operativi (Cards Navigazione) */
+.module-card { display: flex; align-items: center; gap: 20px; padding: 1.5rem; cursor: pointer; transition: all 0.2s ease; }
+.module-card p { margin-bottom: 0; }
+.card-icon { font-size: 2.5rem; background: rgba(59, 130, 246, 0.1); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3); }
+.card-info { flex: 1; }
+.card-arrow { font-size: 1.5rem; color: #475569; font-weight: bold; transition: 0.2s; }
+.hover-scale:hover { transform: translateY(-3px); border-color: #3b82f6; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
+.hover-scale:hover .card-arrow { color: #3b82f6; transform: translateX(5px); }
 
 /* Messaggi */
 .error-msg { color: #fca5a5; background: rgba(127, 29, 29, 0.3); padding: 10px; border-radius: 6px; font-size: 0.9rem; }
@@ -202,20 +216,30 @@ const logout = async () => {
 
 /* Lista Owner & Badge Stato */
 .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-.btn-refresh { background: none; border: none; cursor: pointer; font-size: 1.2rem; }
-.owner-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.btn-refresh { background: none; border: none; cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
+.btn-refresh:hover { transform: rotate(180deg); }
+.owner-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto; padding-right: 5px; }
+
+/* Custom Scrollbar per la lista */
+.owner-list::-webkit-scrollbar { width: 6px; }
+.owner-list::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
+.owner-list::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
 .owner-item { display: flex; align-items: center; gap: 15px; background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #334155; }
+.owner-avatar { width: 40px; height: 40px; background: #3b82f6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; text-transform: uppercase; flex-shrink: 0; }
+.owner-avatar.pending { background: #f59e0b; }
 
-.owner-avatar { width: 40px; height: 40px; background: #3b82f6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; text-transform: uppercase; }
-.owner-avatar.pending { background: #f59e0b; } /* Arancione per pending */
-
-.owner-info { flex: 1; display: flex; flex-direction: column; }
-.owner-info .name { font-weight: 600; font-size: 0.95rem; }
-.owner-info .email { color: #94a3b8; font-size: 0.8rem; }
+.owner-info { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.owner-info .name { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.owner-info .email { color: #94a3b8; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .status-badge { font-size: 0.7rem; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; }
 .status-badge.active { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
 .status-badge.pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
 
-@media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { 
+    .dashboard-grid { grid-template-columns: 1fr; } 
+    .module-card { flex-direction: column; text-align: center; }
+    .card-arrow { display: none; }
+}
 </style>
