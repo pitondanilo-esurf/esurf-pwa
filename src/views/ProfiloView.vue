@@ -1,24 +1,7 @@
 <template>
   <div class="app-container">
     
-    <header class="top-header fade-in delay-0">
-      <button class="back-btn" @click="goBack" aria-label="Torna indietro">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="19" y1="12" x2="5" y2="12"></line>
-          <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
-      </button>
-
-      <div class="header-center">
-        <img 
-          :src="isLightMode ? '/src/assets/img/logo-light.svg' : '/src/assets/img/logo-dark.svg'" 
-          alt="E-surf Logo" 
-          class="app-logo" 
-        />
-      </div>
-      
-      <div style="width: 36px;"></div> 
-    </header>
+    <GuideHeader :isLightMode="isLightMode" :backRoute="backRouteUrl" />
 
     <main class="main-content">
       
@@ -29,89 +12,115 @@
 
       <template v-else>
         
-        <div v-if="profileIncomplete && !isEditing" class="card alert-card fade-in delay-1">
-          <div class="alert-icon">⚠️</div>
-          <div>
-            <h3 class="alert-title">Profilo Incompleto</h3>
-            <p class="alert-text">Per operare sulla rete, completa i tuoi dati anagrafici.</p>
-            <button class="btn-text-only" @click="startEdit" style="padding: 0; text-align: left; margin-top: 8px;">Completa ora</button>
-          </div>
-        </div>
-
-        <section v-if="!isEditing" class="card fade-in delay-2">
-          <div class="card-header-flex">
-            <h2 class="card-title" style="margin: 0;">Dati Personali</h2>
-            <button class="btn-icon-text" @click="startEdit">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-              Modifica
-            </button>
-          </div>
-
-          <div class="info-grid">
-            <div class="info-block full-width">
-              <label>Identity DID</label>
-              <div class="did-box" @click="copyDid">
-                <code>{{ user.profile?.did || 'Generazione in corso...' }}</code>
-                <span class="copy-hint">Copia</span>
-              </div>
+        <template v-if="!isEditing">
+          <section class="card fade-in delay-2">
+            <div class="card-header-flex">
+              <h2 class="card-title" style="margin: 0;">Dati Personali</h2>
+              <button class="btn-icon-text" @click="startEdit">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                Modifica
+              </button>
             </div>
 
-            <div class="info-block full-width">
-              <label>Tipo Account</label>
-              <div class="info-value">{{ user.profile?.subject_type === 'company' ? '🏢 Azienda' : '👤 Privato' }}</div>
-            </div>
-            
-            <div class="info-block full-width">
-              <label>Email</label>
-              <div class="info-value">{{ user.email }}</div>
-            </div>
-
-            <template v-if="user.profile?.subject_type === 'company'">
+            <div class="info-grid">
               <div class="info-block full-width">
-                <label>Ragione Sociale</label>
-                <div class="info-value">{{ user.profile?.company_name }}</div>
-              </div>
-              <div class="info-block">
-                <label>Partita IVA</label>
-                <div class="info-value">{{ user.profile?.vat_number }}</div>
-              </div>
-            </template>
-            <template v-else>
-              <div class="info-block full-width">
-                <label>Nome Completo</label>
-                <div class="info-value">{{ user.profile?.first_name }} {{ user.profile?.last_name }}</div>
-              </div>
-              <div class="info-block">
-                <label>Codice Fiscale</label>
-                <div class="info-value uppercase">{{ user.profile?.tax_code }}</div>
-              </div>
-            </template>
-
-            <div class="info-block">
-              <label>Località</label>
-              <div class="info-value">{{ user.profile?.city }} ({{ user.profile?.province }})</div>
-            </div>
-          </div>
-        </section>
-
-        <section v-if="!isEditing && communities.length > 0" class="card fade-in delay-25">
-            <h2 class="card-title">Le mie Community</h2>
-            <p class="card-text">Sei membro attivo delle seguenti comunità energetiche.</p>
-            
-            <div class="community-list">
-                <div v-for="comm in communities" :key="comm.id" class="community-item">
-                    <div class="comm-icon">🌱</div>
-                    <div class="comm-info">
-                        <strong>{{ comm.name }}</strong>
-                        <span class="comm-type">{{ comm.type }} &bull; {{ comm.address }}</span>
-                    </div>
+                <label>Identity DID</label>
+                <div class="did-box" @click="copyDid">
+                  <code>{{ user.profile?.did || 'Generazione in corso...' }}</code>
+                  <span class="copy-hint">Copia</span>
                 </div>
-            </div>
-        </section>
+              </div>
 
-        <section v-if="isEditing" class="card fade-in">
-          <h2 class="card-title">Modifica Profilo</h2>
+              <div class="info-block full-width">
+                <label>Tipo Account</label>
+                <div class="info-value">{{ user.profile?.subject_type === 'company' ? '🏢 Azienda' : '👤 Privato' }}</div>
+              </div>
+              
+              <div class="info-block full-width">
+                <label>Email</label>
+                <div class="info-value">{{ user.email }}</div>
+              </div>
+
+              <template v-if="user.profile?.subject_type === 'company'">
+                <div class="info-block full-width">
+                  <label>Ragione Sociale</label>
+                  <div class="info-value">{{ user.profile?.company_name }}</div>
+                </div>
+                <div class="info-block">
+                  <label>Partita IVA</label>
+                  <div class="info-value">{{ user.profile?.vat_number }}</div>
+                </div>
+              </template>
+              <template v-else>
+                <div class="info-block full-width">
+                  <label>Nome Completo</label>
+                  <div class="info-value">{{ user.profile?.first_name }} {{ user.profile?.last_name }}</div>
+                </div>
+                <div class="info-block">
+                  <label>Codice Fiscale</label>
+                  <div class="info-value uppercase">{{ user.profile?.tax_code }}</div>
+                </div>
+              </template>
+
+              <div class="info-block">
+                <label>Località</label>
+                <div class="info-value">{{ user.profile?.city }} ({{ user.profile?.province }})</div>
+              </div>
+            </div>
+          </section>
+
+          <section v-if="communities.length > 0" class="card fade-in delay-25">
+              <h2 class="card-title">Le mie Community</h2>
+              <p class="card-text">Sei membro attivo delle seguenti comunità energetiche.</p>
+              
+              <div class="community-list">
+                  <div v-for="comm in communities" :key="comm.id" class="community-item">
+                      <div class="comm-icon">🌱</div>
+                      <div class="comm-info">
+                          <strong>{{ comm.name }}</strong>
+                          <span class="comm-type">{{ comm.type }} &bull; {{ comm.address }}</span>
+                      </div>
+                  </div>
+              </div>
+          </section>
+
+          <section class="card fade-in delay-3">
+            <h2 class="card-title">Documenti e Contratti</h2>
+            <p class="card-text">Consulta i termini legali e i codici di condotta che hai sottoscritto.</p>
+            
+            <div class="doc-list">
+              <button class="doc-item hover-scale" @click="viewPdf('terms_esurf')">
+                <div class="doc-icon">📄</div>
+                <div class="doc-texts">
+                  <strong>Termini e-Surf</strong>
+                  <span>Visualizza accordo</span>
+                </div>
+                <div class="doc-arrow">→</div>
+              </button>
+
+              <button class="doc-item hover-scale" @click="viewPdf('code_ethics_concernet')">
+                <div class="doc-icon">⚖️</div>
+                <div class="doc-texts">
+                  <strong>Codice Etico</strong>
+                  <span>Visualizza regolamento</span>
+                </div>
+                <div class="doc-arrow">→</div>
+              </button>
+            </div>
+          </section>
+        </template>
+
+        <section v-if="isEditing" class="card fade-in"> 
+          <h2 class="card-title">{{ profileIncomplete ? 'Completa la Registrazione' : 'Modifica Profilo' }}</h2>
           
+          <div v-if="profileIncomplete" class="alert-card fade-in" style="margin-bottom: 24px; background-color: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3);">
+            <div class="alert-icon" style="color: var(--accent-blue);">👋</div>
+            <div>
+              <h3 class="alert-title" style="color: var(--accent-blue);">Benvenuto! Un ultimo passaggio...</h3>
+              <p class="alert-text">Prima di iniziare a utilizzare la piattaforma e operare sulla rete, è necessario completare la tua scheda anagrafica con i dati obbligatori.</p>
+            </div>
+          </div>
+
           <form @submit.prevent="saveProfileChanges" class="edit-form">
             
             <div class="form-group">
@@ -172,31 +181,6 @@
           </form>
         </section>
 
-        <section v-if="!isEditing" class="card fade-in delay-3">
-          <h2 class="card-title">Documenti e Contratti</h2>
-          <p class="card-text">Consulta i termini legali e i codici di condotta che hai sottoscritto.</p>
-          
-          <div class="doc-list">
-            <button class="doc-item hover-scale" @click="viewPdf('terms_esurf')">
-              <div class="doc-icon">📄</div>
-              <div class="doc-texts">
-                <strong>Termini e-Surf</strong>
-                <span>Visualizza accordo</span>
-              </div>
-              <div class="doc-arrow">→</div>
-            </button>
-
-            <button class="doc-item hover-scale" @click="viewPdf('code_ethics_concernet')">
-              <div class="doc-icon">⚖️</div>
-              <div class="doc-texts">
-                <strong>Codice Etico</strong>
-                <span>Visualizza regolamento</span>
-              </div>
-              <div class="doc-arrow">→</div>
-            </button>
-          </div>
-        </section>
-
       </template>
     </main>
 
@@ -221,10 +205,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AuthService from '@/services/AuthService';
-import axios from '@/services/axios'; // Importa Axios
+import axios from '@/services/axios'; 
+import GuideHeader from '@/components/layout/GuideHeader.vue';
 
 const router = useRouter();
 
@@ -245,26 +230,27 @@ const showPdfModal = ref(false);
 const pdfLoading = ref(false);
 const pdfUrl = ref('');
 
+// Calcola dinamicamente la rotta di ritorno
+const backRouteUrl = computed(() => {
+  if (user.value?.role === 'owner') return '/owner/dashboard';
+  if (user.value?.role === 'admin') return '/admin';
+  return '/home'; 
+});
+
 onMounted(async () => {
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  
-  // Gestione Tema
   const savedTheme = localStorage.getItem('theme');
   isLightMode.value = savedTheme === 'light';
 
-  // Caricamento Dati
   await fetchUserData();
   await fetchCommunities(); 
 });
-
-const goBack = () => router.back();
 
 const fetchUserData = async () => {
   try {
     const response = await AuthService.getUser();
     user.value = response.data;
     
-    // Validazione Completezza
     const p = user.value.profile || {};
     const commonOk = p.city && p.province;
     let specificOk = false;
@@ -277,7 +263,7 @@ const fetchUserData = async () => {
 
     if (!commonOk || !specificOk) {
       profileIncomplete.value = true;
-      startEdit();
+      startEdit(); // Riattivato! L'utente entra in modalità modifica automaticamente
     } else {
       profileIncomplete.value = false;
       isEditing.value = false;
@@ -320,7 +306,6 @@ const saveProfileChanges = async () => {
   try {
     const payload = { ...editForm.value };
     
-    // Pulizia
     if (payload.subject_type === 'private') {
       payload.company_name = null;
       payload.vat_number = null;
@@ -331,7 +316,7 @@ const saveProfileChanges = async () => {
     }
 
     await AuthService.saveProfile(payload);
-    await fetchUserData(); // Ricarica e verifica
+    await fetchUserData(); // Ricarica e verifica se è ancora incompleto
   } catch (e) {
     alert("Errore salvataggio: " + (e.response?.data?.message || 'Controlla i dati inseriti'));
   } finally {
@@ -368,11 +353,6 @@ const closePdfModal = () => {
 
 <style src="@/assets/css/main.css"></style>
 <style scoped>
-/* Header Globale App */
-.top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 20px; }
-.back-btn { background: none; border: none; color: var(--text-main); cursor: pointer; padding: 8px 8px 8px 0; width: 36px; display: flex; align-items: center; }
-.back-btn:hover { transform: translateX(-4px); }
-
 /* Layout Dati (Read-Only) */
 .card-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
 .btn-icon-text { background: transparent; border: 1px solid var(--border-color); border-radius: 8px; color: var(--accent-blue); padding: 6px 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; }
@@ -385,11 +365,11 @@ const closePdfModal = () => {
 .did-box code { font-family: monospace; font-size: 12px; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%; }
 .copy-hint { font-size: 11px; color: var(--accent-blue); font-weight: bold; }
 
-/* Alert Incompleto */
-.alert-card { background-color: rgba(255, 165, 0, 0.1); border-color: rgba(255, 165, 0, 0.3); display: flex; gap: 16px; align-items: flex-start; }
+/* Alert Styles */
+.alert-card { display: flex; gap: 16px; align-items: flex-start; padding: 16px; border-radius: 12px; border: 1px solid transparent; }
 .alert-icon { font-size: 24px; }
-.alert-title { margin: 0 0 4px 0; font-size: 16px; color: #ff9f0a; }
-.alert-text { margin: 0; font-size: 13px; color: var(--text-muted); }
+.alert-title { margin: 0 0 4px 0; font-size: 16px; font-weight: 700; }
+.alert-text { margin: 0; font-size: 13px; color: var(--text-main); opacity: 0.9; }
 
 /* LISTA COMMUNITY */
 .delay-25 { animation-delay: 0.25s; }
