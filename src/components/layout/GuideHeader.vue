@@ -1,7 +1,6 @@
 <template>
   <header class="top-header fade-in delay-0">
-    <!--<button class="back-btn" @click="router.back()" aria-label="Torna indietro">-->
-      <button class="back-btn" @click="router.push('/home')" aria-label="Torna alla home">
+    <button class="back-btn" @click="router.push(backRoute)" aria-label="Torna indietro">
       <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="19" y1="12" x2="5" y2="12"></line>
         <polyline points="12 19 5 12 12 5"></polyline>
@@ -9,11 +8,11 @@
     </button>
 
     <div class="header-center">
-<img 
-  :src="isLightMode ? logoLight : logoDark" 
-  alt="E-surf Logo" 
-  class="app-logo" 
-/>
+      <img 
+        :src="isLightMode ? logoLight : logoDark" 
+        alt="E-surf Logo" 
+        class="app-logo" 
+      />
     </div>
     
     <div style="width: 36px;"></div>
@@ -25,11 +24,15 @@ import { useRouter } from 'vue-router';
 import logoLight from '@/assets/img/logo-light.svg';
 import logoDark from '@/assets/img/logo-dark.svg';
 
-// Riceve lo stato del tema come prop per la reattività
+// Abbiamo aggiunto backRoute nelle Props
 defineProps({
   isLightMode: {
     type: Boolean,
     default: false
+  },
+  backRoute: {
+    type: String,
+    default: '/home' // Valore di default se non specificato
   }
 });
 
@@ -43,7 +46,6 @@ const router = useRouter();
   align-items: center;
   padding: 20px 0;
 }
-
 
 .back-btn {
   background: none;

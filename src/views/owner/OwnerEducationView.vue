@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <GuideHeader :isLightMode="isLightMode" />
+    <GuideHeader :isLightMode="isLightMode" backRoute="/owner/dashboard" />
 
     <main class="main-content">
         <header class="page-header-compact fade-in delay-1" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">

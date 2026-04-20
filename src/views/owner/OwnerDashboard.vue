@@ -32,12 +32,13 @@
         </div>
       </div>
       
-      <div class="user-profile">
+      <div class="user-profile clickable-profile" @click="goTo('/profilo')" title="Vai al tuo Profilo">
         <div class="avatar">{{ initials }}</div>
         <div class="info">
           <span class="name">{{ user.name }} {{ user.surname }}</span>
           <span class="role">{{ $t('ownerDashboard.sidebar.role') }}</span>
         </div>
+        <div class="profile-arrow">→</div>
       </div>
 
       <ul class="nav-links">
@@ -192,6 +193,15 @@
             <div class="section-card actions-section">
                 <h3>{{ $t('ownerDashboard.actions.title') }}</h3>
                 <div class="actions-list">
+                    <div class="action-item" @click="goTo('/profilo')">
+                        <div class="act-icon">👤</div>
+                        <div class="act-info">
+                            <h4>{{ $t('common.profile', 'Il mio Profilo') }}</h4>
+                            <p>Gestisci anagrafica, identità digitale (DID) e contratti firmati.</p>
+                        </div>
+                        <div class="arrow">→</div>
+                    </div>
+
                     <div class="action-item" @click="goTo('/owner/pods')">
                         <div class="act-icon">📂</div>
                         <div class="act-info">
@@ -206,14 +216,6 @@
                         <div class="act-info">
                             <h4>{{ $t('ownerDashboard.actions.contracts') }}</h4>
                             <p>{{ $t('ownerDashboard.actions.contractsDesc') }}</p>
-                        </div>
-                    </div>
-
-                    <div class="action-item disabled">
-                        <div class="act-icon">🔧</div>
-                        <div class="act-info">
-                            <h4>{{ $t('ownerDashboard.actions.config') }}</h4>
-                            <p>{{ $t('ownerDashboard.actions.configDesc') }}</p>
                         </div>
                     </div>
                 </div>
@@ -270,7 +272,6 @@ const initials = computed(() => {
     return (n + s).toUpperCase();
 });
 
-// Data dinamica in base alla lingua selezionata
 const currentDate = computed(() => {
     const langCode = locale.value === 'it' ? 'it-IT' : 'en-US';
     return new Date().toLocaleDateString(langCode, { 
@@ -279,7 +280,6 @@ const currentDate = computed(() => {
 });
 
 onMounted(async () => {
-    // 1. INIZIALIZZA TEMA E LINGUA DA LOCALSTORAGE
     const savedTheme = localStorage.getItem('theme');
     isLightMode.value = savedTheme === 'light';
     if (isLightMode.value) document.body.classList.add('light-mode');
@@ -418,7 +418,6 @@ const handleLogout = async () => {
     padding-left: 5px;
 }
 
-/* STILE PER I PULSANTI ICONA (NUOVO) */
 .icon-btn {
     background: none;
     border: none;
@@ -457,7 +456,37 @@ const handleLogout = async () => {
     font-family: 'Inter', sans-serif;
 }
 
-.user-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; padding: 1rem; background: var(--bg-app); border-radius: 12px; border: 1px solid var(--border-color); }
+/* STILI PROFILO CLICCABILE SIDEBAR */
+.user-profile { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  margin-bottom: 2rem; 
+  padding: 1rem; 
+  background: var(--bg-app); 
+  border-radius: 12px; 
+  border: 1px solid var(--border-color); 
+}
+.clickable-profile {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.clickable-profile:hover {
+  border-color: var(--accent-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+.profile-arrow {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-weight: bold;
+  transition: transform 0.2s ease;
+}
+.clickable-profile:hover .profile-arrow {
+  color: var(--accent-blue);
+  transform: translateX(4px);
+}
+
 .avatar { width: 42px; height: 42px; background: var(--accent-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; }
 .info { display: flex; flex-direction: column; }
 .name { font-weight: 600; font-size: 0.95rem; color: var(--text-main);}
@@ -477,7 +506,6 @@ const handleLogout = async () => {
 .top-bar { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; }
 .top-bar h1 { margin: 0; font-size: 2rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.02em; }
 
-/* STILE NUOVO: TITOLO CON BADGE */
 .title-with-badge { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .type-badge { font-size: 0.8rem; background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); border: 1px solid var(--accent-blue); padding: 4px 10px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;}
 

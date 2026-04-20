@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     
-    <GuideHeader :isLightMode="isLightMode" />
+    <GuideHeader :isLightMode="isLightMode" backRoute="/owner/dashboard" />
 
     <main class="main-content bills-container fade-in delay-0">
         
