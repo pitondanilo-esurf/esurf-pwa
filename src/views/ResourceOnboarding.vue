@@ -25,7 +25,13 @@
                  </div>
              </div>
              
-             <div v-if="errorMsg" class="error-text text-center mt-3">{{ errorMsg }}</div>
+            <div v-if="errorMsg" class="error-toast fade-in">
+                <div class="toast-content">
+                <span class="toast-icon">⚠️</span>
+                <span>{{ errorMsg }}</span>
+                </div>
+                <button @click="errorMsg = ''" class="btn-close-toast">✕</button>
+            </div>
           </div>
 
           <div v-else-if="formMode === 'ai_loading'" class="ai-processing-state fade-in">
@@ -143,22 +149,32 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import axios from '@/services/axios';
-
+import { validaBollettaPreUpload } from '@/utils/billValidator';
 
 import PodAiModal from '@/components/pods/PodAiModal.vue';
 import PdrAiModal from '@/components/pods/PdrAiModal.vue';
 import WaterAiModal from '@/components/pods/WaterAiModal.vue';
+
+// --- INIZIO IMPORT PDF.JS ---
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Usiamo '?url' in modo che Vite gestisca correttamente il worker come asset statico locale
+// Nota: a seconda della versione di pdfjs-dist, il file potrebbe chiamarsi .mjs o .js
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'; 
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+// --- FINE IMPORT PDF.JS ---
 
 const router = useRouter();
 const { t } = useI18n();
 
 const formMode = ref('selection');
 const errorMsg = ref('');
-const successMsg = ref(''); // <-- NUOVA VARIABILE AGGIUNTA
+const successMsg = ref(''); 
 const analyzedData = ref(null);
 
 const billFile = ref(null); 
@@ -170,13 +186,49 @@ const showWaterAiModal = ref(false);
 
 const triggerMagicUpload = () => { document.getElementById('magicBillInput').click(); };
 
+const currentUser = ref({ cf: '', piva: '' })
+onMounted(async () => {
+    //const res = await axios.get('/api/user/profile');
+    const res = await axios.get('/api/user');
+    currentUser.value = res.data;
+});
+
 const handleMagicUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-    
-    billFile.value = file;
+
     formMode.value = 'ai_loading';
-    errorMsg.value = '';
+    
+    // Utilizzo della funzione esterna
+    const result = await validaBollettaPreUpload(file, {
+        cf: currentUser.value.cf,
+        piva: currentUser.value.piva
+    });
+
+    if (!result.valid) {
+        formMode.value = 'selection';
+        
+        // Se l'errore è relativo al CF/P.IVA, costruiamo il messaggio con i valori incrociati
+        if (result.error.includes('Codice Fiscale') || result.error.includes('P.IVA') || result.error.includes('corrispondono')) {
+            
+            // 1. Il dato che ci aspettiamo dal DB (se ha la PIVA diamo priorità a quella)
+            const expectedValue = currentUser.value.piva ? currentUser.value.piva : currentUser.value.cf;
+            
+            // 2. Il dato che la funzione ha trovato nel file PDF (se presente)
+            const foundValue = result.foundValue ? result.foundValue : "Nessuno o illeggibile";
+            
+            errorMsg.value = `⚠️ Attenzione: Il CF/P.IVA letto nella bolletta (${foundValue}) non corrisponde al tuo profilo (${expectedValue}).`;
+        } else {
+            // Per tutti gli altri errori (es. file troppo grande, non PDF) manteniamo l'errore standard
+            errorMsg.value = `⚠️ ${result.error}`;
+        }
+        
+        event.target.value = ''; 
+        return;
+    }
+
+    // 2. Se è valida, procedi con l'analisi AI
+    billFile.value = file;
     
     try {
         const formData = new FormData(); 
@@ -194,7 +246,22 @@ const handleMagicUpload = async (event) => {
         }
     } catch (e) {
         formMode.value = 'selection';
-        errorMsg.value = e.response?.data?.message || t('onboarding.errors.analysisFailed');
+        const status = e.response?.status;
+        const serverMsg = e.response?.data?.message || "";
+
+        // Gestione Granulare degli Errori di Analisi
+        if (status === 413) {
+            errorMsg.value = "Il file è troppo grande. La dimensione massima consentita è 5MB.";
+        } else if (status === 415) {
+            errorMsg.value = "Formato file non supportato. Per favore, usa PDF, JPG o PNG.";
+        } else if (status === 422) {
+            errorMsg.value = serverMsg || "L'Intelligenza Artificiale non è riuscita a leggere il documento. Assicurati che sia una bolletta intera e leggibile.";
+        } else if (status === 503 || serverMsg.includes('503') || serverMsg.toLowerCase().includes('timeout')) {
+            errorMsg.value = "I server dell'AI sono momentaneamente sovraccarichi. Riprova tra qualche minuto.";
+        } else {
+            errorMsg.value = serverMsg || "Si è verificato un errore durante l'analisi. Controlla la tua connessione e riprova.";
+        }
+        
         billFile.value = null;
     } finally {
         event.target.value = ''; 
@@ -222,12 +289,10 @@ const getTypeBadgeClass = (type) => {
 };
 
 const confirmAndSave = async () => {
-    // 1. DEBUG FRONTEND: Vediamo se il click parte e cosa ha in memoria
     console.log("👉 Click su Conferma e Salva!");
     console.log("Dati analizzati (analyzedData):", analyzedData.value);
     console.log("File in memoria (billFile):", billFile.value);
 
-    // Controlli di sicurezza con Alert visivi
     if (!analyzedData.value) {
         alert("⚠️ ERRORE INTERNO: Mancano i dati analizzati dall'AI.");
         return;
@@ -251,7 +316,6 @@ const confirmAndSave = async () => {
 
         console.log("📡 Chiamata API a /api/resources/store-onboarding in corso...");
         
-        // La chiamata vera e propria
         const res = await axios.post('/api/resources/store-onboarding', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
@@ -260,17 +324,26 @@ const confirmAndSave = async () => {
         
         successMsg.value = res.data.message || 'Risorsa salvata con successo!';
 
-        // Aspettiamo 2.5 secondi prima di cambiare pagina, così hai il tempo di leggere il successo
         setTimeout(() => {
             console.log("🔄 Reindirizzamento a /resources...");
-            // MODIFICA QUI: Da '/pods' a '/resources'
             router.push('/resources'); 
         }, 2500);
         
     } catch (e) {
-        // Se c'è un errore di rotta (404) o validazione (422), lo becchiamo qui!
         console.error("❌ Errore API Frontend:", e);
-        errorMsg.value = e.response?.data?.message || 'Errore di connessione al server.';
+        const status = e.response?.status;
+        const serverMsg = e.response?.data?.message || "";
+
+        // Gestione Granulare degli Errori di Salvataggio
+        if (status === 409) {
+            errorMsg.value = "Questa utenza risulta già registrata nel tuo profilo.";
+        } else if (status === 401 || status === 403) {
+            errorMsg.value = "Sessione scaduta o permessi insufficienti. Ricarica la pagina.";
+        } else if (status === 422) {
+            errorMsg.value = serverMsg || "Dati della bolletta incompleti. Ripeti la scansione.";
+        } else {
+            errorMsg.value = serverMsg || "Impossibile salvare i dati al momento. Riprova più tardi.";
+        }
     } finally {
         isSaving.value = false;
     }
@@ -284,7 +357,7 @@ const resetForm = () => {
     showWaterAiModal.value = false;
     formMode.value = 'selection';
     errorMsg.value = '';
-    successMsg.value = ''; // <-- RESETTA IL MESSAGGIO QUI
+    successMsg.value = '';
 };
 </script>
 
@@ -319,6 +392,41 @@ const resetForm = () => {
 .magic-sparkle { font-size: 2rem; animation: bounce 2s infinite; }
 .loader-bar { width: 100%; max-width: 250px; height: 6px; background: var(--bg-app); border-radius: 10px; margin-top: 1.5rem; overflow: hidden; position: relative; }
 .bar-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); width: 50%; position: absolute; left: 0; top: 0; border-radius: 10px; animation: load-bar 2s ease-in-out infinite; }
+
+/* --- TOAST NOTIFICATIONS --- */
+.error-toast { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  background: #fef2f2; 
+  color: #991b1b; 
+  border: 1px solid #f87171;
+  padding: 14px 16px; 
+  border-radius: 12px; 
+  margin-top: 20px; 
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.toast-icon { font-size: 18px; }
+.btn-close-toast {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+.btn-close-toast:hover { background: rgba(239, 68, 68, 0.1); }
 
 /* Pannello Risultati AI */
 .ai-insights-panel { background: linear-gradient(to right, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05)); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; padding: 20px; }

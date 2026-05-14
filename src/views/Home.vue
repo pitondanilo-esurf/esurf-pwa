@@ -1,375 +1,356 @@
 <template>
   <div class="app-container">
-    <header class="top-nav fade-in delay-0">
+    <TopNavbar />
+
+    <main class="main-content main-content-tight">
       
-      <div style="display:flex; gap: 8px; align-items: center;">
-        <button class="icon-btn hover-scale" @click="toggleTheme" :aria-label="$t('common.changeTheme')">
-          <svg v-if="isLightMode" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-          <svg v-else viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-        </button>
-
-        <button class="icon-btn hover-scale lang-toggle" @click="toggleLanguage">
-          {{ locale === 'it' ? 'EN' : 'IT' }}
-        </button>
-      </div>
-
-      <div class="header-center">
-        <img 
-          :src="currentLogo" 
-          alt="E-surf Logo" 
-          class="app-logo" 
-        />
-      </div>
-
-      <div style="display:flex; gap: 12px; align-items: center;">
-        <button class="icon-btn hover-scale">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-        </button>
-
-        <div v-if="loadingAuth" class="auth-spinner"></div>
-        <template v-else>
-          <template v-if="isAuthenticated">
-            <div class="desktop-actions">
-               <span v-if="user.power_user" class="power-badge" title="Power User">⚡ PRO</span>
-               
-               <div class="user-pill hover-scale" @click="goToProfile" :title="$t('common.profile')">
-                  {{ (user.name || user.first_name || 'U')[0].toUpperCase() }}
-               </div>
-               <button class="icon-btn hover-scale logout-icon" @click="handleLogout" :title="$t('common.logout')">
-                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                   <polyline points="16 17 21 12 16 7"></polyline>
-                   <line x1="21" y1="12" x2="9" y2="12"></line>
-                 </svg>
-               </button>
-            </div>
-          </template>
-          
-          <button v-else class="btn-text-only login-btn hover-scale" @click="goToLogin">
-            {{ $t('common.login') }}
-          </button>
-        </template>
-      </div>
-    </header>
-
-    <main class="main-content">
-      <section class="card hero-card fade-in delay-1">
-        <div class="hero-illustration">
-          <svg viewBox="0 0 300 120" width="100%" height="120" xmlns="http://www.w3.org/2000/svg">
-            <path d="M120 70 Q 150 90 180 50" stroke="var(--accent-blue)" stroke-width="2" fill="none" class="animated-path" />
-            <path d="M120 80 Q 160 100 190 60" stroke="var(--accent-cyan)" stroke-width="2" fill="none" class="animated-path delay-path" />
-            <rect x="60" y="20" width="60" height="70" rx="8" fill="var(--accent-blue)" />
-            <rect x="65" y="25" width="50" height="60" rx="4" fill="var(--bg-card)" />
-            <rect x="75" y="35" width="30" height="20" rx="2" fill="var(--btn-bg)" />
-            <circle cx="90" cy="70" r="6" fill="var(--accent-blue)" />
-            <rect x="180" y="10" width="50" height="90" rx="8" fill="var(--bg-card-alt)" stroke="var(--border-color)" stroke-width="2" />
-            <g class="energy-pulse">
-              <circle cx="205" cy="55" r="14" fill="var(--accent-green)" />
-              <path d="M205 45 L200 55 H205 L203 65 L210 52 H205 Z" fill="var(--bg-card)" />
-            </g>
-          </svg>
+      <div class="welcome-section fade-in">
+        <div class="welcome-header">
+           <span class="greeting">{{ greetingText }}</span>
+           <span class="user-name">{{ (user.name || user.first_name || 'Amico').toUpperCase() }}</span>
         </div>
-        
-        <h1 class="hero-title" v-html="$t('home.hero.title').replace('Digitale', '<br>Digitale')"></h1>
-        <p class="hero-subtitle">{{ $t('home.hero.subtitle1') }}</p>
-        
-        <button class="btn-primary hover-scale" @click="goToResources">
-          {{ $t('home.hero.btnAll') }}
-        </button>
-
-        <template v-if="user.power_user">
-            <button class="btn-primary hover-scale" style="margin-top: 10px;" @click="goToPods">
-              {{ $t('home.hero.btnPods') }}
-            </button>
-            <button class="btn-primary hover-scale" style="margin-top: 10px;" @click="goToControlTower">
-              {{ $t('home.hero.btnControlTower') }}
-            </button>
-            <button class="btn-primary hover-scale" style="margin-top: 10px;" @click="goToTriage">
-              {{ $t('home.hero.btnTriage') }}
-            </button>
-            <button class="btn-primary hover-scale" style="margin-top: 10px;" @click="goToSwipe">
-              {{ $t('home.hero.btnSwipe') }}
-            </button>
-        </template>
-
-        <p class="hero-subtitle" style="margin-top: 20px;">{{ $t('home.hero.subtitle2') }}</p>
-        <button class="btn-primary hover-scale" @click="goTo5Steps">
-          {{ $t('home.hero.btnGuide') }}
-        </button>
-      </section>
-
-      <hr class="section-divider">
-
-      <div style="background: #1e1e1e; border: 1px solid #f59e0b; padding: 15px; margin-bottom: 20px; border-radius: 8px; font-family: monospace; font-size: 11px; color: #eee;">
-        <strong style="color: #f59e0b;">🔍 DEBUG DASHBOARD</strong><br>
-        1. Blocchi attesi dal DB: <strong>{{ dashboardConfig.blocks.length }}</strong><br>
-        2. Chiavi ricevute (DB): <span v-for="b in dashboardConfig.blocks" :key="b.id" style="color: #4ade80;">[{{ b.component_key }}] </span><br>
-        3. Componenti pronti (Frontend): <span style="color: #60a5fa;">{{ Object.keys(availableBlocks).join(', ') }}</span>
-      </div>
-      <h2 class="section-title fade-in delay-3">{{ $t('home.hero.suggestion') }}</h2>
-
-      <div v-if="loadingConfig" class="loading-blocks">
-          <div class="auth-spinner" style="width: 40px; height: 40px;"></div>
+        <p class="card-body mt-2">Benvenuto nel cuore di eSurf. Qui, la tua partecipazione attiva è il motore del cambiamento. Condividendo i tuoi dati di consumo, non solo guadagni, ma contribuisci a costruire un futuro energetico più pulito e sostenibile per tutti. Scopri come il tuo impegno fa la differenza.</p>
       </div>
 
-      <div v-else class="dynamic-blocks">
-          <template v-for="(block, index) in dashboardConfig.blocks" :key="block.id || index">
-              
-              <component
-                v-if="availableBlocks[block.component_key]"
-                :is="availableBlocks[block.component_key]"
-                :class="`fade-in delay-${4 + index}`"
-              />
+      <div class="grid-dashboard mt-5 fade-in delay-1">
+        
+        <div class="glass-card fintech-card benefit-card hover-lift">
+          <div class="benefit-icon icon-earn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              <path d="M11 2v20"></path>
+            </svg>
+          </div>
+          <div class="benefit-details">
+            <h3 class="card-title-text text-earn">Il Tuo Risparmio, il Tuo Guadagno</h3>
+            <p class="card-body">Condividere i dati del tuo contatore intelligente è un modo semplice e diretto per generare valore. Ad eSurf, ogni tuo contributo viene ricompensato. Trasformiamo la tua trasparenza in premi concreti, permettendoti di guadagnare semplicemente comprendendo meglio come consumi.</p>
+          </div>
+        </div>
 
-              <div v-else class="debug-missing-block fade-in">
-                  <div style="font-size: 20px;">⚠️</div>
-                  <div>
-                    <strong>Errore Mapping:</strong> Il DB chiede <code>{{ block.component_key }}</code> ma in Home.vue non è importato.
-                  </div>
-              </div>
+        <div class="glass-card fintech-card benefit-card hover-lift">
+          <div class="benefit-icon icon-env">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+              <path d="M2 17l10 5 10-5"></path>
+              <path d="M2 12l10 5 10-5"></path>
+            </svg>
+          </div>
+          <div class="benefit-details">
+            <h3 class="card-title-text text-env">Insieme per un Pianeta più Verde</h3>
+            <p class="card-body">Il tuo contributo non si ferma al portafoglio. I dati che condividi aiutano a mappare i flussi energetici, identificare sprechi e supportare la transizione verso fonti di energia rinnovabile. Con eSurf, la tua efficienza diventa un bene comune per l'ambiente.</p>
+          </div>
+        </div>
 
-          </template>
+        <div class="glass-card fintech-card benefit-card hover-lift">
+          <div class="benefit-icon icon-com">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div class="benefit-details">
+            <h3 class="card-title-text text-com">La Community eSurf</h3>
+            <p class="card-body">Unisciti a una community di utenti impegnati. Insieme, creiamo un impatto significativo. Più siamo, più precisi diventano i nostri dati e più forte è il nostro potere di influenzare un cambiamento positivo nel settore energetico. Il tuo contributo conta.</p>
+          </div>
+        </div>
+
+        <div v-if="loadingResources" class="glass-card fintech-card benefit-card" style="justify-content: center; align-items: center; min-height: 180px;">
+           <div class="f-spinner"></div>
+        </div>
+
+        <div 
+          v-else-if="!hasResources" 
+          class="glass-card fintech-card benefit-card hover-lift pointer active-card" 
+          @click="goToOnboarding"
+        >
+          <div class="benefit-icon icon-onb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <div class="benefit-details">
+            <h3 class="card-title-text text-onb">Inizia Ora il Tuo Viaggio</h3>
+            <p class="card-body">Sei a un passo dal fare la differenza. Collega la tua prima risorsa o invia una bolletta per permettere all'AI di iniziare l'analisi. Bastano pochi click per sbloccare tutti i vantaggi.</p>
+          </div>
+          <div class="benefit-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </div>
+        </div>
+
+        <div 
+          v-else 
+          class="glass-card fintech-card benefit-card hover-lift pointer active-card" 
+          @click="goToHub"
+        >
+          <div class="benefit-icon icon-hub">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+          </div>
+          <div class="benefit-details">
+            <h3 class="card-title-text text-hub">Le Tue Utenze Attive</h3>
+            <p class="card-body">Hai attualmente <strong style="font-size: 1.1rem; color: var(--text-main);">{{ resourceCount }}</strong> {{ resourceCount === 1 ? 'risorsa collegata' : 'risorse collegate' }}. Puoi monitorarne l'efficienza e i dati direttamente dal tuo Hub di gestione.</p>
+          </div>
+          <div class="benefit-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="grouped-informational mt-4 fade-in delay-2">
+        <div class="location-group">
+            <div class="accordion-container">
+                <div class="glass-card fintech-card benefit-card small hover-scale pointer active-card" @click="goToGuides">
+                    <div class="benefit-icon icon-guide">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a4 4 0 0 0-4-4H2z"></path>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a4 4 0 0 1 4-4h6z"></path>
+                        </svg>
+                    </div>
+                    <div class="benefit-details">
+                        <h3 class="card-title-text-small text-guide">Guide e Come Funziona</h3>
+                        <p class="card-body-small">Hai dubbi? Consulta le nostre guide passo-passo per iniziare al meglio.</p>
+                    </div>
+                    <div class="benefit-arrow small">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                    </div>
+                </div>
+                <div class="glass-card fintech-card benefit-card small hover-scale pointer active-card" @click="goToSupport">
+                    <div class="benefit-icon icon-support">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                            <path d="M20.07 15a10 10 0 1 1-2.14-2.14"></path>
+                            <line x1="21" y1="21" x2="16" y2="16"></line>
+                        </svg>
+                    </div>
+                    <div class="benefit-details">
+                        <h3 class="card-title-text-small text-support">Supporto e Contatti</h3>
+                        <p class="card-body-small">Il nostro team è a tua disposizione per qualsiasi necessità o domanda.</p>
+                    </div>
+                    <div class="benefit-arrow small">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
       </div>
 
     </main>
-
-    <footer class="app-footer fade-in delay-6">
-      <a href="#" class="hover-bright">{{ $t('common.faq') }}</a>
-    </footer>
+    
+    <BottomNavbar class="fade-in delay-3" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, shallowRef, computed } from 'vue'; 
-const logoLight = new URL('@/assets/img/logo-light.svg', import.meta.url).href;
-const logoDark = new URL('@/assets/img/logo-dark.svg', import.meta.url).href;
-
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useI18n } from 'vue-i18n'; 
+import { useI18n } from 'vue-i18n';
+import axios from '@/services/axios'; 
 import AuthService from '@/services/AuthService';
-import axios from '@/services/axios';
+import TopNavbar from '@/components/TopNavbar.vue';
+import BottomNavbar from '@/components/BottomNavbar.vue';
 
-// --- IMPORTA IL REGISTRO BLOCCHI ---
-import { availableBlocks } from '@/config/blockRegistry';
-
-const currentLogo = computed(() => isLightMode.value ? logoLight : logoDark)
 const router = useRouter();
-const { locale } = useI18n(); 
+const { locale } = useI18n();
 
-const dashboardConfig = ref({ blocks: [] });
-const loadingConfig = ref(false);
-
-// --- STATO TEMA E LINGUA ---
-const isLightMode = ref(false);
-
-const toggleLanguage = () => {
-  const newLang = locale.value === 'it' ? 'en' : 'it';
-  locale.value = newLang; 
-  localStorage.setItem('locale', newLang);
-};
-
-const toggleTheme = () => {
-  isLightMode.value = !isLightMode.value;
-  if (isLightMode.value) {
-    document.body.classList.add('light-mode');
-    localStorage.setItem('theme', 'light');
-  } else {
-    document.body.classList.remove('light-mode');
-    localStorage.setItem('theme', 'dark');
-  }
-};
-
-// --- STATO AUTENTICAZIONE ---
+const isLightMode = ref(false); 
 const user = ref({});
-const isAuthenticated = ref(false);
 const loadingAuth = ref(true);
 
+const resources = ref([]);
+const loadingResources = ref(true);
+
+const hasResources = computed(() => resources.value.length > 0);
+const resourceCount = computed(() => resources.value.length);
+
 onMounted(async () => {
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'light') {
+  if (localStorage.getItem('theme') === 'light') {
     isLightMode.value = true;
     document.body.classList.add('light-mode');
+  } else {
+    isLightMode.value = false;
+    document.body.classList.remove('light-mode');
   }
 
   try {
     const response = await AuthService.getUser();
     user.value = response.data;
-    isAuthenticated.value = true;
-    
-    console.log("Utente autenticato, inizio fetchDashboardConfig...");
-    await fetchDashboardConfig();
-
-  } catch (error) {
-    console.warn("Utente non loggato, caricamento fallback.");
-    isAuthenticated.value = false;
-    user.value = {};
-    dashboardConfig.value.blocks = [
-      { id: 1, component_key: 'FeatureActivation' },
-      { id: 2, component_key: 'FeatureNotifications' }
-    ];
+    await fetchResources();
+  } catch (e) {
+    console.warn("Utente non loggato o token scaduto.");
   } finally {
     loadingAuth.value = false;
   }
 });
 
-// Funzione per scaricare la configurazione dinamica dal Backend
-const fetchDashboardConfig = async () => {
-    loadingConfig.value = true;
+const fetchResources = async () => {
+    loadingResources.value = true;
     try {
-        const res = await axios.get('/api/user/dashboard-config');
-        if (res.data.blocks) {
-             dashboardConfig.value.blocks = res.data.blocks;
-        } else {
-             console.error("Struttura risposta API errata:", res.data);
-        }
-    } catch (e) {
-        console.error("Errore API Dashboard", e);
-        dashboardConfig.value.blocks = [
-            { id: 1, component_key: 'FeatureActivation' },
-            { id: 2, component_key: 'FeatureNotifications' }
-        ];
+        const response = await axios.get('/api/resources');
+        resources.value = response.data.data || response.data || [];
+    } catch (error) {
+        console.warn("Errore durante il recupero delle risorse:", error.message);
+        resources.value = [];
     } finally {
-        loadingConfig.value = false;
+        loadingResources.value = false;
     }
 };
 
-// --- NAVIGAZIONE ---
-const goToProfile = () => router.push('/profilo'); 
-const goToLogin = () => router.push('/login');
-const goToPods = () => router.push('/pods');
-const goToResources = () => router.push('/resources');
-const goToControlTower = () => router.push('/control-tower');
-const goToTriage = () => router.push('/triage');
-const goToSwipe = () => router.push('/swipe');
-const goToIdentitaDigitale = () => router.push('/guide/identita-digitale');
-const goTo5Steps = () => router.push('/guide/5-steps');
+const greetingText = computed(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Buongiorno';
+    if (hour < 18) return 'Buon Pomeriggio';
+    return 'Buonasera';
+});
 
-const handleLogout = async () => {
-  loadingAuth.value = true;
-  try {
-    await AuthService.logout();
-  } catch(e) {
-    console.error("Errore durante il logout", e);
-  } finally {
-    isAuthenticated.value = false;
-    user.value = {};
-    loadingAuth.value = false;
-    dashboardConfig.value.blocks = [
-      { id: 1, component_key: 'FeatureActivation' },
-      { id: 2, component_key: 'FeatureNotifications' }
-    ];
-    router.push('/');
-  }
-};
+const goToOnboarding = () => { router.push('/onboarding'); };
+const goToGuides = () => { router.push('/guides'); };
+const goToSupport = () => { router.push('/support'); };
+const goToHub = () => { router.push('/hub'); }; 
 </script>
 
-<style src="@/assets/css/main.css"></style>
 <style scoped>
-/* STILE POWER BADGE */
-.power-badge {
-    background: linear-gradient(135deg, #f59e0b, #ea580c);
-    color: white;
-    font-size: 10px;
-    font-weight: 800;
-    padding: 3px 8px;
-    border-radius: 12px;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
-    margin-right: -4px;
-    z-index: 10;
+/* Contenitore PWA BASE */
+.app-container { min-height: 100vh; background-color: var(--bg-app); color: var(--text-main); }
+.main-content { padding: 1rem 1rem 4rem 1rem; max-width: 1000px; margin: 0 auto; }
+.main-content-tight { padding: 1rem; max-width: 800px; padding-bottom: 90px; }
+
+/* SEZIONE BENVENUTO */
+.welcome-section { text-align: left; margin-bottom: 20px; }
+.welcome-header { display: flex; flex-direction: column; }
+.greeting { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+.user-name { font-weight: 800; font-size: 1.6rem; color: var(--text-main); letter-spacing: -0.5px; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-5 { margin-top: 2rem; }
+
+/* GRIGLIA DASHBOARD BENEFICI */
+.grid-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 2rem;}
+
+/* Base Card */
+.benefit-card { 
+  background: var(--bg-card); 
+  padding: 16px; 
+  border-radius: 12px; 
+  display: flex; 
+  align-items: start; /* Allineamento in alto per schede standard con molto testo */
+  gap: 16px; 
+  border: 1px solid var(--border-color); 
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+  position: relative;
 }
 
-/* STILI DEBUG ERROR */
-.debug-missing-block {
-  background: rgba(255, 68, 68, 0.1);
-  border: 1px solid #ff4444;
-  color: #ff4444;
-  padding: 15px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
+/* Modifiche per Active Card (Cliccabili) */
+.active-card {
+  align-items: center; /* Allineamento centrale per una migliore resa con la freccia */
+  padding-right: 48px; /* Spazio per la freccia */
 }
 
-/* Stili esistenti */
-.loading-blocks {
-    display: flex;
-    justify-content: center;
-    padding: 2rem;
-}
+.benefit-card.small { padding: 12px; gap: 12px; }
+.benefit-card.small.active-card { padding-right: 40px; } /* Spazio ridotto per card piccole */
 
-.dynamic-blocks {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding-bottom: 40px;
-}
+.benefit-card.small:hover { border-color: var(--accent-blue); background: var(--bg-card-alt); }
+.benefit-card .benefit-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.benefit-card.small .benefit-icon { width: 36px; height: 36px; }
+.benefit-details { flex: 1; }
+.card-title-text { margin: 0; font-weight: 700; font-size: 1.05rem; color: var(--text-main); letter-spacing: -0.3px; margin-bottom: 6px;}
+.card-title-text-small { margin: 0; font-weight: 600; font-size: 0.9rem; color: var(--text-main); letter-spacing: -0.2px; }
+.card-body { margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; }
+.card-body-small { margin: 0; font-size: 0.75rem; color: var(--text-muted); line-height: 1.3; }
 
-.lang-toggle {
-  font-weight: 800;
-  font-size: 14px;
-  color: var(--accent-cyan);
-  width: 32px;
-  display: flex;
-  justify-content: center;
-}
-
-.top-nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
-.icon-btn { background: none; border: none; color: var(--text-main); cursor: pointer; padding: 8px; transition: transform 0.2s ease; }
-
-.desktop-actions { display: flex; align-items: center; gap: 12px; }
-
-.user-pill {
-  width: 32px;
-  height: 32px;
-  background-color: var(--accent-blue);
-  color: #000;
-  border-radius: 50%;
+/* Simbolo Freccia per Active Card */
+.benefit-arrow {
+  position: absolute;
+  right: 16px;
+  width: 24px;
+  height: 24px;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  opacity: 0.7;
 }
 
-.logout-icon { opacity: 0.8; }
-.logout-icon:hover { color: #ff4757; opacity: 1; }
-
-.login-btn { width: auto; padding: 6px 12px; font-size: 14px; }
-
-.auth-spinner {
+.benefit-arrow.small {
+  right: 12px;
   width: 20px;
   height: 20px;
-  border: 2px solid var(--border-color);
+}
+
+.benefit-arrow svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Hover effects */
+.hover-lift:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05); }
+.pointer { cursor: pointer; }
+
+/* Cambia colore freccia all'hover della card */
+.active-card:hover .benefit-arrow {
+  color: var(--accent-blue);
+  transform: translateX(2px);
+  opacity: 1;
+}
+
+/* ICON COLORI & TITOLI COLORI */
+.icon-earn { background: rgba(22, 163, 74, 0.1); color: #16a34a; }
+.text-earn { color: #16a34a; }
+.icon-env { background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); }
+.text-env { color: var(--accent-blue); }
+.icon-com { background: rgba(100, 116, 139, 0.1); color: #64748b; }
+.text-com { color: #64748b; }
+.icon-onb { background: rgba(249, 115, 22, 0.1); color: #ea580c; }
+.text-onb { color: #ea580c; }
+.icon-guide { background: rgba(79, 172, 254, 0.1); color: #4facfe; }
+.text-guide { color: #4facfe; }
+.icon-support { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
+.text-support { color: #fbbf24; }
+.icon-hub { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+.text-hub { color: #6366f1; }
+
+/* SPINNER FINTECH */
+.f-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border-color);
   border-top-color: var(--accent-blue);
   border-radius: 50%;
-  animation: spinAuth 1s linear infinite;
-  margin: 0 8px;
+  animation: fspin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
+@keyframes fspin { to { transform: rotate(360deg); } }
 
-@keyframes spinAuth { to { transform: rotate(360deg); } }
+/* ALTRE SCHEDE INFERIORI */
+.grouped-informational { display: flex; flex-direction: column; gap: 10px;}
+.location-group { margin-bottom: 20px; }
+.accordion-container { display: flex; gap: 10px; flex-wrap: wrap; }
 
-.hero-card { padding: 30px 24px; }
-.hero-illustration { margin-bottom: 20px; }
-.hero-title { font-size: 26px; font-weight: 700; line-height: 1.2; margin: 0 0 16px 0; }
-.hero-subtitle { font-size: 13px; color: var(--text-muted); line-height: 1.4; margin: 0 0 16px 0; }
+/* ANIMAZIONI */
+.fade-in { animation: fadeIn 0.4s ease forwards; opacity: 0; }
+.delay-1 { animation-delay: 0.05s; }
+.delay-2 { animation-delay: 0.1s; }
+.delay-3 { animation-delay: 0.15s; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-.section-divider { border: 0; border-top: 1px solid var(--border-color); margin: 40px 0; opacity: 0.5; }
-.section-title { font-size: 22px; font-weight: 700; margin: 0 0 20px 0; }
-
-.app-footer { text-align: center; padding: 20px 0; }
-.app-footer a { color: var(--text-muted); text-decoration: none; font-size: 14px; transition: color 0.2s; }
-
-@keyframes pulseGlowHero {
-  0% { transform: scale(1); filter: drop-shadow(0 0 0px transparent); }
-  50% { transform: scale(1.08); filter: drop-shadow(0 0 10px var(--accent-green)); }
-  100% { transform: scale(1); filter: drop-shadow(0 0 0px transparent); }
+/* RESPONSIVE */
+@media (max-width: 600px) {
+    .grid-dashboard { grid-template-columns: 1fr; }
+    .accordion-container { flex-direction: column; gap: 10px; }
 }
-.energy-pulse { transform-origin: 205px 55px; animation: pulseGlowHero 2.5s infinite ease-in-out; }
-
-@keyframes dashFlow { from { stroke-dashoffset: 200; } to { stroke-dashoffset: 0; } }
-.animated-path { stroke-dasharray: 10 10; animation: dashFlow 3s linear infinite; }
-.animated-path.delay-path { animation-direction: reverse; animation-duration: 4s; }
 </style>

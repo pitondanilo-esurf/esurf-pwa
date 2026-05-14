@@ -196,6 +196,7 @@
 import { reactive, ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import AuthService from '@/services/AuthService';
+import { validateCF, validatePIVA } from '@/utils/validators';
 
 const router = useRouter();
 const route = useRoute();
@@ -300,6 +301,22 @@ const handleVerifyOtp = async () => {
 const handleCompleteProfile = async () => { 
   isLoading.value = true;
   generalError.value = '';
+
+  // --- INIZIO CONTROLLO FORMALE AGGIUNTO ---
+  if (profile.subject_type === 'private') {
+      if (!validateCF(profile.tax_code.toUpperCase())) {
+          generalError.value = "Il Codice Fiscale inserito non è formalmente valido.";
+          isLoading.value = false;
+          return;
+      }
+  } else if (profile.subject_type === 'company') {
+      if (!validatePIVA(profile.vat_number)) {
+          generalError.value = "La Partita IVA inserita non è formalmente valida.";
+          isLoading.value = false;
+          return;
+      }
+  }
+  // --- FINE CONTROLLO FORMALE ---
 
   try {
     const profilePayload = {

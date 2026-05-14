@@ -41,7 +41,7 @@
                     <div class="accordion-container">
                         <ResourceAccordionItem 
                             v-for="resource in group.items" 
-                            :key="resource.id" 
+                            :key="resource.id"
                             :resource="resource"
                             :isOpen="expandedId === resource.id"
                             @toggle="toggleAccordion(resource.id)"
@@ -49,6 +49,7 @@
                             @delete="deleteResource"
                             @view-pdf="openPdfModal"
                             @view-ai="openAiModal"
+                            @open-lens="openLensPanel(resource)" 
                             @open-sign="openSignModal"
                             @open-qr="openQrModal"
                             @open-revoke="openRevokeModal"
@@ -63,50 +64,49 @@
       </div>
     </main>
 
-    <PodModify 
-        :show="showPodEditModal"
-        :podData="selectedResource"
-        @close="showPodEditModal = false"
-        @saved="fetchResources"
-    />
+    <transition name="slide-panel">
+        <div v-if="showLensPanel" class="side-panel-overlay" @click.self="closeLensPanel">
+            <div class="side-panel">
+                <div class="panel-header">
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800;">
+                            Lente {{ activeLensResource?.resource_type ? activeLensResource.resource_type.replace('_', ' ').toUpperCase() : 'ENERGIA' }}
+                        </h3>
+                        <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--text-muted); font-family: monospace;">
+                            ID: <strong style="color: var(--accent-blue)">{{ activeLensResource?.pod_code || activeLensResource?.pdr_code || activeLensResource?.pdp_code }}</strong>
+                        </p>
+                    </div>
+                    <button @click="closeLensPanel" class="btn-close-panel">✕</button>
+                </div>
+                
+                <div class="panel-body">
+                    <electricPower_lens 
+                        v-if="!activeLensResource.resource_type || activeLensResource.resource_type === 'energia_elettrica'" 
+                        :aiAnalysis="parseAiData(activeLensResource.ai_analysis)"
+                    />
+                    <gas_lens 
+                        v-else-if="activeLensResource.resource_type === 'gas'" 
+                        :aiAnalysis="parseAiData(activeLensResource.ai_analysis)"
+                        :assets="activeLensResource.assets || []"
+                    />
+                    <water_lens 
+                        v-else-if="activeLensResource.resource_type === 'acqua'" 
+                        :aiAnalysis="parseAiData(activeLensResource.ai_analysis)"
+                    />
+                </div>
+            </div>
+        </div>
+    </transition>
 
-    <PodAssetModal
-        :show="showAssetModal"
-        :pod="selectedPodForAssets"
-        @close="closeAssetModal"
-        @saved="fetchResources"
-    />
+    <PodModify :show="showPodEditModal" :podData="selectedResource" @close="showPodEditModal = false" @saved="fetchResources"/>
+    <PodAssetModal :show="showAssetModal" :pod="selectedPodForAssets" @close="closeAssetModal" @saved="fetchResources"/>
+    <PdfViewerModal :show="showPdfModal" :url="currentPdfUrl" @close="closePdfModal"/>
+    
+    <PodAiModal v-if="activeResourceType === 'energia_elettrica'" :show="showAiModal" :aiData="activeAiData" @close="showAiModal = false" />
+    <PdrAiModal v-if="activeResourceType === 'gas'" :show="showAiModal" :aiData="activeAiData" @close="showAiModal = false" />
+    <WaterAiModal v-if="activeResourceType === 'acqua'" :show="showAiModal" :aiData="activeAiData" @close="showAiModal = false" />
 
-    <PdfViewerModal
-        :show="showPdfModal"
-        :url="currentPdfUrl"
-        @close="closePdfModal"
-    />
-
-    <PodAiModal 
-        v-if="activeResourceType === 'energia_elettrica'"
-        :show="showAiModal" 
-        :aiData="activeAiData" 
-        @close="showAiModal = false" 
-    />
-    <PdrAiModal 
-        v-if="activeResourceType === 'gas'"
-        :show="showAiModal" 
-        :aiData="activeAiData" 
-        @close="showAiModal = false" 
-    />
-    <WaterAiModal 
-        v-if="activeResourceType === 'acqua'"
-        :show="showAiModal" 
-        :aiData="activeAiData" 
-        @close="showAiModal = false" 
-    />
-
-    <ResourceComplianceModal 
-        :show="showComplianceModal"
-        :complianceData="selectedComplianceData"
-        @close="showComplianceModal = false"
-    />
+    <ResourceComplianceModal :show="showComplianceModal" :complianceData="selectedComplianceData" @close="showComplianceModal = false"/>
 
     <transition name="modal-fade">
         <div v-if="showSignModal" class="modal-backdrop" @click.self="showSignModal = false">
@@ -123,16 +123,8 @@
                     </p>
 
                     <div class="doc-tabs">
-                        <button 
-                            :class="{ active: currentDocType === 'delegation' }" 
-                            @click="loadPreview('delegation')">
-                            {{ $t('resources.signModal.tabDelegation') }}
-                        </button>
-                        <button 
-                            :class="{ active: currentDocType === 'policy' }" 
-                            @click="loadPreview('policy')">
-                            {{ $t('resources.signModal.tabPolicy') }}
-                        </button>
+                        <button :class="{ active: currentDocType === 'delegation' }" @click="loadPreview('delegation')">{{ $t('resources.signModal.tabDelegation') }}</button>
+                        <button :class="{ active: currentDocType === 'policy' }" @click="loadPreview('policy')">{{ $t('resources.signModal.tabPolicy') }}</button>
                     </div>
 
                     <div class="html-preview-box">
@@ -161,10 +153,7 @@
 
                     <div style="display: flex; justify-content: flex-end; gap: 10px;">
                         <button @click="showSignModal = false" class="btn-ghost-small">{{ $t('resources.actions.cancel') }}</button>
-                        <button 
-                            @click="confirmSignature" 
-                            class="btn-primary" 
-                            :disabled="isSigning || !signForm.accept_delegation || !signForm.accept_data_policy">
+                        <button @click="confirmSignature" class="btn-primary" :disabled="isSigning || !signForm.accept_delegation || !signForm.accept_data_policy">
                             {{ isSigning ? $t('resources.signModal.signing') : $t('resources.signModal.signBtn') }}
                         </button>
                     </div>
@@ -182,11 +171,9 @@
                 </div>
                 <div class="modal-body text-center" v-if="activeResource">
                     <p class="text-muted mb-3">{{ $t('resources.qrModal.instruction') }} <strong>{{ activeResource.pod_code || activeResource.pdr_code || activeResource.pdp_code }}</strong>.</p>
-                    
                     <div class="qr-placeholder">
                         <img :src="getQrUrl(activeResource)" alt="QR Code" />
                     </div>
-                    
                 </div>
                 <div class="modal-footer justify-center">
                     <button @click="showQrModal = false" class="btn-ghost-small">{{ $t('resources.actions.close') }}</button>
@@ -234,11 +221,15 @@ import PodModify from '@/components/pods/PodModify.vue';
 import PodAssetModal from '@/components/pods/PodAssetModal.vue';
 import PdfViewerModal from '@/components/common/PdfViewerModal.vue';
 
-// Importazione Modali AI
 import PodAiModal from '@/components/pods/PodAiModal.vue';
 import PdrAiModal from '@/components/pods/PdrAiModal.vue';
 import WaterAiModal from '@/components/pods/WaterAiModal.vue';
 import ResourceComplianceModal from '@/components/resources/ResourceComplianceModal.vue';
+
+// Importazione delle lenti
+import electricPower_lens from '@/components/lenses/electricPower_lens.vue';
+import gas_lens from '@/components/lenses/gas_lens.vue';
+import water_lens from '@/components/lenses/water_lens.vue';
 
 const router = useRouter();
 const { t } = useI18n();
@@ -248,6 +239,33 @@ const isLightMode = ref(false);
 const loading = ref(true);
 const resources = ref([]);
 const expandedId = ref(null);
+
+// --- STATO SIDE PANEL (DRAWER) ---
+const showLensPanel = ref(false);
+const activeLensResource = ref(null);
+
+const openLensPanel = (resource) => {
+    activeLensResource.value = resource;
+    showLensPanel.value = true;
+    // Blocca lo scroll del body dietro al pannello
+    document.body.style.overflow = 'hidden'; 
+};
+
+const closeLensPanel = () => {
+    showLensPanel.value = false;
+    document.body.style.overflow = ''; // Ripristina lo scroll
+    setTimeout(() => { activeLensResource.value = null; }, 300); // Attende fine animazione
+};
+
+// Funzione helper per parsare i dati dell'AI (utilizzata dalle lenti)
+const parseAiData = (data) => {
+    if (!data) return null;
+    try {
+        return typeof data === 'string' ? JSON.parse(data) : data;
+    } catch (e) {
+        return null;
+    }
+};
 
 // --- RAGGRUPPAMENTO RISORSE PER INDIRIZZO (AI + Fuzzy) ---
 const groupedResources = computed(() => {
@@ -260,7 +278,6 @@ const groupedResources = computed(() => {
         } catch (e) {}
 
         const aiAddr = aiData?.indirizzo || {};
-        
         const via = aiAddr.Via ? aiAddr.Via.trim() : (r.address ? r.address.trim() : '');
         const civico = aiAddr.NumeroCivico ? aiAddr.NumeroCivico.trim() : '';
         const citta = aiAddr.Città ? aiAddr.Città.trim() : (r.city ? r.city.trim() : '');
@@ -288,29 +305,24 @@ const groupedResources = computed(() => {
         if (!normKey) normKey = 'unknown_location';
 
         if (!groups[normKey]) {
-            groups[normKey] = {
-                address: displayAddress, 
-                items: []
-            };
+            groups[normKey] = { address: displayAddress, items: [] };
         } else {
             if (displayAddress.length > groups[normKey].address.length) {
                 groups[normKey].address = displayAddress;
             }
         }
-
         groups[normKey].items.push(r);
     });
 
     return Object.values(groups).sort((a, b) => a.address.localeCompare(b.address));
 });
 
-// --- STATO MODALI MODIFICA ---
+// --- STATI MODALI ---
 const selectedResource = ref(null);
 const showPodEditModal = ref(false);
 
 const openForm = (resource = null) => {
     selectedResource.value = resource; 
-    
     if (!resource.resource_type || resource.resource_type === 'energia_elettrica') {
         showPodEditModal.value = true;
     } else if (resource.resource_type === 'gas') {
@@ -320,19 +332,10 @@ const openForm = (resource = null) => {
     }
 };
 
-// --- GESTIONE ASSET MODAL ---
 const showAssetModal = ref(false);
 const selectedPodForAssets = ref(null);
-
-const openAssetModal = (resource) => {
-    selectedPodForAssets.value = resource;
-    showAssetModal.value = true;
-};
-
-const closeAssetModal = () => { 
-    showAssetModal.value = false; 
-    setTimeout(() => { selectedPodForAssets.value = null; }, 300);
-};
+const openAssetModal = (resource) => { selectedPodForAssets.value = resource; showAssetModal.value = true; };
+const closeAssetModal = () => { showAssetModal.value = false; setTimeout(() => { selectedPodForAssets.value = null; }, 300); };
 
 const showPdfModal = ref(false);
 const currentPdfUrl = ref('');
@@ -341,23 +344,16 @@ const showAiModal = ref(false);
 const activeAiData = ref(null);
 const activeResourceType = ref('energia_elettrica');
 
-// COMPLIANCE ---
 const showComplianceModal = ref(false);
 const selectedComplianceData = ref(null);
+const openComplianceModal = (data) => { selectedComplianceData.value = data; showComplianceModal.value = true; };
 
-const openComplianceModal = (data) => {
-    selectedComplianceData.value = data;
-    showComplianceModal.value = true;
-};
-
-// --- STATO AZIONI AGGIUNTIVE (Firma & QR & Revoca) ---
 const showSignModal = ref(false);
 const showQrModal = ref(false);
 const activeResource = ref(null);
 const isSigning = ref(false);
 const signError = ref('');
 const signSuccess = ref('');
-
 const currentDocType = ref('delegation');
 const previewHtml = ref('');
 const previewLoading = ref(false);
@@ -365,19 +361,12 @@ const signForm = ref({ accept_delegation: false, accept_data_policy: false });
 
 const showRevokeModal = ref(false);
 const isRevoking = ref(false);
-
-const openRevokeModal = (resource) => {
-    activeResource.value = resource;
-    showRevokeModal.value = true;
-};
+const openRevokeModal = (resource) => { activeResource.value = resource; showRevokeModal.value = true; };
 
 const confirmRevocation = async () => {
     isRevoking.value = true;
     try {
-        await axios.post(`/api/resources/${activeResource.value.id}/revoke`, {
-            type: activeResource.value.resource_type
-        });
-        
+        await axios.post(`/api/resources/${activeResource.value.id}/revoke`, { type: activeResource.value.resource_type });
         showRevokeModal.value = false;
         fetchResources(); 
     } catch (error) {
@@ -392,7 +381,6 @@ onMounted(() => {
     const savedTheme = localStorage.getItem('theme');
     isLightMode.value = savedTheme === 'light';
     if (isLightMode.value) document.body.classList.add('light-mode');
-    
     fetchResources();
 });
 
@@ -403,7 +391,6 @@ const fetchResources = async () => {
         const response = await axios.get('/api/resources'); 
         resources.value = response.data.data || response.data || [];
     } catch (error) {
-        console.warn("Nessuna risorsa trovata o errore di connessione:", error.message);
         resources.value = [];
     } finally {
         loading.value = false;
@@ -421,32 +408,18 @@ const deleteResource = async (resource) => {
     }
 };
 
-// --- METODI NAVIGAZIONE & UI ---
-const goToOnboarding = () => {
-    router.push('/onboarding-risorse');
-};
+const goToOnboarding = () => { router.push('/onboarding-risorse'); };
+const toggleAccordion = (id) => { expandedId.value = expandedId.value === id ? null : id; };
 
-const toggleAccordion = (id) => {
-    expandedId.value = expandedId.value === id ? null : id;
-};
-
-// --- GESTIONE VISUALIZZAZIONE PDF PROTETTI ---
 const openPdfModal = async (payload) => {
     const { doc, resource } = payload;
-    
     currentPdfUrl.value = '';
     showPdfModal.value = true;
-
     try {
-        const response = await axios.get(
-            `/api/legal/download-resource/${resource.id}?type=${resource.resource_type}&doc=${doc}`, 
-            { responseType: 'blob' }
-        );
-        
+        const response = await axios.get(`/api/legal/download-resource/${resource.id}?type=${resource.resource_type}&doc=${doc}`, { responseType: 'blob' });
         const blob = new Blob([response.data], { type: 'application/pdf' });
         currentPdfUrl.value = window.URL.createObjectURL(blob);
     } catch (error) {
-        console.error("Errore download PDF:", error);
         alert(t('resources.alerts.pdfLoadError'));
         showPdfModal.value = false;
     }
@@ -454,9 +427,7 @@ const openPdfModal = async (payload) => {
 
 const closePdfModal = () => {
     showPdfModal.value = false;
-    if (currentPdfUrl.value && currentPdfUrl.value.startsWith('blob:')) {
-        window.URL.revokeObjectURL(currentPdfUrl.value); 
-    }
+    if (currentPdfUrl.value && currentPdfUrl.value.startsWith('blob:')) window.URL.revokeObjectURL(currentPdfUrl.value); 
     currentPdfUrl.value = '';
 };
 
@@ -470,14 +441,11 @@ const openAiModal = (resource) => {
     }
 };
 
-// --- METODI AZIONI (FIRMA E QR) ---
 const loadPreview = async (tab) => {
     currentDocType.value = tab;
     previewLoading.value = true;
     previewHtml.value = '';
-
     let apiEndpointType = '';
-    
     if (tab === 'delegation') {
         const rType = activeResource.value?.resource_type;
         if (rType === 'gas') apiEndpointType = 'delegation_gas_read';
@@ -486,16 +454,12 @@ const loadPreview = async (tab) => {
     } else {
         apiEndpointType = 'data_usage_policy';
     }
-
     try {
         const code = activeResource.value?.pod_code || activeResource.value?.pdr_code || activeResource.value?.pdp_code || 'ND';
         const response = await axios.get(`/api/legal/preview/${apiEndpointType}?pod_code=${code}`);
         previewHtml.value = response.data.html_content;
     } catch (e) {
-        console.error("Errore fetch anteprima:", e);
-        previewHtml.value = `<div style="color:red; text-align:center; padding: 20px;">
-                                ${t('resources.signModal.previewError')}
-                             </div>`;
+        previewHtml.value = `<div style="color:red; text-align:center; padding: 20px;">${t('resources.signModal.previewError')}</div>`;
     } finally {
         previewLoading.value = false;
     }
@@ -510,23 +474,18 @@ const openSignModal = (resource) => {
     loadPreview('delegation');
 };
 
-const openQrModal = (resource) => {
-    activeResource.value = resource;
-    showQrModal.value = true;
-};
+const openQrModal = (resource) => { activeResource.value = resource; showQrModal.value = true; };
 
 const getQrUrl = (resource) => {
     if (!resource) return '';
     const hash = resource.public_share_hash || resource.id;
-    const baseUrl = window.location.origin;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(baseUrl + '/querypods?id=' + hash)}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin + '/querypods?id=' + hash)}`;
 };
 
 const confirmSignature = async () => {
     isSigning.value = true;
     signError.value = '';
     signSuccess.value = '';
-
     try {
         await axios.post('/api/legal/sign-pod', {
             resource_id: activeResource.value.id,
@@ -536,16 +495,9 @@ const confirmSignature = async () => {
             accept_delegation: 'accepted',
             accept_data_policy: 'accepted'
         });
-
         signSuccess.value = t('resources.alerts.signSuccess');
-        
-        setTimeout(() => {
-            showSignModal.value = false;
-            fetchResources(); 
-        }, 2000);
-
+        setTimeout(() => { showSignModal.value = false; fetchResources(); }, 2000);
     } catch (error) {
-        console.error("Errore firma:", error);
         signError.value = error.response?.data?.message || t('resources.alerts.signError');
     } finally {
         isSigning.value = false;
@@ -563,7 +515,6 @@ const confirmSignature = async () => {
 .page-header-compact { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; gap: 10px; }
 .page-header-compact h2 { margin: 0; font-size: 1.3rem; font-weight: 700; letter-spacing: -0.5px; }
 .page-header-compact p { margin: 2px 0 0 0; color: var(--text-muted); font-size: 0.8rem; }
-
 .btn-add-compact { background-color: var(--accent-blue); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; white-space: nowrap; }
 .btn-add-compact:hover { background-color: var(--accent-cyan); }
 
@@ -578,17 +529,86 @@ const confirmSignature = async () => {
 .location-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 4px; border-bottom: 2px solid var(--border-color); }
 .location-title { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
 .location-badge { background: var(--accent-blue); color: white; font-size: 0.65rem; font-weight: 600; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+.accordion-container { display: flex; flex-direction: column; gap: 8px; margin-left: 4px;}
 
-/* ACCORDION CONTAINER */
-.accordion-container { display: flex; flex-direction: column; gap: 8px; margin-left: 4px;} /* Gap ridotto tra le card */
+/* --- NUOVO STILE: SIDE PANEL (DRAWER) --- */
+.side-panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 10000; /* Sopra la navbar */
+    display: flex;
+    justify-content: flex-end; /* Allinea a destra */
+}
 
-/* ANIMAZIONI */
+.side-panel {
+    width: 100%;
+    max-width: 500px; /* Larghezza desktop */
+    background: var(--bg-card);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.2);
+}
+
+.panel-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-card);
+}
+
+.btn-close-panel {
+    background: rgba(100, 116, 139, 0.1);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-close-panel:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: var(--bg-app);
+}
+
+/* --- ANIMAZIONE SCORRIMENTO LATERALE --- */
+.slide-panel-enter-active, .slide-panel-leave-active {
+    transition: opacity 0.3s ease;
+}
+.slide-panel-enter-active .side-panel, .slide-panel-leave-active .side-panel {
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); /* Curva fluida tipo iOS */
+}
+
+.slide-panel-enter-from { opacity: 0; }
+.slide-panel-enter-from .side-panel { transform: translateX(100%); }
+
+.slide-panel-leave-to { opacity: 0; }
+.slide-panel-leave-to .side-panel { transform: translateX(100%); }
+
+/* ANIMAZIONI DI BASE */
 .fade-in { animation: fadeIn 0.4s ease forwards; opacity: 0; }
 .delay-1 { animation-delay: 0.05s; }
 .delay-2 { animation-delay: 0.1s; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* --- RIMANENTE STILE MODALI (Invariato per funzionalità) --- */
+/* --- STILE MODALI VECCHIE (Invariato) --- */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
 .glass-modal { background: var(--bg-card, #ffffff); width: 95%; max-width: 500px; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; }
 .qr-modal { max-width: 400px; }
@@ -624,5 +644,12 @@ const confirmSignature = async () => {
 @media (max-width: 768px) {
     .page-header-compact { flex-direction: row; flex-wrap: wrap; }
     .btn-add-compact { width: 100%; justify-content: center; padding: 10px; }
+}
+
+@media (max-width: 600px) {
+    /* Su mobile il drawer prende tutto lo schermo */
+    .side-panel {
+        max-width: 100%; 
+    }
 }
 </style>

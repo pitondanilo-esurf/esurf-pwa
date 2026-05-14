@@ -1,4 +1,121 @@
 {
+    "support": {
+        "title": "Support & Contacts",
+        "subtitle": "We're here to help. Choose your preferred channel to get in touch with the eSurf team.",
+                "faqBannertitle":"FAQ",
+        "faqBannersubtitle":"Frequently asked questions",
+        "channels": {
+            "email": {
+                "label": "Send us an email"
+            },
+            "whatsapp": {
+                "label": "Chat on WhatsApp"
+            }
+        },
+        "form": {
+            "title": "Send us a message",
+            "subtitle": "We usually respond within 24 business hours.",
+            "fields": {
+                "subject": "Subject",
+                "message": "Message",
+                "placeholder": "Describe your request here..."
+            },
+            "subjects": {
+                "technical": "Technical Issue",
+                "billing": "Bill Analysis / Resources",
+                "account": "Account Management",
+                "other": "Other"
+            },
+            "submit": "Send Request"
+        }
+    },
+    "faq": {
+        "title": "Frequently Asked Questions",
+        "subtitle": "Everything you need to know to make the most of eSurf.",
+        "items": [
+            {
+                "id": "what-is-esurf",
+                "question": "What exactly is eSurf?",
+                "answer": "eSurf is the innovative platform that transforms utility management into an active opportunity. You can monitor your consumption, optimize your supplies, and actively contribute to the energy transition."
+            },
+            {
+                "id": "benefits",
+                "question": "Why is it beneficial to share my consumption data?",
+                "answer": "By sharing your data, you help us map energy flows and identify grid inefficiencies. In return, eSurf converts your efficiency into concrete rewards: your savings become your earnings."
+            },
+            {
+                "id": "costs",
+                "question": "Is there a cost to register and use eSurf?",
+                "answer": "No, using the platform is completely free for end users. Our model is based on the value that data aggregation brings to the national energy grid, not on user subscriptions."
+            },
+            {
+                "id": "ai-analysis",
+                "question": "How does the AI bill analysis work?",
+                "answer": "It's simple: just upload a PDF or a clear photo of your bill. Our AI extracts the essential technical data and cross-references it with your profile to ensure accuracy, security, and zero manual entry errors."
+            },
+            {
+                "id": "resources-types",
+                "question": "What types of resources can I connect to the Hub?",
+                "answer": "Currently, we support Electricity (POD code), Natural Gas (PDR code), and Water Services (IDRICO/PDP code)."
+            },
+            {
+                "id": "consumer-prosumer",
+                "question": "What is the difference between a Consumer and Prosumer?",
+                "answer": "A <strong>Consumer</strong> draws energy from the standard grid. A <strong>Prosumer</strong> also produces energy (e.g., through solar panels). eSurf provides dedicated analytical tools for both profiles."
+            },
+            {
+                "id": "multi-profile",
+                "question": "Can I manage utilities for multiple homes or my business?",
+                "answer": "Absolutely. The eSurf Hub automatically groups your resources by physical address. You can add both residential and business utilities in a single, centralized dashboard."
+            },
+            {
+                "id": "hardware-req",
+                "question": "Do I need Smart Home sensors or devices to start?",
+                "answer": "Not to start. The analysis begins with the official data from your bill. However, the platform is future-proof: you will soon be able to manage your smart assets directly from the Hub."
+            },
+            {
+                "id": "data-security",
+                "question": "Are my data and documents safe?",
+                "answer": "Yes. We adopt bank-level security and encryption standards. Access to your data only occurs after the digital signing of a clear and transparent Delegation and Privacy Policy."
+            },
+            {
+                "id": "data-usage",
+                "question": "Who is my data shared with?",
+                "answer": "Aggregated and strictly anonymized consumption data is used to support the power grid and predict demand peaks. Your sensitive data is never sold for telemarketing purposes."
+            },
+            {
+                "id": "wrong-holder",
+                "question": "What happens if the bill I upload is not in my name?",
+                "answer": "The system performs a real-time <strong>Cross-Check</strong>. If the Tax ID (Codice Fiscale) on the bill does not match your profile, the upload is blocked to protect your privacy."
+            },
+            {
+                "id": "lock-in",
+                "question": "Am I locked into eSurf for a minimum period?",
+                "answer": "No lock-in. We guarantee maximum freedom. You can easily <strong>Revoke the Mandate</strong> for any single resource directly from your Hub with just one click."
+            }
+        ]
+    },
+    "v0": {
+        "common": {
+            "login": "Login",
+            "logout": "Logout",
+            "profile": "Profile",
+            "loading": "Loading..."
+        },
+        "home": {
+            "subtitle": "Ciao! I'm e-surf, your energy assistant.",
+            "main_title": "What goal do we want to achieve?",
+            "lens_wallet": "Wallet Lens (Gold)",
+            "goal_cost": "CUT COSTS",
+            "desc_cost": "I want to lower my bill and keep the savings over time.",
+            "lens_planet": "Planet Lens (Green)",
+            "goal_emissions": "ZERO EMISSIONS",
+            "desc_emissions": "I want to transform my home into a zero-impact model.",
+            "lens_shield": "Shield Lens (Blue)",
+            "goal_independence": "MAXIMUM INDEPENDENCE",
+            "desc_independence": "I want to protect myself from price hikes and produce my own energy."
+        }
+    },
     "common": {
         "login": "Login",
         "logout": "Logout",

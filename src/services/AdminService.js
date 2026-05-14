@@ -37,5 +37,26 @@ export default {
 
   getPowerUsers() {
     return apiClient.get('/api/admin/power-users');
+  },
+
+  // --- GESTIONE IMPIANTI ---
+  getImpianti() {
+    return apiClient.get('/api/impianti'); // Corretto da api a apiClient
+  },
+  
+  createImpianto(payload) {
+    return apiClient.post('/api/impianti', payload); // Corretto da api a apiClient
+  },
+  
+  updateImpianto(pod_id, payload) {
+    return apiClient.put(`/api/impianti/${pod_id}`, payload); // Corretto da api a apiClient
+  },
+  
+  deleteImpianto(pod_id) {
+    return apiClient.delete(`/api/pods/${pod_id}`); // Corretto da api a apiClient
+  },
+  
+  testConnection(payload) {
+    return apiClient.post('/api/impianti/test', payload); // Corretto da api a apiClient
   }
 };

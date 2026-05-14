@@ -1,4 +1,121 @@
 {
+    "support": {
+        "title": "Supporto e Contatti",
+        "subtitle": "Siamo qui per aiutarti. Scegli il canale che preferisci per metterti in contatto con il team di eSurf.",
+        "faqBannertitle":"FAQ",
+        "faqBannersubtitle":"Domande Frequenti",
+        "channels": {
+            "email": {
+                "label": "Inviaci un'email"
+            },
+            "whatsapp": {
+                "label": "Chatta su WhatsApp"
+            }
+        },
+        "form": {
+            "title": "Inviaci un messaggio",
+            "subtitle": "Rispondiamo solitamente entro 24 ore lavorative.",
+            "fields": {
+                "subject": "Argomento",
+                "message": "Messaggio",
+                "placeholder": "Descrivi qui la tua richiesta..."
+            },
+            "subjects": {
+                "technical": "Problema Tecnico",
+                "billing": "Analisi Bollette / Risorse",
+                "account": "Gestione Profilo",
+                "other": "Altro"
+            },
+            "submit": "Invia Richiesta"
+        }
+    },
+    "faq": {
+        "title": "Domande Frequenti",
+        "subtitle": "Tutto quello che devi sapere per sfruttare al massimo eSurf.",
+        "items": [
+            {
+                "id": "what-is-esurf",
+                "question": "Cos'è esattamente eSurf?",
+                "answer": "eSurf è la piattaforma innovativa che trasforma la gestione delle tue utenze in un'opportunità attiva. Puoi monitorare i consumi e contribuire alla transizione energetica."
+            },
+            {
+                "id": "benefits",
+                "question": "Perché è vantaggioso condividere i miei dati?",
+                "answer": "Condividendo i dati, ci aiuti a mappare i flussi energetici. In cambio, eSurf converte la tua efficienza in premi: il tuo risparmio diventa il tuo guadagno."
+            },
+            {
+                "id": "costs",
+                "question": "L'iscrizione ha un costo?",
+                "answer": "No, l'utilizzo della piattaforma per gli utenti finali è totalmente gratuito."
+            },
+            {
+                "id": "ai-analysis",
+                "question": "Come funziona l'analisi AI?",
+                "answer": "Basta caricare una bolletta; la nostra AI estrae i dati tecnici e li incrocia con il tuo profilo per garantirti precisione e sicurezza."
+            },
+            {
+                "id": "resources-types",
+                "question": "Quali risorse posso collegare?",
+                "answer": "Supportiamo Energia Elettrica (POD), Gas Naturale (PDR) e Servizio Idrico (IDRICO)."
+            },
+            {
+                "id": "consumer-prosumer",
+                "question": "Differenza tra Consumer e Prosumer?",
+                "answer": "Il Consumer preleva energia dalla rete; il Prosumer la produce anche (es. fotovoltaico)."
+            },
+            {
+                "id": "multi-profile",
+                "question": "Posso gestire più abitazioni o aziende?",
+                "answer": "Sì, l'Hub raggruppa automaticamente le risorse per indirizzo, sia residenziali che business."
+            },
+            {
+                "id": "hardware-req",
+                "question": "Ho bisogno di sensori Smart Home?",
+                "answer": "Non per iniziare. L'analisi parte dai dati della tua bolletta, ma il sistema è pronto per futuri asset smart."
+            },
+            {
+                "id": "data-security",
+                "question": "I miei dati sono al sicuro?",
+                "answer": "Sì, utilizziamo standard di sicurezza bancari e i dati sono accessibili solo previa firma della delega."
+            },
+            {
+                "id": "data-usage",
+                "question": "A chi vengono forniti i miei dati?",
+                "answer": "Vengono utilizzati in forma aggregata e anonima per ottimizzare la rete. Non vendiamo dati a telemarketing."
+            },
+            {
+                "id": "wrong-holder",
+                "question": "Cosa succede se la bolletta non è intestata a me?",
+                "answer": "Il sistema effettua un Cross-Check: se il Codice Fiscale non coincide con il tuo account, il caricamento viene bloccato."
+            },
+            {
+                "id": "lock-in",
+                "question": "Sono vincolato a eSurf?",
+                "answer": "Nessun vincolo. Puoi revocare il mandato per ogni singola risorsa direttamente dall'Hub con un click."
+            }
+        ]
+    },
+    "v0": {
+        "common": {
+            "login": "Accedi",
+            "logout": "Esci",
+            "profile": "Profilo",
+            "loading": "Caricamento..."
+        },
+        "home": {
+            "subtitle": "Ciao! Sono e-surf, il tuo assistente per l'energia.",
+            "main_title": "Qual è il traguardo che vogliamo raggiungere?",
+            "lens_wallet": "Lente Wallet (Oro)",
+            "goal_cost": "ABBATTERE I COSTI",
+            "desc_cost": "Voglio tagliare la bolletta e mantenere il risparmio nel tempo.",
+            "lens_planet": "Lente Planet (Verde)",
+            "goal_emissions": "AZZERARE LE EMISSIONI",
+            "desc_emissions": "Voglio trasformare la mia casa in un modello a zero impatto.",
+            "lens_shield": "Lente Shield (Blu)",
+            "goal_independence": "MASSIMA INDIPENDENZA",
+            "desc_independence": "Voglio proteggermi dai rincari e produrre la mia energia."
+        }
+    },
     "common": {
         "login": "Accedi",
         "logout": "Esci",
@@ -782,6 +899,6 @@
             "reportBtn": "Report Completo",
             "emptyAi": "Analisi in corso per ottimizzare i tuoi consumi...",
             "hint": "Fai swipe o usa le frecce per navigare"
-        }       
+        }
     }
 }

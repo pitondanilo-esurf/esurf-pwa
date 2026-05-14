@@ -34,6 +34,189 @@ const router = createRouter({
       name: 'home',
       component: HomeView
     },
+    // V1
+    {
+      path: '/onboarding', // <-- La chiami scrivendo /onboarding nella barra
+      name: 'OnboardingLanding',
+      component: () => import('@/views/home_0_1.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/loadbill',
+      name: 'LoadBill',
+      component: () => import('@/views/v1/ResourceOnboarding.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/assetlight_gas',
+      name: 'AssetLight gas',
+      component: () => import('@/views/v1/assetlight_gas.vue')
+    },
+    {
+      path: '/assetlight_water',
+      name: 'AssetLight water',
+      component: () => import('@/views/v1/assetlight_water.vue')
+    },
+
+    {
+      path: '/assetlight',
+      name: 'AssetLight',
+      component: () => import('@/views/v1/assetlight.vue')
+    },
+    {
+      path: '/onboardinghub',
+      name: 'OnboardingHub',
+      // Caricamento lazy per ottimizzare le performance della PWA
+      component: () => import('@/views/v1/OnboardingHub.vue'),
+      meta: {
+        requiresAuth: true, // Assicurati che l'utente sia loggato
+        title: 'Il tuo Profilo Energetico'
+      }
+    },
+    {
+      path: '/hub',
+      name: 'Dashboard',
+      // Usa il Lazy Loading (consigliato per le performance)
+      component: () => import('@/views/v1/Dashboard.vue'),
+      // Se usi i meta tag per proteggere la rotta (es. richiede login)
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/impact',
+      name: 'ImpactDashboard',
+      component: () => import('@/views/v1/ImpactDashboardView.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/vectors',
+      name: 'VectorDashboardView',
+      component: () => import('@/views/v1/VectorDashboardView.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/leontief',
+      name: 'LeontiefDashboardView',
+      component: () => import('@/views/v1/LeontiefDashboardView.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/analytics',
+      name: 'Report',
+      component: () => import('@/views/v1/DashBoardAnalytics.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/leontief-report',
+      name: 'LeontiefReport',
+      component: () => import('@/views/v1/LeontiefReportView.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/leontief-report-advanced',
+      name: 'LeontiefReportAdvanced',
+      component: () => import('@/views/v1/LeontiefReportAdvancedView.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/cer-leontief',
+      name: 'CerLeontief',
+      component: () => import('@/views/v1/Cer-Leontief.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/leontief-tee',
+      name: '7layer_tee',
+      component: () => import('@/views/v1/Leontief_TEE_7_Layer.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/pv-roi-cer',
+      name: 'PvRoi CER',
+      component: () => import('@/views/v1/Pv_CER_RoiAssessment.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/pv-roi',
+      name: 'PvRoi',
+      component: () => import('@/views/v1/PvRoiAssessment.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/pv-roiFuture',
+      name: 'PvRoi Future Profiling',
+      component: () => import('@/views/v1/PvRoiAssessment_Profiling.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/add-bess-roi',
+      name: 'BessRoi',
+      component: () => import('@/views/v1/PV_Battery_RowAssessment.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/guides',
+      name: 'Home Guides',
+      component: () => import('@/views/Guides.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/support',
+      name: 'Home support',
+      component: () => import('@/components/support/Support.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/faq',
+      name: 'Home faq',
+      component: () => import('@/components/support/FaqSection.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/admin/impianti',
+      name: 'admin-impianti',
+      component: () => import('@/views/admin/GestioneImpianti.vue'),
+      meta: {
+        requiresAuth: true,
+        role: 'admin' // <-- Fondamentale per la sicurezza!
+      }
+    },
+
+
+    // fine V1
     {
       path: '/register',
       name: 'register',
@@ -181,17 +364,23 @@ const router = createRouter({
       path: '/admin/pod-orfani',
       name: 'admin-pod-orfani', // <--- Questo deve essere ESATTAMENTE uguale a quello usato nel router.push
       component: () => import('@/views/admin/PodOrfani.vue'), // Assicurati che il percorso del file sia corretto
-      meta: { 
-         requiresAuth: true, 
-         role: 'admin' // Usa la stessa logica di permessi che usi per la Dashboard
+      meta: {
+        requiresAuth: true,
+        role: 'admin' // Usa la stessa logica di permessi che usi per la Dashboard
       }
     },
     {
-        path: '/admin/power-users',
-        name: 'admin-power-users',
-        component: () => import('@/views/admin/CreaPowerUser.vue'),
-        meta: { requiresAuth: true, requiresRole: 'admin' }
-      }
+      path: '/admin/power-users',
+      name: 'admin-power-users',
+      component: () => import('@/views/admin/CreaPowerUser.vue'),
+      meta: { requiresAuth: true, requiresRole: 'admin' }
+    },
+    {
+      path: '/admin/business-plan',
+      name: 'admin-esco-roi',
+      component: () => import('@/views/admin/EscoBusinessModel.vue'),
+      meta: { requiresAuth: true, requiresRole: 'admin' }
+    }
   ]
 });
 

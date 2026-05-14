@@ -72,6 +72,15 @@
 
           <h2 class="section-title mt-5">Moduli Operativi</h2>
           <div class="dashboard-grid">
+
+              <div class="admin-card module-card hover-scale" @click="$router.push({ name: 'admin-impianti' })">
+                  <div class="card-icon">☀️</div>
+                  <div class="card-info">
+                      <h3>Gestione Impianti</h3>
+                      <p>Amministra anagrafica, credenziali inverter e testa le connessioni API.</p>
+                  </div>
+                  <div class="card-arrow">→</div>
+              </div>
               
               <div class="admin-card module-card hover-scale" @click="goToFlexAuctions">
                   <div class="card-icon">⚡</div>
@@ -98,7 +107,15 @@
                       <p>Assegna o revoca i privilegi speciali agli utenti e visualizza l'elenco degli attivi.</p>
                   </div>
                   <div class="card-arrow">→</div>
-              </div>              
+              </div>  
+              <div class="action-item" @click="goTo('/admin/business-plan')">
+                    <div class="act-icon">📈</div>
+                    <div class="act-info">
+                        <h4>Esco Business Model Simulator</h4>
+                        <p>Simula ROI, sblocchi lead e success fee per le ESCO.</p>
+                    </div>
+                    <div class="arrow">→</div>
+                </div>            
 
           </div>
 

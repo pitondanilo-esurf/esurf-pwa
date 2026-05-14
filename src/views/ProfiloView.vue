@@ -17,7 +17,10 @@
             <div class="card-header-flex">
               <h2 class="card-title" style="margin: 0;">Dati Personali</h2>
               <button class="btn-icon-text" @click="startEdit">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
                 Modifica
               </button>
             </div>
@@ -48,17 +51,17 @@
                 </div>
                 <div class="info-block">
                   <label>Partita IVA</label>
-                  <div class="info-value">{{ user.profile?.vat_number }}</div>
+                  <div class="info-value">{{ user.piva }}</div>
                 </div>
               </template>
               <template v-else>
                 <div class="info-block full-width">
                   <label>Nome Completo</label>
-                  <div class="info-value">{{ user.profile?.first_name }} {{ user.profile?.last_name }}</div>
+                  <div class="info-value">{{ user.name }} {{ user.surname }}</div>
                 </div>
                 <div class="info-block">
                   <label>Codice Fiscale</label>
-                  <div class="info-value uppercase">{{ user.profile?.tax_code }}</div>
+                  <div class="info-value uppercase">{{ user.cf }}</div>
                 </div>
               </template>
 
@@ -135,6 +138,12 @@
               </div>
             </div>
 
+            <div class="form-group">
+              <label>Email Account</label>
+              <input :value="user.email" disabled class="modern-input readonly-field">
+              <span class="input-hint">L'email di accesso non può essere modificata da questa schermata.</span>
+            </div>
+
             <div class="form-row">
               <div class="form-group flex-2">
                 <label>Città</label>
@@ -149,15 +158,15 @@
             <template v-if="editForm.subject_type === 'private'">
               <div class="form-group">
                 <label>Nome</label>
-                <input v-model="editForm.first_name" required class="modern-input">
+                <input v-model="editForm.name" required class="modern-input">
               </div>
               <div class="form-group">
                 <label>Cognome</label>
-                <input v-model="editForm.last_name" required class="modern-input">
+                <input v-model="editForm.surname" required class="modern-input">
               </div>
               <div class="form-group">
                 <label>Codice Fiscale</label>
-                <input v-model="editForm.tax_code" required maxlength="16" class="modern-input uppercase" placeholder="16 caratteri">
+                <input v-model="editForm.cf" required maxlength="16" class="modern-input uppercase" placeholder="16 caratteri">
               </div>
             </template>
 
@@ -168,7 +177,7 @@
               </div>
               <div class="form-group">
                 <label>Partita IVA</label>
-                <input v-model="editForm.vat_number" required maxlength="11" class="modern-input" placeholder="11 cifre">
+                <input v-model="editForm.piva" required maxlength="11" class="modern-input" placeholder="11 cifre">
               </div>
             </template>
 
@@ -205,13 +214,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import AuthService from '@/services/AuthService';
 import axios from '@/services/axios'; 
 import GuideHeader from '@/components/layout/GuideHeader.vue';
 
 const router = useRouter();
+const route = useRoute();
 
 // --- STATI GLOBALI ---
 const isLightMode = ref(false);
@@ -230,11 +240,23 @@ const showPdfModal = ref(false);
 const pdfLoading = ref(false);
 const pdfUrl = ref('');
 
-// Calcola dinamicamente la rotta di ritorno
+// Gestione dinamica del tasto Back
 const backRouteUrl = computed(() => {
+  // Se stiamo modificando ma il profilo è già completo, premendo back usciamo dalla modifica
+  if (isEditing.value && !profileIncomplete.value) {
+    return '/profilo'; 
+  }
+  // Altrimenti torna alla dashboard di competenza
   if (user.value?.role === 'owner') return '/owner/dashboard';
   if (user.value?.role === 'admin') return '/admin';
   return '/home'; 
+});
+
+// Watcher per chiudere il form se l'utente preme la freccia Back nella Navbar
+watch(() => route.fullPath, () => {
+  if (isEditing.value && !profileIncomplete.value) {
+    isEditing.value = false;
+  }
 });
 
 onMounted(async () => {
@@ -251,19 +273,22 @@ const fetchUserData = async () => {
     const response = await AuthService.getUser();
     user.value = response.data;
     
-    const p = user.value.profile || {};
-    const commonOk = p.city && p.province;
+    const u = user.value;
+    const p = u.profile || {};
+    
+    // Controllo completezza (Sincronizzato con le chiavi del server)
+    const commonOk = !!(p.city && p.province);
     let specificOk = false;
     
     if (p.subject_type === 'company') {
-      specificOk = p.company_name && p.vat_number;
+      specificOk = !!(p.company_name && u.piva);
     } else {
-      specificOk = p.first_name && p.last_name && p.tax_code;
+      specificOk = !!(u.name && u.surname && u.cf);
     }
 
     if (!commonOk || !specificOk) {
       profileIncomplete.value = true;
-      startEdit(); // Riattivato! L'utente entra in modalità modifica automaticamente
+      startEdit();
     } else {
       profileIncomplete.value = false;
       isEditing.value = false;
@@ -285,16 +310,16 @@ const fetchCommunities = async () => {
 };
 
 const startEdit = () => {
-  const p = user.value.profile || {};
   const u = user.value;
+  const p = u.profile || {};
 
   editForm.value = {
     subject_type: p.subject_type || 'private',
-    first_name: p.first_name || u.name || '',
-    last_name: p.last_name || u.surname || '',
-    tax_code: p.tax_code || '',
+    name: u.name || '',
+    surname: u.surname || '',
+    cf: u.cf || '',
     company_name: p.company_name || '',
-    vat_number: p.vat_number || '',
+    piva: u.piva || '',
     city: p.city || '',
     province: p.province || '',
   };
@@ -306,17 +331,18 @@ const saveProfileChanges = async () => {
   try {
     const payload = { ...editForm.value };
     
+    // Sanitizzazione payload
     if (payload.subject_type === 'private') {
       payload.company_name = null;
-      payload.vat_number = null;
+      payload.piva = null;
     } else {
-      payload.first_name = null;
-      payload.last_name = null;
-      payload.tax_code = null;
+      payload.name = null;
+      payload.surname = null;
+      payload.cf = null;
     }
 
     await AuthService.saveProfile(payload);
-    await fetchUserData(); // Ricarica e verifica se è ancora incompleto
+    await fetchUserData();
   } catch (e) {
     alert("Errore salvataggio: " + (e.response?.data?.message || 'Controlla i dati inseriti'));
   } finally {
@@ -330,7 +356,6 @@ const copyDid = () => {
   }
 };
 
-// --- LOGICA PDF ---
 const viewPdf = async (type) => {
   showPdfModal.value = true;
   pdfLoading.value = true;
@@ -353,7 +378,7 @@ const closePdfModal = () => {
 
 <style src="@/assets/css/main.css"></style>
 <style scoped>
-/* Layout Dati (Read-Only) */
+/* READ-ONLY LAYOUT */
 .card-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
 .btn-icon-text { background: transparent; border: 1px solid var(--border-color); border-radius: 8px; color: var(--accent-blue); padding: 6px 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; }
 .info-grid { display: flex; flex-direction: column; gap: 16px; }
@@ -365,29 +390,20 @@ const closePdfModal = () => {
 .did-box code { font-family: monospace; font-size: 12px; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%; }
 .copy-hint { font-size: 11px; color: var(--accent-blue); font-weight: bold; }
 
-/* Alert Styles */
+/* ALERT & FORMS */
 .alert-card { display: flex; gap: 16px; align-items: flex-start; padding: 16px; border-radius: 12px; border: 1px solid transparent; }
 .alert-icon { font-size: 24px; }
 .alert-title { margin: 0 0 4px 0; font-size: 16px; font-weight: 700; }
 .alert-text { margin: 0; font-size: 13px; color: var(--text-main); opacity: 0.9; }
 
-/* LISTA COMMUNITY */
-.delay-25 { animation-delay: 0.25s; }
-.community-list { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
-.community-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 12px; }
-.comm-icon { width: 36px; height: 36px; background: rgba(16, 185, 129, 0.1); color: #10b981; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-.comm-info { display: flex; flex-direction: column; }
-.comm-info strong { font-size: 0.95rem; color: var(--text-main); }
-.comm-type { font-size: 0.8rem; color: var(--text-muted); }
-
-/* Form Styles */
 .form-group { margin-bottom: 16px; }
 .form-row { display: flex; gap: 12px; }
 .flex-1 { flex: 1; }
 .flex-2 { flex: 2; }
 .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
 .modern-input { width: 100%; background-color: var(--bg-app); color: var(--text-main); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; font-size: 15px; box-sizing: border-box; }
-.modern-input:focus { outline: none; border-color: var(--accent-blue); }
+.readonly-field { opacity: 0.6; cursor: not-allowed; background-color: var(--bg-card); }
+.input-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block; }
 
 .type-switcher { display: flex; gap: 8px; background: var(--bg-app); padding: 6px; border-radius: 10px; border: 1px solid var(--border-color); }
 .type-switcher label { flex: 1; text-align: center; padding: 10px; font-size: 14px; font-weight: 600; color: var(--text-muted); border-radius: 6px; cursor: pointer; margin: 0; transition: all 0.2s; }
@@ -396,7 +412,14 @@ const closePdfModal = () => {
 .form-actions { display: flex; flex-direction: column; gap: 10px; }
 .mt-4 { margin-top: 24px; }
 
-/* Documenti e Contratti */
+/* COMMUNITY & DOCS */
+.community-list { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+.community-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 12px; }
+.comm-icon { width: 36px; height: 36px; background: rgba(16, 185, 129, 0.1); color: #10b981; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.comm-info { display: flex; flex-direction: column; }
+.comm-info strong { font-size: 0.95rem; color: var(--text-main); }
+.comm-type { font-size: 0.8rem; color: var(--text-muted); }
+
 .doc-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
 .doc-item { display: flex; align-items: center; background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; text-align: left; cursor: pointer; color: var(--text-main); transition: background-color 0.2s; }
 .doc-icon { font-size: 24px; margin-right: 16px; background: var(--bg-card); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
@@ -405,7 +428,7 @@ const closePdfModal = () => {
 .doc-texts span { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 .doc-arrow { color: var(--accent-blue); font-weight: bold; }
 
-/* Modale PDF */
+/* MODALS */
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px); z-index: 999; display: flex; justify-content: center; align-items: center; padding: 16px; }
 .modal-content { background: var(--bg-card); width: 100%; max-width: 480px; height: 85vh; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-color); }
 .modal-header { padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); color: var(--text-main); }
@@ -413,7 +436,7 @@ const closePdfModal = () => {
 .modal-body { flex-grow: 1; background: #fff; position: relative; }
 .pdf-iframe { width: 100%; height: 100%; border: none; }
 
-/* Utils */
+/* UI UTILS */
 .loading-state { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100px; color: var(--text-muted); font-size: 14px; }
 .spinner { width: 30px; height: 30px; border: 3px solid var(--border-color); border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
 @keyframes spin { to { transform: rotate(360deg); } }

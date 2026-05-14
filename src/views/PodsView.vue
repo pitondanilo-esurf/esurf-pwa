@@ -5,10 +5,12 @@
 
     <main class="main-content">
       <div class="page-header-compact fade-in delay-1">
+         
          <div class="header-left">
             <h2>{{ $t('pods.header.title') }}</h2>
             <p>{{ $t('pods.header.subtitle') }}</p>
          </div>
+
          <button class="btn-add-compact hover-scale" @click="openAddForm">
             {{ $t('pods.header.newBtn') }}
          </button>
@@ -156,42 +158,11 @@
       </div>
     </main>
 
-    <PodComplianceModal 
-        :show="showComplianceModal" 
-        :complianceData="selectedCompliance" 
-        @close="closeComplianceModal" 
-    />
-
-    <PodAiModal 
-        :show="showAiModal" 
-        :aiData="selectedAiData" 
-        @close="closeAiModal" 
-    />
-
-    <PodSignModal 
-        :show="showSignModal"
-        :signingPod="signingPod"
-        :currentDocType="currentDocType"
-        :previewHtml="previewHtml"
-        :signForm="signForm"
-        :isSigning="isSigning"
-        @close="closeSignModal"
-        @switchTab="switchTab"
-        @confirm="confirmSign"
-    />
-
-    <PodAssetModal
-        :show="showAssetModal"
-        :pod="selectedPodForAssets"
-        @close="closeAssetModal"
-    />
-    
-    <PodQrModal
-        :show="showQrModal"
-        :pod="selectedPodForQr"
-        :qrUrl="generatedQrUrl"
-        @close="closeQrModal"
-    />
+    <PodComplianceModal :show="showComplianceModal" :complianceData="selectedCompliance" @close="closeComplianceModal" />
+    <PodAiModal :show="showAiModal" :aiData="selectedAiData" @close="closeAiModal" />
+    <PodSignModal :show="showSignModal" :signingPod="signingPod" :currentDocType="currentDocType" :previewHtml="previewHtml" :signForm="signForm" :isSigning="isSigning" @close="closeSignModal" @switchTab="switchTab" @confirm="confirmSign" />
+    <PodAssetModal :show="showAssetModal" :pod="selectedPodForAssets" @close="closeAssetModal" />
+    <PodQrModal :show="showQrModal" :pod="selectedPodForQr" :qrUrl="generatedQrUrl" @close="closeQrModal" />
 
     <transition name="modal-fade">
         <div v-if="showPdfModal" class="modal-backdrop" @click.self="closePdfModal">
@@ -358,8 +329,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n'; 
 import apiClient from '@/services/axios'; 
 import PodService from '@/services/PodService';
@@ -374,6 +345,7 @@ import PodAssetModal from '@/components/pods/PodAssetModal.vue';
 import PodQrModal from '@/components/pods/PodQrModal.vue';
 
 const router = useRouter();
+const route = useRoute();
 const { t } = useI18n();
 
 const user = ref({});
@@ -411,7 +383,6 @@ const selectedCompliance = ref(null);
 const showAssetModal = ref(false);
 const selectedPodForAssets = ref(null);
 
-// --- STATI PER MODALE QR ---
 const showQrModal = ref(false);
 const selectedPodForQr = ref(null);
 const generatedQrUrl = ref('');
@@ -424,11 +395,32 @@ const currentDocType = ref('delegation_pod_read');
 const previewHtml = ref('');
 const signForm = ref({ accept_delegation: false, accept_data_policy: false });
 
-// Parsa la cache AI per poterla usare nel template in tempo reale
 const parsedAiAnalysis = computed(() => {
     if (!cachedAiAnalysis.value) return null;
     try { return JSON.parse(cachedAiAnalysis.value); } catch(e) { return null; }
 });
+
+// FUNZIONE PER APRIRE L'ACCORDION DINAMICAMENTE
+const openAccordionFromUrl = async () => {
+    if (route.query.expand && pods.value.length > 0) {
+        const expandVal = String(route.query.expand);
+        const targetPod = pods.value.find(p => String(p.id) === expandVal);
+        
+        if (targetPod) {
+            expandedPodId.value = targetPod.id; 
+            
+            await nextTick(); 
+            
+            setTimeout(() => {
+                const el = document.querySelector('.is-open');
+                if (el) {
+                    const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                }
+            }, 300);
+        }
+    }
+};
 
 onMounted(async () => {
     const savedTheme = localStorage.getItem('theme');
@@ -439,8 +431,20 @@ onMounted(async () => {
     try {
         const userRes = await AuthService.getUser();
         user.value = userRes.data;
+        
         await fetchPods();
-    } catch (e) { if(e.response?.status === 401) router.push('/login'); }
+        await openAccordionFromUrl();
+
+    } catch (e) { 
+        if(e.response?.status === 401) router.push('/login'); 
+    }
+});
+
+// ASCOLTA I CAMBIAMENTI DELL'URL
+watch(() => route.query.expand, async (newVal) => {
+    if (newVal) {
+        await openAccordionFromUrl();
+    }
 });
 
 const fetchPods = async () => {
@@ -478,20 +482,15 @@ const getStorageUrl = (path) => {
 const viewStorageFile = (path, title) => {
     currentPdfTitle.value = title;
     pdfLoading.value = true;
-    
     if(pdfUrl.value && pdfUrl.value.startsWith('blob:')) window.URL.revokeObjectURL(pdfUrl.value);
-    
     pdfUrl.value = getStorageUrl(path);
     showPdfModal.value = true;
     setTimeout(() => { pdfLoading.value = false; }, 500);
 };
 
 const viewPdf = async (pod, type) => {
-    if (pdfUrl.value && pdfUrl.value.startsWith('blob:')) {
-        window.URL.revokeObjectURL(pdfUrl.value);
-    }
+    if (pdfUrl.value && pdfUrl.value.startsWith('blob:')) window.URL.revokeObjectURL(pdfUrl.value);
     pdfUrl.value = '';
-    
     showPdfModal.value = true; 
     pdfLoading.value = true;
     currentPdfTitle.value = type === 'delegation' ? t('pods.actions.delegation') : t('pods.actions.policy');
@@ -557,12 +556,10 @@ const closeAssetModal = () => {
 
 const openQrModal = (pod) => {
     selectedPodForQr.value = pod;
-    
     if (!pod.public_share_hash) {
         alert("Errore: Hash di condivisione non disponibile. Aggiorna la pagina o contatta l'assistenza.");
         return;
     }
-    
     generatedQrUrl.value = `http://192.168.0.206:5173/querypods?id=${pod.public_share_hash}`;
     showQrModal.value = true;
 };
@@ -603,14 +600,9 @@ const handleMagicUpload = async (event) => {
             const extracted = res.data.data; 
             
             if (extracted) {
-                // Assicuriamoci di prendere il JSON grezzo
                 const rawData = extracted.raw_analysis || extracted; 
                 cachedAiAnalysis.value = JSON.stringify(rawData);
-
-                // Mappatura con il NUOVO JSON
                 form.value.pod_code = rawData.pod_id || form.value.pod_code;
-                
-                // Gestione oggetto annidato 'indirizzo'
                 if (rawData.indirizzo) {
                     const via = rawData.indirizzo.Via || '';
                     const civico = rawData.indirizzo.NumeroCivico || '';
@@ -618,10 +610,7 @@ const handleMagicUpload = async (event) => {
                     form.value.city = rawData.indirizzo.Città || form.value.city;
                     form.value.zip_code = rawData.indirizzo.Cap || form.value.zip_code;
                 }
-                
-                // Dati Tecnici
                 form.value.contract_power = rawData.committed_power_kw || form.value.contract_power;
-                
                 if (rawData.consumption_bands && rawData.consumption_bands.total_annual) {
                     form.value.annual_consumption_kwh = rawData.consumption_bands.total_annual;
                 }
@@ -970,7 +959,7 @@ a.hover-link:hover { opacity: 0.7; text-decoration: underline; color: var(--acce
 @media (max-width: 768px) {
     .main-content { padding: 1rem 1rem 2rem 1rem; }
     .page-header-compact { flex-direction: column; align-items: stretch; gap: 15px; }
-    .header-left { text-align: center; }
+    .header-left { text-align: center; flex-direction: column !important; }
     .btn-add-compact { width: 100%; padding: 12px; }
     .accordion-header { gap: 10px; padding: 8px 10px; }
     .header-main-info { gap: 6px; }
