@@ -72,6 +72,10 @@
                         🔌 Asset
                     </button>
 
+                    <button v-if="isMonitorato" @click.stop="isChartModalOpen = true" class="f-btn f-btn-ghost" title="Visualizza Grafico Storico Impianto">
+                        📈 Grafico
+                    </button>
+
                     <button v-if="resource.ai_analysis" @click.stop="$emit('open-lens', resource)" class="f-btn f-btn-primary hover-lift">
                         🔍 Lente AI
                     </button>
@@ -154,6 +158,20 @@
         </div>
     </transition>
 
+    <teleport to="body">
+        <div v-if="isChartModalOpen" class="modal-overlay" @click="isChartModalOpen = false">
+            <div class="modal-content" @click.stop>
+                <div class="modal-header">
+                    <h3>Storico Impianto</h3>
+                    <button @click="isChartModalOpen = false" class="btn-close">&times;</button>
+                </div>
+                <div class="p-4" style="padding-bottom: 2rem;">
+                    <PodChartCustom :podId="resource.pod_code" />
+                </div>
+            </div>
+        </div>
+    </teleport>
+
   </div>
 </template>
 
@@ -163,6 +181,9 @@ import { useI18n } from 'vue-i18n';
 import axios from '@/services/axios';
 import GetRealTimeData from './GetRealTimeData.vue';
 
+// Importazione del nuovo componente per il grafico
+import PodChartCustom from '@/components/charts/PodChartCustom.vue';
+
 const props = defineProps({
   resource: { type: Object, required: true },
   isOpen: { type: Boolean, default: false }
@@ -171,7 +192,10 @@ const props = defineProps({
 const emit = defineEmits(['toggle', 'edit', 'delete', 'view-pdf', 'view-ai', 'open-lens', 'open-sign', 'open-qr', 'open-revoke', 'manage-assets', 'view-compliance']);
 const { t } = useI18n();
 
-// --- NUOVA LOGICA: Controllo stato monitoraggio ---
+// Stato per la Modale del Grafico
+const isChartModalOpen = ref(false);
+
+// Controllo stato monitoraggio
 const isMonitorato = ref(false);
 
 const checkMonitoringStatus = async () => {
@@ -259,7 +283,6 @@ const getComplianceColorClass = (level) => {
 .fintech-card.is-open { border-color: var(--accent-blue); box-shadow: 0 8px 24px rgba(0,0,0,0.06); margin: 12px 0; }
 .fintech-card.has-error { border-color: rgba(239, 68, 68, 0.4); }
 
-/* HEADER */
 .fintech-header { 
     padding: 14px 16px; 
     display: flex; justify-content: space-between; align-items: center; 
@@ -268,13 +291,8 @@ const getComplianceColorClass = (level) => {
 .header-left, .header-right { display: flex; align-items: center; gap: 10px; }
 .header-left { flex-wrap: wrap; flex: 1; }
 
-.f-code { 
-    font-family: 'JetBrains Mono', 'Courier New', monospace; 
-    font-size: 1.05rem; font-weight: 700; color: var(--text-main); 
-    letter-spacing: -0.5px; margin-right: 6px;
-}
+.f-code { font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 1.05rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; margin-right: 6px; }
 
-/* COMPLIANCE DOT */
 .compliance-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 3px var(--border-color); }
 .compliance-dot.empty { visibility: hidden; }
 .level-bronze { background: #CD7F32; box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 3px rgba(205, 127, 50, 0.4); }
@@ -282,40 +300,11 @@ const getComplianceColorClass = (level) => {
 .level-gold { background: #FFD700; box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 3px rgba(255, 215, 0, 0.4); }
 .level-platinum { background: #4facfe; box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 3px rgba(79, 172, 254, 0.4); }
 
-/* --- NUOVI STILI BADGE LIVE --- */
-.f-live-pulse {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-size: 0.65rem;
-    font-weight: 800;
-}
+.f-live-pulse { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 800;}
+.f-live-pulse .pulse-dot { width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; animation: pulse-dot-animation 2s infinite;}
+@keyframes pulse-dot-animation { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
-.f-live-pulse .pulse-dot {
-    width: 6px;
-    height: 6px;
-    background-color: #ef4444;
-    border-radius: 50%;
-    animation: pulse-dot-animation 2s infinite;
-}
-
-@keyframes pulse-dot-animation {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-}
-/* ------------------------------- */
-
-/* BADGES */
-.f-badge { 
-    font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-    padding: 4px 8px; border-radius: 6px; white-space: nowrap;
-}
+.f-badge { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 8px; border-radius: 6px; white-space: nowrap;}
 .f-type-luce { color: #d97706; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); }
 .f-type-gas { color: #ea580c; background: rgba(249, 115, 22, 0.08); border: 1px solid rgba(249, 115, 22, 0.2); }
 .f-type-acqua { color: #2563eb; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); }
@@ -331,7 +320,6 @@ const getComplianceColorClass = (level) => {
 .chevron { color: var(--text-muted); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 .chevron.rotate { transform: rotate(180deg); color: var(--accent-blue); }
 
-/* BODY & ANIMATION */
 .fintech-body { padding: 0 16px 16px 16px; border-top: 1px solid var(--border-color); }
 .fintech-slide-enter-active, .fintech-slide-leave-active { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); max-height: 800px; opacity: 1; overflow: hidden; }
 .fintech-slide-enter-from, .fintech-slide-leave-to { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; }
@@ -339,29 +327,25 @@ const getComplianceColorClass = (level) => {
 .f-alert { padding: 10px; border-radius: 8px; font-size: 0.85rem; margin: 12px 0; }
 .f-alert-error { background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; }
 
-/* TOP INFO (Location & Buttons) */
 .f-body-top { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px; flex-wrap: wrap; gap: 16px; }
 .f-location-block { flex: 1; }
 .f-address { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; }
 .f-owner { font-size: 0.95rem; font-weight: 600; color: var(--text-main); }
 .owner-email { font-size: 0.8rem; font-weight: 400; color: var(--text-muted); margin-left: 6px; }
 
-/* BUTTONS */
 .f-actions-main { display: flex; gap: 8px; flex-wrap: wrap; }
 .f-btn { font-family: inherit; font-size: 0.85rem; font-weight: 600; padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
 .f-btn-ghost { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
 .f-btn-ghost:hover { background: var(--bg-app); border-color: var(--text-muted); }
-.f-btn-primary { background: var(--text-main); color: var(--bg-card); border: 1px solid var(--text-main); }
-.f-btn-primary:hover.hover-lift { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+/* SISTEMATO BOTTONE PRIMARIO (Lente AI) PER ESSERE RESPONSIVO AL TEMA (Blue Accent) */
+.f-btn-primary { background: #3b82f6; color: #ffffff; border: 1px solid #2563eb; }
+.f-btn-primary:hover.hover-lift { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+
 .f-btn-primary-outline { background: transparent; border: 1px solid var(--accent-blue); color: var(--accent-blue); }
 .f-btn-primary-outline:hover { background: rgba(59, 130, 246, 0.05); }
 
-/* DATA DASHBOARD (The Fintech Core) */
-.f-data-dashboard { 
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px;
-    background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 10px;
-    padding: 16px; margin: 20px 0;
-}
+.f-data-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin: 20px 0;}
 .f-data-cell { display: flex; flex-direction: column; gap: 4px; }
 .f-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
 .f-value { font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
@@ -372,7 +356,6 @@ const getComplianceColorClass = (level) => {
 .f-link { color: #16a34a; font-family: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-decoration: none; }
 .f-link:hover { text-decoration: underline; }
 
-/* FOOTER ACTIONS */
 .f-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border-color); padding-top: 12px; flex-wrap: wrap; gap: 12px;}
 .f-footer-left, .f-footer-right { display: flex; align-items: center; gap: 12px; }
 .f-btn-text { background: none; border: none; padding: 0; color: var(--text-muted); font-weight: 600; font-size: 0.85rem; cursor: pointer; }
@@ -389,7 +372,33 @@ const getComplianceColorClass = (level) => {
 .f-btn-icon-danger { background: transparent; border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;}
 .f-btn-icon-danger:hover { background: rgba(239, 68, 68, 0.1); border-color: #ef4444; }
 
-/* RESPONSIVE */
+/* ==================================================== */
+/* MODALE GRAFICO: RESA RESPONSIVA AL TEMA              */
+/* ==================================================== */
+.modal-overlay { 
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+    background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; 
+    z-index: 1000; backdrop-filter: blur(2px); 
+}
+.modal-content { 
+    background: var(--bg-card); /* Colore dinamico in base al tema */
+    color: var(--text-main);
+    border: 1px solid var(--border-color); 
+    border-radius: 12px; width: 100%; max-width: 900px; padding: 0; 
+    overflow: hidden; max-height: 90vh; overflow-y: auto; 
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+}
+.modal-header { 
+    padding: 20px; 
+    background: var(--bg-app); /* Sfondo Header adattato */
+    border-bottom: 1px solid var(--border-color); 
+    display: flex; justify-content: space-between; align-items: center; 
+}
+.modal-header h3 { margin: 0; color: var(--text-main); font-size: 1.25rem; }
+.btn-close { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
+.btn-close:hover { color: var(--text-main); }
+.p-4 { padding: 1.5rem; }
+
 @media (max-width: 600px) {
     .f-body-top { flex-direction: column; align-items: flex-start; gap: 12px; }
     .f-actions-main { width: 100%; }

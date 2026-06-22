@@ -24,6 +24,10 @@
         <span class="meta-label">Nome:</span>
         <span class="meta-value">{{ impiantoInfo.nome }}</span>
       </div>
+      
+      <button @click.stop="$emit('open-chart')" class="btn-chart-rt" title="Visualizza Grafico Storico Impianto">
+        📈 Grafico Storico
+      </button>
     </div>
 
     <div v-if="hasData && rt" class="rt-dashboard">
@@ -77,6 +81,8 @@ const props = defineProps({
   isExpanded: { type: Boolean, default: false }
 });
 
+const emit = defineEmits(['open-chart']);
+
 const isImpianto = ref(false);
 const hasData = ref(false);
 const loading = ref(true);
@@ -84,13 +90,10 @@ const rt = ref(null);
 const impiantoInfo = ref(null);
 let pollingTimer = null; 
 
-// Logica visualizzazione batteria
 const hasBatteryConfig = computed(() => impiantoInfo.value?.has_bess === true);
 const hasBatteryLiveData = computed(() => rt.value && rt.value.batteria_soc_percentuale !== null && rt.value.batteria_soc_percentuale !== undefined);
-// Mostra la batteria se configurata in MySQL OPPURE se arrivano dati da Aiven/Valkey
 const showBattery = computed(() => hasBatteryConfig.value || hasBatteryLiveData.value);
 
-// Helper UI per la Batteria
 const translateBatteryState = (state) => {
   if (!state) return 'Sconosciuto';
   const s = state.toLowerCase();
@@ -166,38 +169,67 @@ onUnmounted(() => fermaPolling());
 </script>
 
 <style scoped>
+/* SOSTITUITI COLORI HARDCODED CON VARIABILI CSS */
 .realtime-banner {
-  background: #0f172a;
-  border: 1px solid #334155;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 15px;
-  color: white;
+  color: var(--text-main);
 }
 .rt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.rt-timestamp { color: var(--text-muted); font-size: 0.8rem; }
 
-/* Nuovo stile per la riga dei metadati */
 .rt-meta-row {
-  display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; padding: 10px 14px;
-  background: rgba(30, 41, 59, 0.4); border-radius: 8px; border: 1px dashed rgba(148, 163, 184, 0.2);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 15px; margin-bottom: 15px; padding: 10px 14px;
+  background: var(--bg-app); border-radius: 8px; border: 1px dashed var(--border-color);
   font-size: 0.8rem;
 }
 .meta-item { display: flex; align-items: center; gap: 6px; }
-.meta-label { color: #94a3b8; text-transform: uppercase; font-size: 0.65rem; font-weight: 600;}
-.meta-value { font-weight: 700; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; }
-.f-accent { color: #38bdf8; } /* Azzurro per il brand (es. SolarEdge) */
+.meta-label { color: var(--text-muted); text-transform: uppercase; font-size: 0.65rem; font-weight: 600;}
+.meta-value { font-weight: 700; color: var(--text-main); font-family: 'JetBrains Mono', monospace; }
+.f-accent { color: #38bdf8; } 
 
-.rt-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-.rt-card { background: #1e293b; padding: 12px; border-radius: 8px; border-left: 4px solid #475569; }
-
-.rt-storage-info {
-  margin-top: 8px; font-size: 0.65rem; color: #94a3b8; display: flex; flex-direction: column;
-  gap: 3px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px;
+.btn-chart-rt {
+  margin-left: auto;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #3b82f6;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.btn-chart-rt:hover {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
 }
 
-/* Colori Dinamici Batteria */
-.text-charging { color: #10b981 !important; }    /* Smeraldo */
-.text-discharging { color: #f59e0b !important; } /* Ambra */
-.text-muted { color: #94a3b8 !important; }
+.rt-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+
+/* RT CARD: Adattata al tema chiaro/scuro */
+.rt-card { 
+  background: var(--bg-card); 
+  padding: 12px; 
+  border-radius: 8px; 
+  border: 1px solid var(--border-color);
+  border-left-width: 4px;
+}
+.rt-storage-info { 
+  margin-top: 8px; font-size: 0.65rem; color: var(--text-muted); display: flex; flex-direction: column; 
+  gap: 3px; border-top: 1px solid var(--border-color); padding-top: 6px;
+}
+
+/* Colori Dinamici (Rimangono assoluti perché semantici) */
+.text-charging { color: #10b981 !important; }
+.text-discharging { color: #f59e0b !important; }
+.text-muted { color: var(--text-muted) !important; }
 
 .solar { border-left-color: #f59e0b; }
 .load { border-left-color: #3b82f6; }
@@ -205,17 +237,15 @@ onUnmounted(() => fermaPolling());
 .grid-export { border-left-color: #10b981; }
 .battery { border-left-color: #8b5cf6; }
 
-.info-full { grid-column: 1 / -1; background: transparent; border: none; font-size: 0.8rem; color: #94a3b8; text-align: center; padding-top: 5px;}
-
+.info-full { grid-column: 1 / -1; background: transparent; border: none; font-size: 0.8rem; color: var(--text-muted); text-align: center; padding-top: 5px;}
 .rt-value { font-size: 1.2rem; font-weight: bold; }
-.unit { font-size: 0.8rem; color: #64748b; }
-.rt-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px; }
+.unit { font-size: 0.8rem; color: var(--text-muted); }
+.rt-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
 
 .live-indicator { width: 10px; height: 10px; border-radius: 50%; }
 .live-indicator.pulsing { background-color: #ef4444; animation: pulse-red 2s infinite; }
-.live-indicator.waiting { background-color: #64748b; }
-
-.rt-error-state { text-align: center; padding: 15px; color: #94a3b8; font-size: 0.9rem; }
+.live-indicator.waiting { background-color: var(--text-muted); }
+.rt-error-state { text-align: center; padding: 15px; color: var(--text-muted); font-size: 0.9rem; }
 
 @keyframes pulse-red {
   0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }

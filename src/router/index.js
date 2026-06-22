@@ -5,6 +5,7 @@ import HomeView from '../views/HomeView.vue'
 import RegisterView from '../views/auth/RegisterView.vue'
 import LoginView from '../views/auth/LoginView.vue'
 import DashboardView from '../views/DashboardView.vue'
+import OrchestratorDashboard from '@/components/OrchestratorDashboard.vue';
 
 // VECCHIA GESTIONE PODS (Mantenuta come richiesto)
 import PodsView from '../views/PodsView.vue'
@@ -214,6 +215,15 @@ const router = createRouter({
         role: 'admin' // <-- Fondamentale per la sicurezza!
       }
     },
+    {
+      path: '/docs', // o /documentazione
+      name: 'documentazione',
+      component: () => import('@/components/document/TreeParser.vue'),
+      meta: {
+        requiresAuth: true, // Imposta su false se vuoi che sia pubblica
+        role: 'admin'  // Opzionale: restringe l'accesso solo a determinati ruoli se necessario
+      }
+    },
 
 
     // fine V1
@@ -380,6 +390,24 @@ const router = createRouter({
       name: 'admin-esco-roi',
       component: () => import('@/views/admin/EscoBusinessModel.vue'),
       meta: { requiresAuth: true, requiresRole: 'admin' }
+    },
+    {
+      path: '/revenue-forecast',
+      name: 'AIRevenueDashboard',
+      component: () => import('@/components/AIRevenueDashboard.vue'),
+      meta: {
+        requiresAuth: true, 
+        title: 'Orchestrator Hub'
+      }
+    },
+    {
+      path: '/orchestrator', // o il percorso che preferisci
+      name: 'OrchestratorDashboard',
+      component: OrchestratorDashboard,
+      meta: {
+        requiresAuth: true, // Mantieni la protezione se serve
+        title: 'Orchestrator Hub'
+      }
     }
   ]
 });

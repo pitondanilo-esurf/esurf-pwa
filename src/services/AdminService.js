@@ -58,5 +58,10 @@ export default {
   
   testConnection(payload) {
     return apiClient.post('/api/impianti/test', payload); // Corretto da api a apiClient
+  },
+
+  getStoricoPod(podId, hours = 120) {
+    // Passiamo le ore alla query string (?hours=120)
+    return apiClient.get(`/api/pod/${podId}/storico?hours=${hours}`); 
   }
 };

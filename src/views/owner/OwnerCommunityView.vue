@@ -30,10 +30,16 @@
                     class="card substation-card"
                 >
                     <div class="card-header substation-header">
-                        <div class="substation-title">
-                            <span class="icon">🏢</span>
-                            <h3>{{ substation === 'unassigned' ? $t('ownerCommunity.unassigned') : substation }}</h3>
-                        </div>
+<div class="substation-title">
+    <span class="icon">🏢</span>
+    <h3>
+        {{ substation === 'unassigned' ? $t('ownerCommunity.unassigned') : substation }}
+        
+        <span v-if="substation !== 'unassigned' && podsList.length > 0 && podsList[0].cabina_province" class="substation-province" :title="podsList[0].cabina_province.provincia_nome">
+            ({{ podsList[0].cabina_province.provincia_sigla }})
+        </span>
+    </h3>
+</div>
                         <span class="badge">{{ podsList.length }} POD</span>
                     </div>
                     
@@ -459,6 +465,14 @@ const forceMobileDownload = async () => {
 .substation-title h3 { margin: 0; font-size: 1.2rem; color: var(--accent-blue); font-weight: 800; letter-spacing: 0.5px;}
 .substation-title .icon { font-size: 1.5rem; }
 .badge { background: var(--accent-blue); color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);}
+
+.substation-province {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-left: 6px;
+    font-family: 'Inter', sans-serif;
+}
 
 /* STILE ACCORDION EREDITATO DA PODSVIEW */
 .accordion-container { display: flex; flex-direction: column; gap: 12px; }

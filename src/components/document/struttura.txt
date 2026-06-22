@@ -1,0 +1,65 @@
+e-Surf PWA - Mappa di Navigazione Gerarchica
+	@/views/HomeView.vue (/) - Portale pubblico di ingresso ed home di atterraggio
+		/register (@/views/auth/RegisterView.vue) - Pagina di registrazione per nuovi utenti standard
+			/login (@/views/auth/LoginView.vue) - Collegamento di ritorno per utenti già in possesso di account
+		/login (@/views/auth/LoginView.vue) - Finestra di autenticazione centralizzata per tutti i ruoli della piattaforma
+			Reindirizzamento Condizionale Ruolo: superadmin -> /admin/dashboard (@/views/admin/AdminDashboard.vue)
+				{ name: 'admin-impianti' } (@/views/admin/Impianti.vue) - Amministrazione delle anagrafiche inverter, credenziali e test connessioni API
+				{ name: 'admin-flex-auctions' } (@/views/admin/FlexAuctions.vue) - Gestione dei plafond, calcolo baseline e raggruppamento asset mercati UVAM/DSO
+				{ name: 'admin-pod-orfani' } (@/views/admin/PodOrfani.vue) - Centro di rilevamento, smistamento e assegnazione dei POD non associati ad alcuna CER
+				{ name: 'admin-power-users' } (@/views/admin/CreaPowerUser.vue) - Interfaccia di assegnazione o revoca dei privilegi speciali ai profili utente attivi
+				/admin/business-plan (@/views/admin/EscoBusinessModel.vue) - Simulatore economico di ROI, sblocco lead e success fee per configurazioni ESCO
+				/login (@/views/auth/LoginView.vue) - Interruzione controllata della sessione amministrativa ed uscita sicura dal sistema
+			Reindirizzamento Condizionale Ruolo: owner -> /owner/dashboard (@/views/owner/OwnerDashboard.vue)
+				/profilo (@/views/ProfiloView.vue) - Gestione dei dati anagrafici societari, identità digitale (DID) e monitoraggio contratti stipulati
+				/survey/strategia_business_2026 (@/views/survey/StrategicSurvey.vue) - Compilazione e invio del sondaggio strategico e di posizionamento business 2026
+				/owner/pods (@/views/owner/OwnerPodsView.vue) - Amministrazione centralizzata dei POD e dei partecipanti associati alla Comunità Energetica
+					Link Inverso di Ritorno -> /owner/dashboard (@/views/owner/OwnerCommunityView.vue via attributo statico backRoute) - Chiusura elenco e rientro nel pannello di controllo
+				/owner/cabine (@/views/owner/OwnerCabineView.vue) - Monitoraggio geografico e censimento delle sottostazioni primarie di competenza territoriale
+				/owner/education (@/views/owner/OwnerEducationView.vue) - Hub multimediale contenente le risorse didattiche, normative e formative destinate all'Owner
+				/owner/bollette (@/views/owner/OwnerBolletteView.vue) - Repository e consultazione dello storico dei documenti di fatturazione e dei costi di gestione
+				Vista Locale: Perimetro Operativo CER - Tabella interattiva di riepilogo delle cabine fisiche ufficialmente verificate dal GSE
+					Pseudo-rotta: Modale Configurazione CER (isCerModalOpen) - Pannello di modifica brand, logo, regolamenti PDF, IBAN e associazione nuove cabine
+				/login (@/views/auth/LoginView.vue) - Logout immediato dal pannello di controllo Owner con distruzione del token di sessione
+			Reindirizzamento Condizionale Ruolo: user -> /dashboard (@/views/DashboardView.vue)
+				Risorse Energetiche Utente
+					Flusso di Primo Accesso (Onboarding Guidato)
+						/onboarding (@/views/v1/home_0_1.vue) - Hub di atterraggio iniziale e caricamento prima bolletta
+							/loadbill (@/views/v1/ResourceOnboarding.vue) - Configurazione ed estrazione dati bolletta con supporto AI
+								/assetlight (@/views/v1/assetlight.vue) - Censimento e configurazione degli asset elettrici principali
+								/assetlight_water (@/views/v1/assetlight_water.vue) - Censimento e configurazione degli asset idrici della risorsa
+								/assetlight_gas (@/views/v1/assetlight_gas.vue) - Censimento e configurazione degli asset termici e gas
+									/onboardinghub (@/views/v1/OnboardingHub.vue) - Atterraggio strategico sulle Lenti di Analisi
+										Lenti Analitiche Elettriche (LensWallet.vue, LensPlanet.vue, LensShield.vue)
+										Lenti Analitiche Idriche (water_LensWallet.vue, water_LensPlanet.vue, water_LensShield.vue)
+										Lenti Analitiche Gas (gas_LensWallet.vue, gas_LensPlanet.vue, gas_LensShield.vue)
+										/hub (@/views/v1/Dashboard.vue) - Pannello di controllo centrale (Dashboard Utente)
+					Flusso dal Secondo Accesso (Accesso Diretto)
+						/hub (@/views/v1/Dashboard.vue) - Dashboard Centrale Utente
+							Centro Azioni -> /resources (Elenco e riepilogo delle risorse attive dell'utente)
+							Gestione Risorse -> /resources (Elenco e riepilogo delle risorse attive dell'utente)
+							Maturity Hub (Modali interattive di verifica conformità per Energia, Gas e Acqua)
+							Call to Action (Pannello delle attività pendenti e task di ottimizzazione)
+							Opportunità (Suggerimenti algoritmici per l'efficientamento energetico mirato)
+				/guides (@/views/Guides.vue) - Portale della Formazione e Guide interattive configurate dall'Owner
+					/guide/identita-digitale - Approfondimento sulla gestione e sulla sicurezza dell'identità decentralizzata (DID)
+					/guide/notifiche - Configurazione dei sistemi di avviso e ricezione incentivi energetici
+				/support (@/components/support/Support.vue) - Assistenza Tecnica, Ticket Hub e FAQ di Comunità
+				/topNavBar - Componente di navigazione superiore
+					/profilo - Gestione del profilo utente, anagrafica e impostazioni di sicurezza
+				/bottomNavBar - Barra di navigazione inferiore per dispositivi mobili
+					Home (/home) - Pagina principale di atterraggio
+					Hub (/hub) - Hub operativo delle attività
+					Action - Azioni rapide operative e moduli di inserimento rapido
+					Analytics /analytics (@/views/v1/DashBoardAnalytics.vue) - Centro di monitoraggio analitico e modelli di scenario
+						/impact - Dashboard degli impatti ambientali, parametri ESG e CO2 evitata
+						/vectors - Modello vettoriale bidimensionale per l'esame dei flussi di carico
+						/leontief - Modello matematico Input/Output di interdipendenza energetica
+						/leontief-report - Report Executive sintetico per la consultazione aziendale
+						/leontief-report-advanced - Report Avanzato di scomposizione analitica per analisti
+						/cer-leontief - Analisi accoppiata dei flussi di scenario interni alla CER
+						/leontief-tee - Analisi strutturale dei Titoli di Efficienza Energetica organizzata su 7 Layer operativi
+						/pv-roi - Analisi economica e tempi di ritorno dell'investimento Fotovoltaico privato
+						/pv-roi-cer - Analisi ROI combinata: Impianto privato + Modello incentivi della CER
+						/pv-roiFuture - Analisi ROI predittiva basata su algoritmi di Future Profiling dei consumi
+						/add-bess-roi - Analisi ROI per l'integrazione di sistemi di accumulo (BESS) su impianti esistenti
