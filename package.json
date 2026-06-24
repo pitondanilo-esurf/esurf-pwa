@@ -11,6 +11,8 @@
   "dependencies": {
     "axios": "^1.13.4",
     "crypto-js": "^4.2.0",
+    "d3": "^7.9.0",
+    "d3-sankey": "^0.12.3",
     "papaparse": "^5.5.3",
     "pdfjs-dist": "^5.6.205",
     "qrcode.vue": "^3.8.0",

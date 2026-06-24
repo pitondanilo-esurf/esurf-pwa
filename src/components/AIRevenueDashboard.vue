@@ -12,15 +12,20 @@
                     <p class="subtitle">Aggregazione automatica delle opportunità in Filoni di Cassa</p>
                 </div>
                 
-                <div class="header-right no-print">
-                    <button @click="fetchAggregation" :disabled="loading" class="btn-generate">
+                <div class="header-right no-print action-buttons">
+                    <span v-if="lastUpdateDate" class="last-update-label">
+                        <svg class="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Aggiornato: {{ lastUpdateDate }}
+                    </span>
+
+                    <button @click="fetchAggregation(true)" :disabled="loading" class="btn-generate">
                         <span v-if="loading" class="flex-center">
                             <svg class="spinner icon-sm mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             Analisi AI in corso...
                         </span>
                         <span v-else class="flex-center">
                             <svg class="icon-sm mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            Estrai Previsioni
+                            Forza Aggiornamento
                         </span>
                     </button>
                 </div>
@@ -32,113 +37,193 @@
             
             <div v-else-if="!loading && !revenueData" class="empty-state glass-card no-print">
                 <svg class="icon-xl mb-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                <p>Nessuna aggregazione presente. Clicca su "Estrai Previsioni" per avviare il motore AI di Gemini e analizzare gli intenti commerciali.</p>
+                <p>Nessuna aggregazione presente. Clicca su "Forza Aggiornamento" per avviare il motore AI di Gemini.</p>
             </div>
 
-            <main v-if="revenueData" class="dashboard-grid">
+            <div v-if="revenueData" class="dashboard-content">
                 
-                <div class="streams-section">
-                    <h3 class="section-title">
-                        Filoni di Ricavo Attivati ({{ revenueData.revenue_streams?.length || 0 }})
-                    </h3>
+                <!-- PANNELLO STATISTICHE -->
+                <div class="stats-row no-print">
+                    <div class="stat-card">
+                        <span class="stat-label">Filoni Attivati</span>
+                        <span class="stat-value text-indigo-400">{{ revenueData.revenue_streams?.length || 0 }}</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Intenti Core Rilevati</span>
+                        <span class="stat-value text-emerald-400">{{ totalCoreIntents }}</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Opportunità (Org.) Coinvolte</span>
+                        <span class="stat-value text-blue-400">{{ totalOrganizations }}</span>
+                    </div>
+                    <div class="stat-card border-red">
+                        <span class="stat-label">Intenti Scartati (Noise)</span>
+                        <span class="stat-value text-red-400">{{ totalDiscarded }}</span>
+                    </div>
+                </div>
+
+                <main class="dashboard-grid">
                     
-                    <div class="streams-list">
-                        <div v-for="(stream, index) in revenueData.revenue_streams" :key="'stream-'+index" class="stream-card print-avoid-break">
-                            
-                            <div class="stream-header">
-                                <h4 class="stream-name">{{ stream.stream_name }}</h4>
-                                <div class="score-badge print-badge" :class="getScoreColor(stream.total_potential_score)">
-                                    Score: {{ stream.total_potential_score }}/100
-                                </div>
-                            </div>
-                            
-                            <div class="progress-track">
-                                <div class="progress-fill" 
-                                     :class="getScoreColorClass(stream.total_potential_score)" 
-                                     :style="{ width: stream.total_potential_score + '%' }">
-                                </div>
-                            </div>
-
-                            <p class="stream-summary">
-                                {{ stream.strategic_summary }}
-                            </p>
-
-                            <div class="stream-footer">
-                                <div class="intent-count interactive" @click="toggleStream(index)">
-                                    <svg class="icon-xs chevron-rotate no-print" :class="{ 'open': openStreams.includes(index) }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                    Intenti Aggregati ({{ stream.aggregated_intents_count || (stream.aggregated_intents ? stream.aggregated_intents.length : 0) }})
-                                </div>
-                                <div class="organizations">
-                                    <span v-for="(org, i) in stream.contributing_organizations" :key="'org-'+i" class="org-chip">
-                                        {{ org }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="intent-dropdown" :class="{ 'force-print-open': true }" v-show="openStreams.includes(index)">
-                                <div v-for="(intentObj, idx) in stream.aggregated_intents" :key="'intent-'+index+'-'+idx" class="intent-detail-item">
-                                    <span class="intent-text">{{ intentObj.intent || intentObj }}</span>
-                                    <span v-if="intentObj.weight" class="intent-weight-pill">W: {{ intentObj.weight }}</span>
-                                </div>
-                                <div v-if="!stream.aggregated_intents || stream.aggregated_intents.length === 0" class="text-muted text-xs">
-                                    Nessun dettaglio intento restituito dall'AI.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="noise-section">
-                    <div class="noise-card print-avoid-break">
-                        <h3 class="noise-title">
-                            <svg class="icon-sm text-red no-print" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                            Filtro Operativo (Scarti)
+                    <div class="streams-section">
+                        <h3 class="section-title">
+                            Dettaglio Filoni di Ricavo
                         </h3>
-                        <p class="noise-desc">
-                            Questi intenti sono stati isolati dall'AI in quanto non generano marginalità PaaS e rischiano di esporre E-surf a costi operativi, cantieristici o finanziari (Fuori Perimetro).
-                        </p>
                         
-                        <ul v-if="revenueData.discarded_noise?.length" class="noise-list">
-                            <li v-for="(noise, index) in revenueData.discarded_noise" :key="'noise-'+index" class="noise-item-container">
-                                <div class="noise-main">
-                                    <span class="bullet-cross">✕</span>
-                                    <span class="noise-text">{{ noise.intent || noise }}</span>
+                        <div class="streams-list">
+                            <div v-for="(stream, index) in revenueData.revenue_streams" :key="'stream-'+index" class="stream-card print-avoid-break">
+                                
+                                <div class="stream-header">
+                                    <h4 class="stream-name">{{ stream.stream_name }}</h4>
+                                    <div class="score-badge print-badge" :class="getScoreColor(stream.total_potential_score)">
+                                        Score: {{ stream.total_potential_score }}/100
+                                    </div>
                                 </div>
-                                <div v-if="noise.reason" class="noise-reason">
-                                    Motivo: {{ noise.reason }}
+                                
+                                <div class="progress-track">
+                                    <div class="progress-fill" 
+                                         :class="getScoreColorClass(stream.total_potential_score)" 
+                                         :style="{ width: stream.total_potential_score + '%' }">
+                                    </div>
                                 </div>
-                            </li>
-                        </ul>
-                        <div v-else class="no-noise">
-                            L'AI non ha rilevato anomalie o deviazioni dal core business.
+
+                                <p class="stream-summary">
+                                    {{ stream.strategic_summary }}
+                                </p>
+
+                                <div class="stream-footer">
+                                    <div class="intent-count interactive" @click="toggleStream(index)">
+                                        <svg class="icon-xs chevron-rotate no-print" :class="{ 'open': openStreams.includes(index) }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        Intenti Aggregati ({{ stream.aggregated_intents_count || (stream.aggregated_intents ? stream.aggregated_intents.length : 0) }})
+                                    </div>
+                                    <div class="organizations">
+                                        <span v-for="(org, i) in stream.contributing_organizations" :key="'org-'+i" class="org-chip">
+                                            {{ org }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Dettaglio Intenti Aggregati -->
+                                <div class="intent-dropdown" :class="{ 'force-print-open': true }" v-show="openStreams.includes(index)">
+                                    <div v-for="(intentObj, idx) in stream.aggregated_intents" :key="'intent-'+index+'-'+idx" class="intent-detail-item">
+                                        <span class="intent-text">{{ intentObj.intent || intentObj }}</span>
+                                        <span v-if="intentObj.weight" class="intent-weight-pill">W: {{ intentObj.weight }}</span>
+                                    </div>
+                                    <div v-if="!stream.aggregated_intents || stream.aggregated_intents.length === 0" class="text-muted text-xs">
+                                        Nessun dettaglio intento restituito dall'AI.
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-            </main>
+                    <div class="noise-section">
+                        <div class="noise-card print-avoid-break">
+                            <h3 class="noise-title">
+                                <svg class="icon-sm text-red no-print" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                Filtro Operativo (Scarti)
+                            </h3>
+                            <p class="noise-desc">
+                                Questi intenti sono stati isolati dall'AI in quanto non generano marginalità PaaS e rischiano di esporre E-surf a costi operativi, cantieristici o finanziari (Fuori Perimetro).
+                            </p>
+                            
+                            <ul v-if="revenueData.discarded_noise?.length" class="noise-list">
+                                <li v-for="(noise, index) in revenueData.discarded_noise" :key="'noise-'+index" class="noise-item-container">
+                                    <div class="noise-main">
+                                        <span class="bullet-cross">✕</span>
+                                        <span class="noise-text">{{ noise.intent || noise }}</span>
+                                    </div>
+                                    <div v-if="noise.reason" class="noise-reason">
+                                        Motivo: {{ noise.reason }}
+                                    </div>
+                                </li>
+                            </ul>
+                            <div v-else class="no-noise">
+                                L'AI non ha rilevato anomalie o deviazioni dal core business.
+                            </div>
+                        </div>
+                    </div>
+
+                </main>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import apiClient from '@/services/axios.js'; 
 
 const loading = ref(false);
 const error = ref(null);
 const revenueData = ref(null);
 const openStreams = ref([]); 
+const lastUpdateDate = ref(null);
 
-const fetchAggregation = async () => {
+// === COMPUTED PROPERTIES PER STATISTICHE ===
+const totalCoreIntents = computed(() => {
+    if (!revenueData.value?.revenue_streams) return 0;
+    return revenueData.value.revenue_streams.reduce((acc, stream) => {
+        return acc + (stream.aggregated_intents_count || (stream.aggregated_intents ? stream.aggregated_intents.length : 0));
+    }, 0);
+});
+
+const totalOrganizations = computed(() => {
+    if (!revenueData.value?.revenue_streams) return 0;
+    const orgs = new Set();
+    revenueData.value.revenue_streams.forEach(stream => {
+        if (stream.contributing_organizations) {
+            stream.contributing_organizations.forEach(org => orgs.add(org));
+        }
+    });
+    return orgs.size;
+});
+
+const totalDiscarded = computed(() => {
+    return revenueData.value?.discarded_noise?.length || 0;
+});
+
+
+// === LOGICA DI RIPARTENZA E FORMATTAZIONE DATA ===
+onMounted(() => {
+    fetchAggregation(false);
+});
+
+const formatDateTime = (isoString) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    if (isNaN(date)) return '';
+    
+    return new Intl.DateTimeFormat('it-IT', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(date);
+};
+
+// === LOGICA DI FETCH ===
+const fetchAggregation = async (forceUpdate = false) => {
     loading.value = true;
     error.value = null;
-    revenueData.value = null;
     openStreams.value = [];
 
     try {
-        const response = await apiClient.get('/api/eddps/revenue-aggregation');
+        const url = forceUpdate ? '/api/eddps/revenue-aggregation?force=true' : '/api/eddps/revenue-aggregation';
+        const response = await apiClient.get(url);
+        
         if (response.data.status === 'success') {
             revenueData.value = response.data.data;
+            lastUpdateDate.value = formatDateTime(response.data.timestamp);
+            
+            if (response.data.is_cached && !forceUpdate) {
+                setTimeout(() => {
+                    const wantsUpdate = window.confirm("Stai visualizzando l'ultimo Snapshot AI globale.\n\nVuoi forzare una nuova analisi a Gemini per aggiornare i dati per tutti gli utenti?");
+                    if (wantsUpdate) {
+                        fetchAggregation(true);
+                    }
+                }, 300);
+            }
         } else {
             throw new Error(response.data.message || "Errore sconosciuto durante l'analisi.");
         }
@@ -211,7 +296,7 @@ const getScoreColorClass = (score) => {
 .flex-center { display: flex; align-items: center; justify-content: center; }
 .text-red { color: #EF4444; }
 
-/* HEADER */
+/* HEADER E BOTTONI */
 .page-header-compact {
     display: flex;
     justify-content: space-between;
@@ -253,6 +338,25 @@ const getScoreColorClass = (score) => {
     margin: 0;
 }
 
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.last-update-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: monospace;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
 .btn-generate {
     background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
     color: white;
@@ -264,6 +368,8 @@ const getScoreColorClass = (score) => {
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+    display: flex;
+    align-items: center;
 }
 
 .btn-generate:hover:not(:disabled) {
@@ -299,6 +405,52 @@ const getScoreColorClass = (score) => {
     flex-direction: column;
     align-items: center;
 }
+
+/* PANNELLO STATISTICHE */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.stat-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card.border-red {
+    border-bottom: 2px solid rgba(239, 68, 68, 0.5);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: monospace;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.text-emerald-400 { color: #34D399; }
+.text-blue-400 { color: #60A5FA; }
+.text-indigo-400 { color: #818CF8; }
+.text-red-400 { color: #F87171; }
+
 
 /* GRIGLIA PRINCIPALE */
 .dashboard-grid {
@@ -567,6 +719,10 @@ const getScoreColorClass = (score) => {
         grid-template-columns: 1fr;
     }
     
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
     .noise-card {
         position: static;
     }
@@ -577,6 +733,14 @@ const getScoreColorClass = (score) => {
         flex-direction: column;
         align-items: flex-start;
         gap: 1.5rem;
+    }
+    .action-buttons {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .stats-row {
+        grid-template-columns: 1fr;
     }
     .stream-header {
         flex-direction: column;
@@ -597,7 +761,6 @@ const getScoreColorClass = (score) => {
    STAMPA (PRINT CSS) - ATTIVABILE CON CTRL+P
    ========================================================================== */
 @media print {
-    /* Resetta gli sfondi scuri per non sprecare inchiostro nero */
     body, .revenue-wrapper, .main-content {
         background-color: white !important;
         color: #111827 !important;
@@ -605,19 +768,16 @@ const getScoreColorClass = (score) => {
         margin: 0 !important;
     }
 
-    /* Rimuove gradiente titolo */
     .text-gradient {
         background: none !important;
         -webkit-text-fill-color: #111827 !important;
         color: #111827 !important;
     }
 
-    /* Nasconde elementi non utili alla stampa */
     .no-print {
         display: none !important;
     }
 
-    /* Modifica layout in griglia singola a tutta larghezza */
     .dashboard-grid {
         display: block !important;
         width: 100% !important;
@@ -627,13 +787,11 @@ const getScoreColorClass = (score) => {
         margin-bottom: 2rem !important;
     }
 
-    /* Forza l'apertura di TUTTI gli intenti nella stampa per non perdere dati */
     .intent-dropdown.force-print-open {
         display: flex !important;
         border-color: #E5E7EB !important;
     }
 
-    /* Colori delle carte */
     .stream-card, .noise-card, .intent-detail-item, .noise-item-container {
         background-color: white !important;
         border: 1px solid #D1D5DB !important;
@@ -645,13 +803,11 @@ const getScoreColorClass = (score) => {
         transform: none !important;
     }
 
-    /* Evita che una carta venga tagliata a metà pagina */
     .print-avoid-break {
         page-break-inside: avoid;
         break-inside: avoid;
     }
 
-    /* Testi */
     .stream-name, h2, h3, h4, .noise-title, .intent-text, .noise-text {
         color: #111827 !important;
     }
@@ -659,14 +815,12 @@ const getScoreColorClass = (score) => {
         color: #4B5563 !important;
     }
 
-    /* Modifica le label per essere leggibili su bianco */
     .print-badge, .org-chip, .intent-weight-pill {
         border: 1px solid #9CA3AF !important;
         background-color: white !important;
         color: #111827 !important;
     }
 
-    /* Mantiene i colori di base per i grafici (deve essere supportato dal browser stampante) */
     .progress-track {
         background-color: #F3F4F6 !important;
         border: 1px solid #E5E7EB !important;
@@ -676,7 +830,6 @@ const getScoreColorClass = (score) => {
         print-color-adjust: exact !important;
     }
     
-    /* Disabilita le animazioni e gli stati interattivi in stampa */
     .interactive {
         pointer-events: none;
     }

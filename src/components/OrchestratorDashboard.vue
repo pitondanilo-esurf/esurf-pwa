@@ -35,13 +35,32 @@
 
             <main v-else class="accordion-container">
                 <div v-for="doc in opportunities" :key="doc._id" class="accordion-item print-avoid-break" :class="{ 'is-open': openChannels.includes(doc._id) }">
-                    <div class="accordion-accent-line no-print"></div>
+                    <div class="accordion-accent-line no-print" :class="getStatusBorderClass(doc.status)"></div>
                     
                     <div class="accordion-header" @click="toggleChannel(doc._id)">
                         <div class="header-main-info">
                             <div class="title-row">
-                                <h3 class="org-name">{{ doc.crm_lead_enrichment?.organization_name || 'N/A' }}</h3>
-                                <span class="website-tag">{{ doc.crm_lead_enrichment?.website_or_references || '' }}</span>
+                                <span class="status-badge" :class="getStatusClass(doc.status)">
+                                    {{ getStatusText(doc.status) }}
+                                </span>
+
+                                <span class="date-tag">{{ formatDate(doc.event_date || doc.processing_date) }}</span>
+                                
+                                <div class="doc-source-tag" v-if="doc.analyzed_document_title">
+                                    <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                    {{ doc.analyzed_document_title }}
+                                </div>
+
+                                <div class="org-tags-container">
+                                    <template v-if="doc.crm_lead_enrichment?.organizations && doc.crm_lead_enrichment.organizations.length > 0">
+                                        <h3 v-for="(org, oIdx) in doc.crm_lead_enrichment.organizations" :key="'org-'+oIdx" class="org-name-chip">
+                                            {{ org.organization_name }}
+                                        </h3>
+                                    </template>
+                                    <h3 v-else class="org-name-chip">N/A</h3>
+                                </div>
+
+                                <span class="website-tag" v-if="getFirstWebsite(doc)">{{ getFirstWebsite(doc) }}</span>
                             </div>
                             <p class="reasoning-text">{{ doc.reasoning }}</p>
                         </div>
@@ -69,8 +88,9 @@
                                     <div v-for="(contact, idx) in doc.crm_lead_enrichment.key_contacts" :key="'contact-'+idx" class="contact-card print-border">
                                         <div class="contact-header">
                                             <div>
-                                                <h5 class="contact-name">{{ contact.name }}</h5>
+                                                <h5 class="contact-name" :class="{'text-muted-italic': contact.name === 'Nome non rilevato'}">{{ contact.name }}</h5>
                                                 <span class="contact-role">{{ contact.role_or_title }}</span>
+                                                <div v-if="contact.associated_organization" class="associated-org">@ {{ contact.associated_organization }}</div>
                                             </div>
                                             <span class="relation-badge">{{ contact.relation_type }}</span>
                                         </div>
@@ -117,6 +137,30 @@
                                                 <h5 class="intent-title">{{ intent.intent }}</h5>
                                             </div>
                                             <p class="intent-motivation">{{ intent.weight_motivation }}</p>
+                                            
+                                            <div v-if="intent.associated_business_models?.length" class="associated-models-box">
+                                                <span class="framework-label">💼 Modelli Business Mappati:</span>
+                                                <div class="model-chips">
+                                                    <span v-for="(bm, bmIdx) in intent.associated_business_models" :key="'bm-'+bmIdx" class="model-chip" :title="bm.categoria_titolo">
+                                                        <span class="model-code">[{{ bm.categoria_codice }}.{{ bm.modello_codice }}]</span> {{ bm.modello_titolo }}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div class="intent-execution-framework" v-if="intent.objective || (intent.action_flow && intent.action_flow.length > 0)">
+                                                <div class="framework-objective" v-if="intent.objective">
+                                                    <span class="framework-label">🎯 Obiettivo Strategico:</span>
+                                                    <p class="framework-value">{{ intent.objective }}</p>
+                                                </div>
+                                                <div class="framework-workflow" v-if="intent.action_flow && intent.action_flow.length > 0">
+                                                    <span class="framework-label">📋 Action Flow Ordinato (SOP):</span>
+                                                    <ul class="sop-list">
+                                                        <li v-for="(step, sIdx) in intent.action_flow" :key="'step-'+sIdx" class="sop-step">
+                                                            {{ step }}
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div v-if="intent.weight >= 0.8" class="asana-interactive-block print-clean">
@@ -242,8 +286,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { EDDPSService } from '@/services/eddps_service.js'; 
-import apiClient from '@/services/axios.js'; 
+import apiClient from '@/services/axios.js'; // Usa l'axios del progetto (bypassando EDDPSService)
 
 const opportunities = ref([]);
 const loading = ref(true);
@@ -278,6 +321,59 @@ const getRoleName = (roleId) => {
     return role ? role.role_name : roleId;
 };
 
+const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date)) return dateString;
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = date.toLocaleString('it-IT', { month: 'long' });
+    const year = date.getFullYear();
+    
+    return `${day}, ${month} ${year}`;
+};
+
+// HELPER: Formatta il testo in modo sicuro
+const getStatusText = (status) => {
+    if (!status) return 'STATUS UNKNOWN';
+    if (typeof status === 'string') return status.replace(/_/g, ' ');
+    return 'STATUS UNKNOWN';
+};
+
+// HELPER: Ritorna la classe colore per lo Status Badge (ora Blindato contro i crash)
+const getStatusClass = (status) => {
+    if (!status || typeof status !== 'string') return 'bg-muted';
+    const s = status.toUpperCase();
+    if (s === 'IN_PERIMETER') return 'status-in';
+    if (s === 'OUT_OF_PERIMETER') return 'status-out';
+    if (s === 'AMBIGUOUS') return 'status-amb';
+    return 'bg-muted';
+};
+
+// HELPER: Ritorna la classe per colorare il bordo della card (Blindato)
+const getStatusBorderClass = (status) => {
+    if (!status || typeof status !== 'string') return '';
+    const s = status.toUpperCase();
+    if (s === 'OUT_OF_PERIMETER') return 'border-out';
+    if (s === 'AMBIGUOUS') return 'border-amb';
+    return ''; // Default fallback (Emerald)
+};
+
+const getFirstWebsite = (doc) => {
+    if (doc.crm_lead_enrichment?.organizations && Array.isArray(doc.crm_lead_enrichment.organizations)) {
+        const orgWithWeb = doc.crm_lead_enrichment.organizations.find(org => org.website_or_references && org.website_or_references !== "N/A");
+        return orgWithWeb ? orgWithWeb.website_or_references : null;
+    }
+    return null;
+};
+
+const getPrimaryOrgName = (doc) => {
+    if (doc.crm_lead_enrichment?.organizations && doc.crm_lead_enrichment.organizations.length > 0) {
+        return doc.crm_lead_enrichment.organizations[0].organization_name;
+    }
+    return 'Opportunità Generica';
+};
+
 const toggleChannel = (docId) => {
     const index = openChannels.value.indexOf(docId);
     if (index === -1) {
@@ -294,12 +390,25 @@ const pushToAsana = async (doc, item, type, roleId, uniqueKey) => {
     const itemIndex = parseInt(parts[parts.length - 1], 10);
 
     try {
+        let compiledDescription = type === 'intent' ? item.intent : item.activity_description;
+        if (type === 'intent') {
+            if (item.associated_business_models?.length) {
+                compiledDescription += `\n\n💼 MODELLI DI BUSINESS MAPPATI:\n` + item.associated_business_models.map(bm => `- [${bm.categoria_codice}.${bm.modello_codice}] ${bm.modello_titolo} (${bm.categoria_titolo})`).join('\n');
+            }
+            if (item.objective) {
+                compiledDescription += `\n\n🎯 OBIETTIVO STRATEGICO:\n${item.objective}`;
+            }
+            if (item.action_flow && item.action_flow.length > 0) {
+                compiledDescription += `\n\n📋 WORKFLOW AZIONI (SOP):\n` + item.action_flow.map(step => `- ${step}`).join('\n');
+            }
+        }
+
         const payload = {
-            title: `[${roleId}] Opportunità: ${doc.crm_lead_enrichment?.organization_name || 'Generica'}`,
-            description: type === 'intent' ? item.intent : item.activity_description,
+            title: `[${roleId}] Opportunità: ${getPrimaryOrgName(doc)}`,
+            description: compiledDescription,
             role_assigned: roleId,
             destination_board: "BACKLOG", 
-            source_document: doc.analyzed_document_title,
+            source_document: doc.analyzed_document_title || 'N/A',
             doc_id: doc._id,
             item_type: type,
             item_index: itemIndex
@@ -351,9 +460,20 @@ const unassignAsanaTask = async (doc, item, type, uniqueKey) => {
     }
 };
 
+// ============================================================================
+// BYPASS EDDPSService E AGGANCIO DIRETTO A LARAVEL PER EVITARE LA PERDITA DATI
+// ============================================================================
 onMounted(async () => {
     try {
-        const data = await EDDPSService.getActiveChannels();
+        const response = await apiClient.get('/api/eddps/opportunities');
+        let data = response.data?.data || [];
+        
+        data.sort((a, b) => {
+            const dateA = a.event_date ? new Date(a.event_date).getTime() : 0;
+            const dateB = b.event_date ? new Date(b.event_date).getTime() : 0;
+            return dateB - dateA; 
+        });
+        
         opportunities.value = data;
 
         opportunities.value.forEach(doc => {
@@ -420,7 +540,6 @@ onMounted(async () => {
 .icon-sm { width: 16px; height: 16px; }
 .icon-md { width: 20px; height: 20px; }
 
-/* Inizialmente nascondi il testo visibile solo in stampa */
 .print-only-text {
     display: none;
 }
@@ -552,6 +671,8 @@ onMounted(async () => {
     width: 4px;
     background: linear-gradient(to bottom, var(--accent-emerald), transparent);
 }
+.accordion-accent-line.border-out { background: linear-gradient(to bottom, #EF4444, transparent); }
+.accordion-accent-line.border-amb { background: linear-gradient(to bottom, #F59E0B, transparent); }
 
 .accordion-header {
     padding: 1.5rem 2rem;
@@ -575,18 +696,54 @@ onMounted(async () => {
 .title-row {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 12px;
 }
 
-.org-name {
-    font-size: 1.5rem;
+/* NUOVI BADGE STATUS E DOC TITLE */
+.status-badge {
+    font-size: 0.65rem;
+    font-family: monospace;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.status-in { background-color: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); }
+.status-out { background-color: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+.status-amb { background-color: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+.doc-source-tag {
+    font-size: 0.75rem;
+    color: #9CA3AF;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.org-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.org-name-chip {
+    font-size: 1.25rem;
     font-weight: 700;
     color: #f3f4f6;
     margin: 0;
     letter-spacing: -0.025em;
+    background-color: rgba(59, 130, 246, 0.1);
+    padding: 4px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
-.website-tag {
+.website-tag, .date-tag {
     font-size: 0.75rem;
     background-color: #1F2937;
     color: #D1D5DB;
@@ -594,6 +751,11 @@ onMounted(async () => {
     border-radius: 6px;
     font-family: monospace;
     border: 1px solid #374151;
+}
+.date-tag {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #93C5FD;
+    border-color: rgba(59, 130, 246, 0.3);
 }
 
 .reasoning-text {
@@ -698,7 +860,7 @@ onMounted(async () => {
 }
 
 /* ==========================================================================
-   NUOVE SEZIONI CRM E ENTITÀ
+   STRUTTURE DI DETTAGLIO CONTATTI ED ENTITÀ
    ========================================================================== */
 .contact-card {
     background-color: rgba(59, 130, 246, 0.05);
@@ -718,11 +880,27 @@ onMounted(async () => {
     font-size: 0.875rem;
     font-weight: 700;
     color: #DBEAFE;
-    margin: 0 0 4px 0;
+    margin: 0 0 2px 0;
+}
+.text-muted-italic {
+    color: #9CA3AF;
+    font-style: italic;
+    font-weight: 400;
 }
 .contact-role {
     font-size: 0.75rem;
     color: #9CA3AF;
+    display: block;
+}
+.associated-org {
+    font-size: 0.65rem;
+    font-family: monospace;
+    color: #60A5FA;
+    margin-top: 4px;
+    background-color: rgba(59, 130, 246, 0.1);
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
 }
 .relation-badge {
     font-size: 0.625rem;
@@ -785,13 +963,13 @@ onMounted(async () => {
 }
 
 /* ==========================================================================
-   CARDS INTERNE E NUOVI CONTROLLI INTERATTIVI (ASANA)
+   CARDS INTENTI CON DATI STRUTTURATI (OBJECTIVE, ACTION FLOW & BUSINESS MODELS)
    ========================================================================== */
 .intent-card {
     background-color: var(--bg-panel);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 1.25rem;
+    padding: 1.5rem;
     display: flex;
     justify-content: space-between;
     gap: 1.5rem;
@@ -807,7 +985,7 @@ onMounted(async () => {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
 }
 
 .intent-header {
@@ -827,22 +1005,106 @@ onMounted(async () => {
 .bg-muted { background-color: #374151; color: #D1D5DB; }
 
 .intent-title {
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #E5E7EB;
     margin: 0;
 }
 
 .intent-motivation {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
     font-family: monospace;
-    margin: 0 0 0 4px;
+    margin: 0;
     padding-left: 8px;
     border-left: 2px solid #374151;
 }
 
-/* Form e Bottoni Asana */
+/* Nuovi stili per i Modelli di Business Mappati */
+.associated-models-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.model-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.model-chip {
+    font-size: 0.725rem;
+    background-color: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: #A7F3D0;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.model-code {
+    font-family: monospace;
+    font-weight: 700;
+    color: var(--accent-emerald);
+    margin-right: 2px;
+}
+
+/* Layout Framework Strategico (Obiettivi e SOP) */
+.intent-execution-framework {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.framework-label {
+    font-size: 0.675rem;
+    font-family: monospace;
+    text-transform: uppercase;
+    color: #a7f3d0; 
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.framework-value {
+    font-size: 0.85rem;
+    color: #E5E7EB;
+    margin: 4px 0 0 0;
+    font-weight: 500;
+}
+
+.sop-list {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sop-step {
+    font-size: 0.8rem;
+    color: #D1D5DB;
+    padding-left: 18px;
+    position: relative;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.sop-step::before {
+    content: "→";
+    position: absolute;
+    left: 2px;
+    color: var(--accent-emerald);
+    font-weight: bold;
+}
+
+/* Sezione interattiva Asana */
 .asana-interactive-block {
     display: flex;
     align-items: flex-end;
@@ -852,6 +1114,7 @@ onMounted(async () => {
     border: 1px solid var(--border-color);
     border-radius: 8px;
     min-width: 35%;
+    max-height: fit-content;
 }
 
 .assignment-controls {
@@ -885,16 +1148,8 @@ onMounted(async () => {
     margin-top: 2px;
 }
 
-.full-width {
-    width: 100%;
-}
-
-.mb-2 {
-    margin-bottom: 8px;
-}
-.mb-3 {
-    margin-bottom: 12px;
-}
+.full-width { width: 100%; }
+.mb-3 { margin-bottom: 12px; }
 
 .asana-label {
     font-size: 0.625rem;
@@ -915,12 +1170,9 @@ onMounted(async () => {
     outline: none;
     width: 100%;
     cursor: pointer;
-    transition: border-color 0.2s ease;
 }
 
-.role-select:focus {
-    border-color: var(--accent-blue);
-}
+.role-select:focus { border-color: var(--accent-blue); }
 
 .btn-asana-push {
     background-color: #F06A6A; 
@@ -934,7 +1186,6 @@ onMounted(async () => {
     display: flex;
     align-items: center;
     gap: 6px;
-    transition: background-color 0.2s ease, opacity 0.2s ease;
     min-height: 34px;
 }
 
@@ -944,10 +1195,6 @@ onMounted(async () => {
     cursor: not-allowed;
 }
 
-.btn-asana-push:not(:disabled):hover {
-    background-color: #e55a5a;
-}
-
 .btn-asana-remove {
     background-color: rgba(239, 68, 68, 0.1);
     color: #EF4444;
@@ -955,7 +1202,6 @@ onMounted(async () => {
     padding: 6px 10px;
     border-radius: 6px;
     cursor: pointer;
-    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -963,17 +1209,7 @@ onMounted(async () => {
     height: 32px;
 }
 
-.btn-asana-remove:not(:disabled):hover {
-    background-color: rgba(239, 68, 68, 0.2);
-    border-color: rgba(239, 68, 68, 0.6);
-}
-
-.btn-asana-remove:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Card Collaborazione */
+/* Card Collaborazione Partner */
 .collab-card {
     background-color: var(--accent-indigo-bg);
     border: 1px solid var(--accent-indigo-border);
@@ -985,55 +1221,13 @@ onMounted(async () => {
     gap: 1rem;
 }
 
-.collab-info {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.collab-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.partner-title {
-    font-size: 0.75rem;
-    font-family: monospace;
-    font-weight: 700;
-    color: #A5B4FC;
-    text-transform: uppercase;
-}
-
-.partner-badge {
-    font-size: 0.625rem;
-    font-family: monospace;
-    background-color: rgba(99, 102, 241, 0.2);
-    color: #C7D2FE;
-    padding: 2px 8px;
-    border-radius: 4px;
-    border: 1px solid rgba(99, 102, 241, 0.3);
-}
-
-.collab-desc {
-    font-size: 0.875rem;
-    color: #D1D5DB;
-    margin: 0;
-}
-
-.collab-footer {
-    padding-top: 12px;
-    border-top: 1px solid var(--accent-indigo-border);
-    display: flex;
-    flex-direction: column;
-}
-
-.assignment-controls-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
+.collab-info { display: flex; flex-direction: column; gap: 8px; }
+.collab-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.partner-title { font-size: 0.75rem; font-family: monospace; font-weight: 700; color: #A5B4FC; text-transform: uppercase; }
+.partner-badge { font-size: 0.625rem; font-family: monospace; background-color: rgba(99, 102, 241, 0.2); color: #C7D2FE; padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(99, 102, 241, 0.3); }
+.collab-desc { font-size: 0.875rem; color: #D1D5DB; margin: 0; }
+.collab-footer { padding-top: 12px; border-top: 1px solid var(--accent-indigo-border); display: flex; flex-direction: column; }
+.assignment-controls-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 .flex-1 { flex: 1; }
 .mr-2 { margin-right: 0.5rem; }
 .ml-auto { margin-left: auto; }
@@ -1047,109 +1241,41 @@ onMounted(async () => {
     border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
-.strategic-block {
-    display: flex;
-    flex-direction: column;
-}
+.strategic-block { display: flex; flex-direction: column; }
+.strategic-label { font-size: 0.625rem; color: rgba(165, 180, 252, 0.7); font-family: monospace; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+.strategic-value { font-size: 0.75rem; color: var(--text-muted); font-style: italic; }
+.discarded-block { justify-content: flex-end; background: none; border: none; }
+.discarded-badge { font-size: 0.75rem; font-family: monospace; color: #4B5563; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--border-color); }
 
-.strategic-label {
-    font-size: 0.625rem;
-    color: rgba(165, 180, 252, 0.7);
-    font-family: monospace;
-    text-transform: uppercase;
-    font-weight: 700;
-    margin-bottom: 4px;
-}
-
-.strategic-value {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    font-style: italic;
-}
-
-.discarded-block {
-    justify-content: flex-end;
-    background: none;
-    border: none;
-}
-.discarded-badge {
-    font-size: 0.75rem;
-    font-family: monospace;
-    color: #4B5563;
-    padding: 4px 12px;
-    border-radius: 9999px;
-    border: 1px solid var(--border-color);
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 .spinner { animation: spin 1s linear infinite; }
 
 @media (max-width: 768px) {
-    .page-header-compact {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-    
-    .accordion-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1.5rem;
-    }
-    
-    .header-actions {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .intent-card {
-        flex-direction: column;
-    }
-
-    .asana-interactive-block {
-        width: 100%;
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .btn-asana-push, .btn-asana-remove {
-        width: 100%;
-        justify-content: center;
-        margin-top: 8px;
-    }
-
-    .grid-list-2 {
-        grid-template-columns: 1fr;
-    }
+    .page-header-compact { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .accordion-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+    .header-actions { width: 100%; justify-content: space-between; }
+    .intent-card { flex-direction: column; }
+    .asana-interactive-block { width: 100%; flex-direction: column; align-items: stretch; }
+    .btn-asana-push, .btn-asana-remove { width: 100%; justify-content: center; margin-top: 8px; }
+    .grid-list-2 { grid-template-columns: 1fr; }
 }
 
 /* ==========================================================================
    STAMPA (PRINT CSS) - ATTIVABILE CON CTRL+P
    ========================================================================== */
 @media print {
-    /* Reset per sfondo bianco e testo scuro, ottimizzazione inchiostro */
     body, .orchestrator-wrapper, .main-content {
         background-color: white !important;
         color: #111827 !important;
         padding: 0 !important;
         margin: 0 !important;
     }
-
-    /* Rimuovi effetti non stampabili */
     .text-gradient {
         background: none !important;
         -webkit-text-fill-color: #111827 !important;
         color: #111827 !important;
     }
-
-    /* Nascondi elementi di UI interattivi non necessari su carta */
-    .no-print {
-        display: none !important;
-    }
-
-    /* Forza l'apertura di tutte le tendine per mostrare i dati completi */
+    .no-print { display: none !important; }
     .force-print-block {
         display: block !important;
         opacity: 1 !important;
@@ -1159,68 +1285,22 @@ onMounted(async () => {
         border-top: none !important;
         background-color: white !important;
     }
-
-    /* Layout delle card per evitare interruzioni di pagina a metà */
     .accordion-item, .print-avoid-break, .intent-card, .collab-card, .contact-card, .entities-card {
         page-break-inside: avoid;
         break-inside: avoid;
     }
-
-    .accordion-item {
-        box-shadow: none !important;
-        border: 1px solid #D1D5DB !important;
-        margin-bottom: 2rem !important;
-    }
-
-    .accordion-header {
-        background-color: #F9FAFB !important;
-        padding: 1rem !important;
-        border-bottom: 1px solid #D1D5DB !important;
-    }
-
-    /* Regolazione dei colori testuali e bordi delle singole card */
-    .print-border {
-        background-color: white !important;
-        border: 1px solid #D1D5DB !important;
-        box-shadow: none !important;
-    }
-
-    .org-name, .section-title, h2, h3, h4, h5, .intent-title, .partner-title, .entity-label, .contact-name {
-        color: #111827 !important;
-    }
-
-    .reasoning-text, .intent-motivation, .collab-desc, .contact-notes, .entity-value, .contact-role {
-        color: #4B5563 !important;
-    }
-
-    /* Modifica badge e chip per risultare eleganti sul foglio bianco */
-    .weight-badge, .relation-badge, .tech-chip, .partner-badge, .website-tag, .discarded-badge {
-        border: 1px solid #9CA3AF !important;
-        background-color: white !important;
-        color: #111827 !important;
-    }
-
-    /* Sezione di assegnazione Asana: rimuovi box scuri */
-    .print-clean {
-        background-color: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-    }
-
-    .role-assigned {
-        color: #059669 !important; /* Verde più scuro per la stampa */
-        font-weight: 700 !important;
-    }
-    
-    .task-id {
-        color: #6B7280 !important;
-    }
-
-    /* Mostra il testo 'Da assegnare' solo in stampa quando manca l'assegnazione */
-    .print-only-text {
-        display: inline-block !important;
-        color: #6B7280 !important;
-        font-size: 0.85rem !important;
-    }
+    .accordion-item { box-shadow: none !important; border: 1px solid #D1D5DB !important; margin-bottom: 2rem !important; }
+    .accordion-header { background-color: #F9FAFB !important; padding: 1rem !important; border-bottom: 1px solid #D1D5DB !important; }
+    .print-border { background-color: white !important; border: 1px solid #D1D5DB !important; box-shadow: none !important; }
+    .org-name-chip, .section-title, h2, h3, h4, h5, .intent-title, .partner-title, .entity-label, .contact-name, .framework-label { color: #111827 !important; background-color: transparent !important; border: none !important; padding: 0 !important;}
+    .reasoning-text, .intent-motivation, .collab-desc, .contact-notes, .entity-value, .contact-role, .framework-value, .sop-step { color: #4B5563 !important; }
+    .weight-badge, .relation-badge, .tech-chip, .partner-badge, .website-tag, .date-tag, .discarded-badge, .associated-org, .model-chip { border: 1px solid #9CA3AF !important; background-color: white !important; color: #111827 !important; }
+    .print-clean { background-color: transparent !important; border: none !important; padding: 0 !important; }
+    .role-assigned { color: #059669 !important; font-weight: 700 !important; }
+    .task-id { color: #6B7280 !important; }
+    .print-only-text { display: inline-block !important; color: #6B7280 !important; font-size: 0.85rem !important; }
+    .intent-execution-framework { background-color: #FAFAFA !important; border: 1px solid #E5E7EB !important; }
+    .text-muted-italic { color: #6B7280 !important; }
+    .model-code { color: #111827 !important; }
 }
 </style>

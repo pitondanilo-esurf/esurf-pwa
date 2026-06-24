@@ -6,6 +6,7 @@ import RegisterView from '../views/auth/RegisterView.vue'
 import LoginView from '../views/auth/LoginView.vue'
 import DashboardView from '../views/DashboardView.vue'
 import OrchestratorDashboard from '@/components/OrchestratorDashboard.vue';
+import NetworkCoverageMap from '@/components/NetworkCoverageMap.vue';
 
 // VECCHIA GESTIONE PODS (Mantenuta come richiesto)
 import PodsView from '../views/PodsView.vue'
@@ -408,6 +409,24 @@ const router = createRouter({
         requiresAuth: true, // Mantieni la protezione se serve
         title: 'Orchestrator Hub'
       }
+    },
+    {
+        path: '/coverage-map',
+        name: 'CoverageMap',
+        component: NetworkCoverageMap,
+        meta: { 
+            title: 'EDDPS Coverage Matrix',
+            requiresAuth: true // se usi un sistema di autenticazione
+        }
+    },
+    {
+        path: '/sankey-map',
+        name: 'sankeyeMap',
+        component: () => import('@/components/SankeyCoverageMap.vue'),
+        meta: { 
+            title: 'EDDPS sankey Matrix',
+            requiresAuth: true // se usi un sistema di autenticazione
+        }
     }
   ]
 });
