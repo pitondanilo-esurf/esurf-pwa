@@ -1,4 +1,5 @@
 <template>
+<AppNavbar />
     <div class="orchestrator-wrapper custom-scrollbar">
         <div class="main-content">
             
@@ -110,7 +111,7 @@
                                         <span class="entity-value">{{ doc.entities_extracted.client_or_context }}</span>
                                     </div>
                                     <div class="entity-row" v-if="doc.entities_extracted.key_technologies_mentioned?.length">
-                                        <span class="entity-label">Tecnologie Chiave Menzionate:</span>
+                                        <span class="entity-label">Tecnologies Chiave Menzionate:</span>
                                         <div class="tech-chips">
                                             <span v-for="(tech, i) in doc.entities_extracted.key_technologies_mentioned" :key="'tech-'+i" class="tech-chip">
                                                 {{ tech }}
@@ -129,7 +130,10 @@
                                     <div v-for="(intent, index) in doc.opportunity_intents" :key="'intent-'+index" 
                                          class="intent-card print-border" :class="{ 'high-weight': intent.weight >= 0.8 }">
                                         
+
+                                        
                                         <div class="intent-info">
+                                        
                                             <div class="intent-header">
                                                 <span class="weight-badge" :class="intent.weight >= 0.8 ? 'bg-emerald' : 'bg-muted'">
                                                     W: {{ Number(intent.weight).toFixed(2) }}
@@ -137,31 +141,7 @@
                                                 <h5 class="intent-title">{{ intent.intent }}</h5>
                                             </div>
                                             <p class="intent-motivation">{{ intent.weight_motivation }}</p>
-                                            
-                                            <div v-if="intent.associated_business_models?.length" class="associated-models-box">
-                                                <span class="framework-label">💼 Modelli Business Mappati:</span>
-                                                <div class="model-chips">
-                                                    <span v-for="(bm, bmIdx) in intent.associated_business_models" :key="'bm-'+bmIdx" class="model-chip" :title="bm.categoria_titolo">
-                                                        <span class="model-code">[{{ bm.categoria_codice }}.{{ bm.modello_codice }}]</span> {{ bm.modello_titolo }}
-                                                    </span>
-                                                </div>
-                                            </div>
 
-                                            <div class="intent-execution-framework" v-if="intent.objective || (intent.action_flow && intent.action_flow.length > 0)">
-                                                <div class="framework-objective" v-if="intent.objective">
-                                                    <span class="framework-label">🎯 Obiettivo Strategico:</span>
-                                                    <p class="framework-value">{{ intent.objective }}</p>
-                                                </div>
-                                                <div class="framework-workflow" v-if="intent.action_flow && intent.action_flow.length > 0">
-                                                    <span class="framework-label">📋 Action Flow Ordinato (SOP):</span>
-                                                    <ul class="sop-list">
-                                                        <li v-for="(step, sIdx) in intent.action_flow" :key="'step-'+sIdx" class="sop-step">
-                                                            {{ step }}
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
 
                                         <div v-if="intent.weight >= 0.8" class="asana-interactive-block print-clean">
                                             
@@ -213,6 +193,77 @@
                                         <div v-else class="asana-block discarded-block">
                                             <span class="discarded-badge">Scartato (W &lt; 0.8)</span>
                                         </div>
+
+                                            
+                                            <div v-if="intent.associated_business_models?.length" class="associated-models-box">
+                                                <span class="framework-label">💼 Modelli Business Mappati:</span>
+                                                <div class="model-chips">
+                                                    <span v-for="(bm, bmIdx) in intent.associated_business_models" :key="'bm-'+bmIdx" class="model-chip" :title="bm.categoria_titolo">
+                                                        <span class="model-code">[{{ bm.categoria_codice }}.{{ bm.modello_codice }}]</span> {{ bm.modello_titolo }}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div class="intent-execution-framework">
+                                                
+                                                <div class="sop-header-edit mb-2">
+                                                    <span class="framework-label">⚙️ Setup Esecutivo</span>
+                                                    <button @click="toggleEditSOP(doc._id, index, intent)" class="btn-edit-sop no-print">
+                                                        {{ editingSOPs[`${doc._id}_intent_${index}`] ? '💾 Salva Setup' : '✏️ Modifica Dettagli' }}
+                                                    </button>
+                                                </div>
+
+                                                <div class="framework-objective" v-if="intent.objective">
+                                                    <span class="framework-label">🎯 Obiettivo Strategico:</span>
+                                                    <p class="framework-value">{{ intent.objective }}</p>
+                                                </div>
+
+                                                <div class="framework-context mt-3" v-if="!editingSOPs[`${doc._id}_intent_${index}`] && (intent.target || intent.note)">
+                                                    <div v-if="intent.target" class="mb-2 flex align-center">
+                                                        <span class="framework-label">🎯 Mercato Target:</span>
+                                                        <span class="target-badge ml-2">{{ intent.target }}</span>
+                                                    </div>
+                                                    <div v-if="intent.note" class="mb-2">
+                                                        <span class="framework-label">📝 Note Operative:</span>
+                                                        <div class="framework-value markdown-content" v-html="renderMarkdown(intent.note)"></div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="framework-context-edit mt-3" v-if="editingSOPs[`${doc._id}_intent_${index}`]">
+                                                    <div class="edit-group mb-2">
+                                                        <span class="framework-label">🎯 Mercato Target:</span>
+                                                        <select v-model="intent.target" class="sop-select mt-1">
+                                                            <option value="General">General (Default)</option>
+                                                            <option value="Residenziale">Residenziale</option>
+                                                            <option value="PMI">PMI</option>
+                                                            <option value="Altro">Altro</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="edit-group mb-3">
+                                                        <span class="framework-label">📝 Note Operative (Supporta Markdown: **grassetto**, - lista):</span>
+                                                        <textarea v-model="intent.note" class="sop-textarea-note custom-scrollbar" placeholder="Es. **Attenzione:** Verificare i requisiti..."></textarea>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="framework-workflow mt-2" v-if="intent.action_flow && intent.action_flow.length > 0">
+                                                    <span class="framework-label">📋 Action Flow (SOP):</span>
+                                                    
+                                                    <ul class="sop-list mt-1" v-if="!editingSOPs[`${doc._id}_intent_${index}`]">
+                                                        <li v-for="(step, sIdx) in intent.action_flow" :key="'step-'+sIdx" class="sop-step">
+                                                            {{ step }}
+                                                        </li>
+                                                    </ul>
+                                                    
+                                                    <div v-else class="sop-edit-area mt-1">
+                                                        <textarea v-for="(step, sIdx) in intent.action_flow" :key="'edit-'+sIdx" 
+                                                                v-model="intent.action_flow[sIdx]" class="sop-textarea custom-scrollbar"></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+
+                                                                                </div>
                                     </div>
                                 </div>
                             </div>
@@ -286,7 +337,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import apiClient from '@/services/axios.js'; // Usa l'axios del progetto (bypassando EDDPSService)
+import apiClient from '@/services/axios.js'; 
+import AppNavbar from '@/components/eddpsNavBar.vue';
 
 const opportunities = ref([]);
 const loading = ref(true);
@@ -296,6 +348,30 @@ const openChannels = ref([]);
 const selectedRoles = ref({});
 const pushStatus = ref({});
 const unassignStatus = ref({}); 
+
+// --- STATO EDITING SETUP ESECUTIVO ---
+const editingSOPs = ref({}); 
+
+// Funzione Custom per parsare il Markdown senza librerie esterne
+const renderMarkdown = (text) => {
+    if (!text) return '';
+    
+    let html = text
+        // 1. Escapa i tag HTML base per sicurezza
+        .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        // 2. Grassetto (**testo**)
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // 3. Corsivo (*testo* o _testo_)
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        // 4. Liste puntate (trattino all'inizio della riga)
+        .replace(/^\s*-\s+(.*)$/gm, '<li>$1</li>')
+        // 5. Avvolgi i gruppi di <li> in un <ul>
+        .replace(/(<li>.*<\/li>(\n<li>.*<\/li>)*)/g, '<ul class="md-list">$1</ul>')
+        // 6. Vai a capo: converti i newline in <br> (evitando di rompere le liste)
+        .replace(/\n(?!\s*<)/g, '<br>');
+        
+    return html;
+};
 
 const ORG_ROLES = [
     { role_id: "R01", role_name: "System Architect" },
@@ -333,14 +409,12 @@ const formatDate = (dateString) => {
     return `${day}, ${month} ${year}`;
 };
 
-// HELPER: Formatta il testo in modo sicuro
 const getStatusText = (status) => {
     if (!status) return 'STATUS UNKNOWN';
     if (typeof status === 'string') return status.replace(/_/g, ' ');
     return 'STATUS UNKNOWN';
 };
 
-// HELPER: Ritorna la classe colore per lo Status Badge (ora Blindato contro i crash)
 const getStatusClass = (status) => {
     if (!status || typeof status !== 'string') return 'bg-muted';
     const s = status.toUpperCase();
@@ -350,13 +424,12 @@ const getStatusClass = (status) => {
     return 'bg-muted';
 };
 
-// HELPER: Ritorna la classe per colorare il bordo della card (Blindato)
 const getStatusBorderClass = (status) => {
     if (!status || typeof status !== 'string') return '';
     const s = status.toUpperCase();
     if (s === 'OUT_OF_PERIMETER') return 'border-out';
     if (s === 'AMBIGUOUS') return 'border-amb';
-    return ''; // Default fallback (Emerald)
+    return ''; 
 };
 
 const getFirstWebsite = (doc) => {
@@ -383,6 +456,31 @@ const toggleChannel = (docId) => {
     }
 };
 
+// === LOGICA EDITING SETUP ESECUTIVO ===
+const toggleEditSOP = (docId, index, intent) => {
+    const uniqueKey = `${docId}_intent_${index}`;
+    if (editingSOPs.value[uniqueKey]) {
+        saveSOP(uniqueKey, intent);
+    }
+    editingSOPs.value[uniqueKey] = !editingSOPs.value[uniqueKey];
+};
+
+const saveSOP = async (uniqueKey, intent) => {
+    try {
+        if (!intent.target) intent.target = 'General';
+
+        await apiClient.post(`/api/eddps/dss/update-flow/${uniqueKey}`, {
+            action_flow: intent.action_flow,
+            note: intent.note || '',
+            target: intent.target
+        });
+        console.log("✅ Setup esecutivo aggiornato con successo in MongoDB:", uniqueKey);
+    } catch (err) {
+        console.error("❌ Errore salvataggio setup esecutivo", err);
+        alert("Errore di rete durante il salvataggio dei dettagli.");
+    }
+};
+
 const pushToAsana = async (doc, item, type, roleId, uniqueKey) => {
     pushStatus.value[uniqueKey] = 'loading';
 
@@ -391,7 +489,14 @@ const pushToAsana = async (doc, item, type, roleId, uniqueKey) => {
 
     try {
         let compiledDescription = type === 'intent' ? item.intent : item.activity_description;
+        
         if (type === 'intent') {
+            if (item.target) {
+                compiledDescription += `\n\n🎯 MERCATO TARGET:\n${item.target}`;
+            }
+            if (item.note) {
+                compiledDescription += `\n\n📝 NOTE OPERATIVE:\n${item.note}`;
+            }
             if (item.associated_business_models?.length) {
                 compiledDescription += `\n\n💼 MODELLI DI BUSINESS MAPPATI:\n` + item.associated_business_models.map(bm => `- [${bm.categoria_codice}.${bm.modello_codice}] ${bm.modello_titolo} (${bm.categoria_titolo})`).join('\n');
             }
@@ -399,7 +504,7 @@ const pushToAsana = async (doc, item, type, roleId, uniqueKey) => {
                 compiledDescription += `\n\n🎯 OBIETTIVO STRATEGICO:\n${item.objective}`;
             }
             if (item.action_flow && item.action_flow.length > 0) {
-                compiledDescription += `\n\n📋 WORKFLOW AZIONI (SOP):\n` + item.action_flow.map(step => `- ${step}`).join('\n');
+                compiledDescription += `\n\n📋 WORKFLOW AZIONI VALIDATO (SOP):\n` + item.action_flow.map(step => `- ${step}`).join('\n');
             }
         }
 
@@ -460,9 +565,6 @@ const unassignAsanaTask = async (doc, item, type, uniqueKey) => {
     }
 };
 
-// ============================================================================
-// BYPASS EDDPSService E AGGANCIO DIRETTO A LARAVEL PER EVITARE LA PERDITA DATI
-// ============================================================================
 onMounted(async () => {
     try {
         const response = await apiClient.get('/api/eddps/opportunities');
@@ -588,6 +690,13 @@ onMounted(async () => {
     margin: 0;
 }
 
+/* Stili Markdown Custom */
+.markdown-content { font-size: 0.85rem; color: #E5E7EB; margin-top: 4px; line-height: 1.5; }
+.markdown-content :deep(strong) { font-weight: 700; color: #fff; background: rgba(255, 255, 255, 0.05); padding: 0 4px; border-radius: 3px; }
+.markdown-content :deep(em) { font-style: italic; color: var(--accent-emerald); }
+.markdown-content :deep(.md-list) { list-style-type: disc; padding-left: 20px; margin: 6px 0; }
+.markdown-content :deep(li) { margin-bottom: 4px; }
+
 .status-panel {
     background-color: #111827;
     border: 1px solid var(--border-color);
@@ -700,7 +809,6 @@ onMounted(async () => {
     gap: 12px;
 }
 
-/* NUOVI BADGE STATUS E DOC TITLE */
 .status-badge {
     font-size: 0.65rem;
     font-family: monospace;
@@ -823,13 +931,8 @@ onMounted(async () => {
     opacity: 0;
 }
 
-.section-block {
-    margin-bottom: 2rem;
-}
-
-.mt-custom {
-    margin-top: 2rem;
-}
+.section-block { margin-bottom: 2rem; }
+.mt-custom { margin-top: 2rem; }
 
 .section-title {
     font-size: 0.75rem;
@@ -847,17 +950,8 @@ onMounted(async () => {
 .title-blue { color: #60A5FA; }
 .title-purple { color: #A78BFA; }
 
-.grid-list {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-}
-
-.grid-list-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
+.grid-list { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+.grid-list-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
 /* ==========================================================================
    STRUTTURE DI DETTAGLIO CONTATTI ED ENTITÀ
@@ -871,55 +965,13 @@ onMounted(async () => {
     flex-direction: column;
     gap: 12px;
 }
-.contact-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-.contact-name {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: #DBEAFE;
-    margin: 0 0 2px 0;
-}
-.text-muted-italic {
-    color: #9CA3AF;
-    font-style: italic;
-    font-weight: 400;
-}
-.contact-role {
-    font-size: 0.75rem;
-    color: #9CA3AF;
-    display: block;
-}
-.associated-org {
-    font-size: 0.65rem;
-    font-family: monospace;
-    color: #60A5FA;
-    margin-top: 4px;
-    background-color: rgba(59, 130, 246, 0.1);
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 4px;
-}
-.relation-badge {
-    font-size: 0.625rem;
-    font-family: monospace;
-    background-color: rgba(59, 130, 246, 0.15);
-    color: #93C5FD;
-    padding: 4px 8px;
-    border-radius: 6px;
-    border: 1px solid rgba(59, 130, 246, 0.25);
-    text-transform: uppercase;
-}
-.contact-notes {
-    font-size: 0.75rem;
-    color: #D1D5DB;
-    margin: 0;
-    font-style: italic;
-    border-left: 2px solid rgba(59, 130, 246, 0.3);
-    padding-left: 8px;
-}
+.contact-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.contact-name { font-size: 0.875rem; font-weight: 700; color: #DBEAFE; margin: 0 0 2px 0; }
+.text-muted-italic { color: #9CA3AF; font-style: italic; font-weight: 400; }
+.contact-role { font-size: 0.75rem; color: #9CA3AF; display: block; }
+.associated-org { font-size: 0.65rem; font-family: monospace; color: #60A5FA; margin-top: 4px; background-color: rgba(59, 130, 246, 0.1); display: inline-block; padding: 2px 6px; border-radius: 4px; }
+.relation-badge { font-size: 0.625rem; font-family: monospace; background-color: rgba(59, 130, 246, 0.15); color: #93C5FD; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.25); text-transform: uppercase; }
+.contact-notes { font-size: 0.75rem; color: #D1D5DB; margin: 0; font-style: italic; border-left: 2px solid rgba(59, 130, 246, 0.3); padding-left: 8px; }
 
 .entities-card {
     background-color: rgba(139, 92, 246, 0.05);
@@ -930,40 +982,14 @@ onMounted(async () => {
     flex-direction: column;
     gap: 16px;
 }
-.entity-row {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.entity-label {
-    font-size: 0.625rem;
-    font-family: monospace;
-    text-transform: uppercase;
-    font-weight: 700;
-    color: #C4B5FD;
-}
-.entity-value {
-    font-size: 0.875rem;
-    color: #EDE9FE;
-    font-weight: 500;
-}
-.tech-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-.tech-chip {
-    font-size: 0.7rem;
-    font-family: monospace;
-    background-color: rgba(139, 92, 246, 0.15);
-    color: #DDD6FE;
-    padding: 4px 10px;
-    border-radius: 9999px;
-    border: 1px solid rgba(139, 92, 246, 0.25);
-}
+.entity-row { display: flex; flex-direction: column; gap: 6px; }
+.entity-label { font-size: 0.625rem; font-family: monospace; text-transform: uppercase; font-weight: 700; color: #C4B5FD; }
+.entity-value { font-size: 0.875rem; color: #EDE9FE; font-weight: 500; }
+.tech-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.tech-chip { font-size: 0.7rem; font-family: monospace; background-color: rgba(139, 92, 246, 0.15); color: #DDD6FE; padding: 4px 10px; border-radius: 9999px; border: 1px solid rgba(139, 92, 246, 0.25); }
 
 /* ==========================================================================
-   CARDS INTENTI CON DATI STRUTTURATI (OBJECTIVE, ACTION FLOW & BUSINESS MODELS)
+   CARDS INTENTI CON DATI STRUTTURATI
    ========================================================================== */
 .intent-card {
     background-color: var(--bg-panel);
@@ -977,81 +1003,24 @@ onMounted(async () => {
     overflow: hidden;
 }
 
-.intent-card.high-weight {
-    border-color: var(--accent-emerald-light);
-}
+.intent-card.high-weight { border-color: var(--accent-emerald-light); }
 
-.intent-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+.intent-info { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+.intent-header { display: flex; align-items: center; gap: 12px; }
 
-.intent-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.weight-badge {
-    padding: 2px 8px;
-    font-size: 0.625rem;
-    font-family: monospace;
-    font-weight: 700;
-    border-radius: 4px;
-}
+.weight-badge { padding: 2px 8px; font-size: 0.625rem; font-family: monospace; font-weight: 700; border-radius: 4px; }
 .bg-emerald { background-color: var(--accent-emerald); color: #000; }
 .bg-muted { background-color: #374151; color: #D1D5DB; }
 
-.intent-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #E5E7EB;
-    margin: 0;
-}
+.intent-title { font-size: 1rem; font-weight: 600; color: #E5E7EB; margin: 0; }
+.intent-motivation { font-size: 0.8rem; color: var(--text-muted); font-family: monospace; margin: 0; padding-left: 8px; border-left: 2px solid #374151; }
 
-.intent-motivation {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    font-family: monospace;
-    margin: 0;
-    padding-left: 8px;
-    border-left: 2px solid #374151;
-}
+.associated-models-box { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
+.model-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.model-chip { font-size: 0.725rem; background-color: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); color: #A7F3D0; padding: 4px 10px; border-radius: 6px; font-weight: 500; }
+.model-code { font-family: monospace; font-weight: 700; color: var(--accent-emerald); margin-right: 2px; }
 
-/* Nuovi stili per i Modelli di Business Mappati */
-.associated-models-box {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 2px;
-}
-
-.model-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.model-chip {
-    font-size: 0.725rem;
-    background-color: rgba(16, 185, 129, 0.08);
-    border: 1px solid rgba(16, 185, 129, 0.2);
-    color: #A7F3D0;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-weight: 500;
-}
-
-.model-code {
-    font-family: monospace;
-    font-weight: 700;
-    color: var(--accent-emerald);
-    margin-right: 2px;
-}
-
-/* Layout Framework Strategico (Obiettivi e SOP) */
+/* Layout Framework Strategico & SOP Editing */
 .intent-execution-framework {
     background-color: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.03);
@@ -1063,46 +1032,54 @@ onMounted(async () => {
     gap: 12px;
 }
 
-.framework-label {
-    font-size: 0.675rem;
-    font-family: monospace;
-    text-transform: uppercase;
-    color: #a7f3d0; 
-    font-weight: 700;
-    letter-spacing: 0.05em;
+.framework-label { font-size: 0.675rem; font-family: monospace; text-transform: uppercase; color: #a7f3d0; font-weight: 700; letter-spacing: 0.05em; }
+.framework-value { font-size: 0.85rem; color: #E5E7EB; margin: 4px 0 0 0; font-weight: 500; }
+
+.sop-header-edit { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.btn-edit-sop {
+    background: transparent; border: 1px solid var(--border-color);
+    color: var(--text-muted); font-size: 0.65rem; padding: 4px 8px;
+    border-radius: 4px; cursor: pointer; font-family: monospace;
+    transition: all 0.2s;
+}
+.btn-edit-sop:hover { border-color: var(--accent-emerald); color: var(--accent-emerald); background: rgba(16, 185, 129, 0.05); }
+
+.sop-list { list-style: none; padding: 0; margin: 6px 0 0 0; display: flex; flex-direction: column; gap: 6px; }
+.sop-step { font-size: 0.8rem; color: #D1D5DB; padding-left: 18px; position: relative; font-family: system-ui, -apple-system, sans-serif; }
+.sop-step::before { content: "→"; position: absolute; left: 2px; color: var(--accent-emerald); font-weight: bold; }
+
+.sop-edit-area { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.sop-textarea {
+    width: 100%; background: rgba(0,0,0,0.3); border: 1px solid #374151;
+    color: #D1D5DB; padding: 8px; font-size: 0.8rem;
+    border-radius: 6px; font-family: system-ui, -apple-system, sans-serif; 
+    resize: vertical; min-height: 40px;
+}
+.sop-textarea-note {
+    width: 100%; background: rgba(0,0,0,0.3); border: 1px solid #374151;
+    color: #D1D5DB; padding: 8px; font-size: 0.8rem;
+    border-radius: 6px; font-family: system-ui, -apple-system, sans-serif; 
+    resize: vertical; min-height: 200px;
+}
+.sop-textarea:focus { outline: none; border-color: var(--accent-blue); }
+
+.target-badge {
+    font-family: monospace; font-size: 0.7rem; font-weight: 700;
+    background-color: rgba(59, 130, 246, 0.15); color: #93C5FD;
+    padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
-.framework-value {
-    font-size: 0.85rem;
-    color: #E5E7EB;
-    margin: 4px 0 0 0;
-    font-weight: 500;
+.sop-select {
+    width: 100%; background: rgba(0,0,0,0.3); border: 1px solid #374151;
+    color: #D1D5DB; padding: 6px 8px; font-size: 0.8rem;
+    border-radius: 6px; font-family: system-ui, -apple-system, sans-serif;
 }
+.sop-select:focus { outline: none; border-color: var(--accent-blue); }
 
-.sop-list {
-    list-style: none;
-    padding: 0;
-    margin: 6px 0 0 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.sop-step {
-    font-size: 0.8rem;
-    color: #D1D5DB;
-    padding-left: 18px;
-    position: relative;
-    font-family: system-ui, -apple-system, sans-serif;
-}
-
-.sop-step::before {
-    content: "→";
-    position: absolute;
-    left: 2px;
-    color: var(--accent-emerald);
-    font-weight: bold;
-}
+.ml-2 { margin-left: 8px; }
+.mb-2 { margin-bottom: 8px; }
+.flex { display: flex; }
+.align-center { align-items: center; }
 
 /* Sezione interattiva Asana */
 .asana-interactive-block {
@@ -1117,47 +1094,16 @@ onMounted(async () => {
     max-height: fit-content;
 }
 
-.assignment-controls {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-
-.assigned-state-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    gap: 12px;
-}
-
-.assigned-details {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
-}
-.role-assigned {
-    font-size: 0.75rem;
-    font-weight: 700;
-}
-.task-id {
-    font-size: 0.65rem;
-    font-family: monospace;
-    color: var(--text-muted);
-    margin-top: 2px;
-}
+.assignment-controls { display: flex; flex-direction: column; flex: 1; }
+.assigned-state-container { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 12px; }
+.assigned-details { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+.role-assigned { font-size: 0.75rem; font-weight: 700; }
+.task-id { font-size: 0.65rem; font-family: monospace; color: var(--text-muted); margin-top: 2px; }
 
 .full-width { width: 100%; }
 .mb-3 { margin-bottom: 12px; }
 
-.asana-label {
-    font-size: 0.625rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 6px;
-}
+.asana-label { font-size: 0.625rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
 
 .role-select {
     background-color: var(--bg-body);
@@ -1171,7 +1117,6 @@ onMounted(async () => {
     width: 100%;
     cursor: pointer;
 }
-
 .role-select:focus { border-color: var(--accent-blue); }
 
 .btn-asana-push {
@@ -1188,12 +1133,7 @@ onMounted(async () => {
     gap: 6px;
     min-height: 34px;
 }
-
-.btn-asana-push:disabled {
-    background-color: #374151;
-    color: #9CA3AF;
-    cursor: not-allowed;
-}
+.btn-asana-push:disabled { background-color: #374151; color: #9CA3AF; cursor: not-allowed; }
 
 .btn-asana-remove {
     background-color: rgba(239, 68, 68, 0.1);
@@ -1220,7 +1160,6 @@ onMounted(async () => {
     justify-content: space-between;
     gap: 1rem;
 }
-
 .collab-info { display: flex; flex-direction: column; gap: 8px; }
 .collab-header { display: flex; justify-content: space-between; align-items: flex-start; }
 .partner-title { font-size: 0.75rem; font-family: monospace; font-weight: 700; color: #A5B4FC; text-transform: uppercase; }
@@ -1261,7 +1200,7 @@ onMounted(async () => {
 }
 
 /* ==========================================================================
-   STAMPA (PRINT CSS) - ATTIVABILE CON CTRL+P
+   STAMPA (PRINT CSS)
    ========================================================================== */
 @media print {
     body, .orchestrator-wrapper, .main-content {

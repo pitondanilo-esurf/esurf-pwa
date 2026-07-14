@@ -1,4 +1,5 @@
 <template>
+<AppNavbar />
     <div class="network-dashboard">
         <div class="overlay-ui">
             <h1>EDDPS Coverage Matrix</h1>
@@ -41,6 +42,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import apiClient from '@/services/axios.js'; // Stesso client usato dalla Dashboard
+import AppNavbar from '@/components/eddpsNavBar.vue';
 import * as d3 from 'd3';
 
 const graphContainer = ref(null);
@@ -336,7 +338,9 @@ onBeforeUnmount(() => { if (simulation) simulation.stop(); });
     --stream-active: #10B981; --stream-active-glow: rgba(16, 185, 129, 0.6);
     --stream-latent: #374151;
     
-    width: 100%; height: 100vh; background-color: var(--bg-dark); color: var(--text-main);
+    width: 100%;
+    height: calc(100vh - 64px);
+    background-color: var(--bg-dark); color: var(--text-main);
     position: relative; overflow: hidden; font-family: system-ui, sans-serif;
 }
 .d3-container { width: 100%; height: 100%; }

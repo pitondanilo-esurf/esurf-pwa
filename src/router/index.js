@@ -427,6 +427,15 @@ const router = createRouter({
             title: 'EDDPS sankey Matrix',
             requiresAuth: true // se usi un sistema di autenticazione
         }
+    },
+    {
+        path: '/decision-support',
+        name: 'DecisionSupport',
+        component: () => import('@/components/DecisionSupport.vue'),
+        meta: { 
+            title: 'decision support',
+            requiresAuth: true // se usi un sistema di autenticazione
+        }
     }
   ]
 });

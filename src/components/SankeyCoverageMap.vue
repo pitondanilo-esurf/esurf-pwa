@@ -1,5 +1,6 @@
 <template>
-    <div class="sankey-dashboard">
+    <AppNavbar />
+    <div class="sankey-dashboard" @click.self="unpinTooltip">
         <div class="overlay-ui">
             <h1>EDDPS Sankey Flow</h1>
             <p>Distribuzione del Valore: Documenti → Intenti → Modelli → Revenue</p>
@@ -15,13 +16,17 @@
         <div 
             v-if="tooltip.visible" 
             class="custom-tooltip" 
+            :class="{ 'is-pinned': tooltip.pinned }"
             :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
         >
             <div class="tooltip-header">
                 <span class="tooltip-badge" :style="{ backgroundColor: tooltip.color }">{{ tooltip.badge }}</span>
+                <span v-if="tooltip.pinned" class="pin-icon">📌</span>
                 <h3 class="tooltip-title">{{ tooltip.title }}</h3>
             </div>
-            <p class="tooltip-desc">{{ tooltip.desc }}</p>
+            <p class="tooltip-desc">
+                {{ tooltip.desc || 'Nessuna descrizione aggiuntiva disponibile per questo nodo.' }}
+            </p>
             <div class="tooltip-value">Peso del Flusso: <strong>{{ tooltip.value.toFixed(2) }}</strong></div>
         </div>
 
@@ -41,8 +46,8 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue';
 import apiClient from '@/services/axios.js'; 
+import AppNavbar from '@/components/eddpsNavBar.vue';
 import * as d3 from 'd3';
-// FIX: importiamo esplicitamente sankeyJustify da d3-sankey
 import { sankey, sankeyLinkHorizontal, sankeyJustify } from 'd3-sankey'; 
 
 const sankeyContainer = ref(null);
@@ -50,7 +55,7 @@ const loading = ref(true);
 const error = ref(null);
 
 const tooltip = ref({
-    visible: false, x: 0, y: 0, title: '', desc: '', badge: '', color: '', value: 0
+    visible: false, x: 0, y: 0, title: '', desc: '', badge: '', color: '', value: 0, pinned: false
 });
 
 const COLORS = {
@@ -82,20 +87,53 @@ const fetchDatabaseData = async () => {
     } catch (err) {
         console.error("[EDDPS Sankey] Errore API:", err);
         let errorMsg = "Impossibile caricare i dati dal server.";
-        
-        if (err.response && err.response.status === 404) {
-            errorMsg = "Errore 404: Rotta non trovata.";
-        } else if (err.response && err.response.status === 500) {
-            errorMsg = "Errore 500: Database MongoDB non raggiungibile.";
-        }
-        
+        if (err.response && err.response.status === 404) errorMsg = "Errore 404: Rotta non trovata.";
+        if (err.response && err.response.status === 500) errorMsg = "Errore 500: Database MongoDB non raggiungibile.";
         error.value = errorMsg;
         return { opportunities: [], matrixMap: { revenue_streams: [] } };
     }
 };
 
 // ============================================================================
-// 2. PARSER BLINDATO CON FILTRO ESTREMO 
+// 2. FUNZIONE DI RICERCA MIRATA (TARGETED SEARCH)
+// ============================================================================
+// Esplora l'oggetto cercando specificamente un nodo che abbia 'codice' == target 
+// e che possieda il campo 'descrizione'. Evita falsi positivi con ID di categorie.
+const findTargetDescription = (obj, targetCode) => {
+    let foundDesc = "";
+    
+    const search = (current) => {
+        if (!current || typeof current !== 'object') return;
+        if (foundDesc) return; // Interrompi se trovata
+        
+        // Se troviamo un array, esploriamolo
+        if (Array.isArray(current)) {
+            for (let i = 0; i < current.length; i++) search(current[i]);
+            return;
+        }
+
+        const currentCode = current.codice || current.modello_codice;
+        
+        // Match esatto: è l'oggetto del modello e ha la descrizione
+        if (String(currentCode) === String(targetCode) && (current.descrizione || current.modello_descrizione)) {
+            foundDesc = current.descrizione || current.modello_descrizione;
+            return;
+        }
+        
+        // Continua a cercare nelle proprietà annidate (es. array 'business_models' dentro la categoria)
+        for (const key in current) {
+            if (Object.prototype.hasOwnProperty.call(current, key)) {
+                search(current[key]);
+            }
+        }
+    };
+    
+    search(obj);
+    return foundDesc;
+};
+
+// ============================================================================
+// 3. PARSER
 // ============================================================================
 const buildSankeyData = (opportunities, matrixMap) => {
     const nodesMap = new Map();
@@ -105,6 +143,11 @@ const buildSankeyData = (opportunities, matrixMap) => {
         const safeId = String(id).trim();
         if (!nodesMap.has(safeId)) {
             nodesMap.set(safeId, { id: safeId, name: name || "Sconosciuto", group, desc });
+        } else {
+            const existingNode = nodesMap.get(safeId);
+            const isGeneric = !existingNode.desc || existingNode.desc.includes("attivo per la categoria") || existingNode.desc === "";
+            const isNewBetter = desc && !desc.includes("attivo per la categoria") && desc !== "";
+            if (isGeneric && isNewBetter) existingNode.desc = desc;
         }
     };
 
@@ -122,7 +165,8 @@ const buildSankeyData = (opportunities, matrixMap) => {
 
     opportunities.forEach((doc, dIdx) => {
         const docId = `D_${doc._id || dIdx}`;
-        addNode(docId, doc.analyzed_document_title || `Documento ${dIdx+1}`, 1, doc.reasoning || "Doc Ingerito");
+        const docDesc = doc.reasoning || doc.descrizione || doc.description || doc.abstract || "Documento analizzato dalla pipeline.";
+        addNode(docId, doc.analyzed_document_title || `Documento ${dIdx+1}`, 1, docDesc);
 
         if (doc.opportunity_intents && Array.isArray(doc.opportunity_intents)) {
             doc.opportunity_intents.forEach((intent, iIdx) => {
@@ -139,23 +183,60 @@ const buildSankeyData = (opportunities, matrixMap) => {
                     const bmCount = intent.associated_business_models.length;
                     
                     intent.associated_business_models.forEach(bm => {
-                        const modelId = `M_${bm.categoria_codice}_${bm.modello_codice}`;
-                        const modelLabel = `[${bm.categoria_codice}.${bm.modello_codice}] ${bm.modello_titolo || 'N/A'}`;
+                        const targetCode = bm.modello_codice;
+                        let extractedTitolo = bm.modello_titolo || bm.titolo || 'N/A';
+                        let modelDesc = "";
+
+                        // FASE 1: Ricerca diretta. 
+                        // Se l'oggetto 'bm' è la categoria e ha dentro un array di modelli, ispezioniamo quell'array.
+                        const arraysToCheck = [bm.business_models, bm.modelli, bm.models, bm.array];
+                        for (const arr of arraysToCheck) {
+                            if (Array.isArray(arr)) {
+                                const matchedModel = arr.find(m => String(m.codice) === String(targetCode) || String(m.modello_codice) === String(targetCode));
+                                if (matchedModel) {
+                                    modelDesc = matchedModel.descrizione || matchedModel.modello_descrizione || "";
+                                    if (extractedTitolo === 'N/A') extractedTitolo = matchedModel.titolo || matchedModel.modello_titolo || 'N/A';
+                                }
+                            }
+                        }
+
+                        // FASE 2: Se non trovato negli array interni, controlliamo se fosse già al primo livello
+                        if (!modelDesc) {
+                            modelDesc = bm.modello_descrizione || bm.descrizione || "";
+                        }
+
+                        // FASE 3: Ricerca ricorsiva globale (Matrix o Documento) per quel preciso targetCode
+                        if (!modelDesc) {
+                            modelDesc = findTargetDescription(matrixMap, targetCode);
+                        }
+                        if (!modelDesc) {
+                            modelDesc = findTargetDescription(doc, targetCode);
+                        }
+
+                        // Fallback finale se il database non ha la stringa salvata da nessuna parte
+                        if (!modelDesc) {
+                            modelDesc = `Modello di Business attivo per la categoria ${bm.categoria_codice} (Codice: ${targetCode}).`;
+                        }
+
+                        const modelId = `M_${bm.categoria_codice}_${targetCode}`;
+                        const modelLabel = `[${bm.categoria_codice}.${targetCode}] ${extractedTitolo}`;
+
+                        addNode(modelId, modelLabel, 3, modelDesc);
                         
-                        addNode(modelId, modelLabel, 3, "Modello Attivato");
                         const bmFlowValue = flowValue / (bmCount || 1);
                         addLink(intentId, modelId, bmFlowValue);
 
                         const matchingStreams = (matrixMap.revenue_streams || []).filter(stream => {
                             if (!stream.mapped_models) return false;
-                            return stream.mapped_models.some(m => m.categoria_codice === bm.categoria_codice && m.modello_codice === bm.modello_codice);
+                            return stream.mapped_models.some(m => String(m.categoria_codice) === String(bm.categoria_codice) && String(m.modello_codice) === String(targetCode));
                         });
 
                         if (matchingStreams.length > 0) {
                             const streamFlowValue = bmFlowValue / matchingStreams.length;
                             matchingStreams.forEach(stream => {
                                 const streamId = `S_${stream.stream_id}`;
-                                addNode(streamId, stream.stream_name, 4, stream.strategic_summary || "Flusso Monetario Generato");
+                                const streamDesc = stream.strategic_summary || stream.descrizione || "Flusso Monetario Generato.";
+                                addNode(streamId, stream.stream_name, 4, streamDesc);
                                 addLink(modelId, streamId, streamFlowValue);
                             });
                         }
@@ -165,32 +246,25 @@ const buildSankeyData = (opportunities, matrixMap) => {
         }
     });
 
-    // --- FILTRO SALVAVITA (Garantisce che non ci siano nodi/link corrotti passati a D3) ---
     const rawLinks = Array.from(linksMap.values());
-    
-    // 1. Tieni solo i link dove source e target esistono effettivamente nei nodi
     const validLinks = rawLinks.filter(l => nodesMap.has(l.source) && nodesMap.has(l.target) && l.value > 0);
-    
-    // 2. Raccogli gli ID dei nodi che sono coinvolti attivamente in un link valido
     const activeNodeIds = new Set();
+    
     validLinks.forEach(l => {
         activeNodeIds.add(l.source);
         activeNodeIds.add(l.target);
     });
     
-    // 3. Tieni SOLO i nodi coinvolti (elimina nodi fluttuanti)
     const validNodes = Array.from(nodesMap.values()).filter(n => activeNodeIds.has(n.id));
-
     return { nodes: validNodes, links: validLinks };
 };
 
 // ============================================================================
-// 3. MOTORE GRAFICO D3 SANKEY
+// 4. MOTORE GRAFICO D3 SANKEY E INTERAZIONI
 // ============================================================================
 const initSankeyGraph = (data) => {
     if (!sankeyContainer.value || data.nodes.length === 0 || data.links.length === 0) return;
 
-    // Aggiunto fallback per sicurezza sulle misure
     const width = sankeyContainer.value.clientWidth || 800;
     const height = sankeyContainer.value.clientHeight || 600;
     const margin = { top: 40, right: 40, bottom: 40, left: 40 };
@@ -205,10 +279,9 @@ const initSankeyGraph = (data) => {
         .nodeId(d => d.id)
         .nodeWidth(16)
         .nodePadding(20)
-        .nodeAlign(sankeyJustify) // FIX PRINCIPALE: rimosso il prefisso 'd3.'
+        .nodeAlign(sankeyJustify)
         .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]]);
 
-    // CLONE PROFONDO: Evita i crash distruggendo i proxy reattivi di Vue
     const safeNodes = JSON.parse(JSON.stringify(data.nodes));
     const safeLinks = JSON.parse(JSON.stringify(data.links));
 
@@ -228,14 +301,21 @@ const initSankeyGraph = (data) => {
         .attr("stroke", d => d3.color(COLORS[d.target.group]).copy({ opacity: 0.35 }))
         .attr("stroke-width", d => Math.max(1, d.width))
         .style("transition", "stroke-opacity 0.2s")
+        .style("cursor", "pointer")
         .on("mouseover", function(event, d) {
+            if (tooltip.value.pinned) return;
             d3.select(this).attr("stroke-opacity", 0.8);
-            showTooltip(event, `Flusso: ${d.source.name} → ${d.target.name}`, "", "Flow", COLORS[d.target.group], d.value);
+            showTooltip(event, `Flusso: ${d.source.name} → ${d.target.name}`, "Connessione logica e passaggio di peso tra entità.", "Flow", COLORS[d.target.group], d.value);
         })
         .on("mousemove", moveTooltip)
         .on("mouseout", function() {
+            if (tooltip.value.pinned) return;
             d3.select(this).attr("stroke-opacity", 0.35);
             hideTooltip();
+        })
+        .on("click", function(event, d) {
+            togglePinTooltip(event, `Flusso: ${d.source.name} → ${d.target.name}`, "Connessione logica e passaggio di peso tra entità.", "Flow", COLORS[d.target.group], d.value);
+            event.stopPropagation();
         });
 
     const node = svg.append("g")
@@ -250,16 +330,23 @@ const initSankeyGraph = (data) => {
         .attr("stroke", "#06090F")
         .attr("stroke-width", 1)
         .attr("rx", 2)
+        .style("cursor", "pointer")
         .on("mouseover", function(event, d) {
+            if (tooltip.value.pinned) return;
             d3.select(this).attr("stroke", "#fff").attr("stroke-width", 2);
             path.style("stroke-opacity", l => (l.source.id === d.id || l.target.id === d.id) ? 0.8 : 0.1);
             showTooltip(event, d.name, d.desc, `Pilastro ${d.group}`, COLORS[d.group], d.value);
         })
         .on("mousemove", moveTooltip)
         .on("mouseout", function() {
+            if (tooltip.value.pinned) return;
             d3.select(this).attr("stroke", "#06090F").attr("stroke-width", 1);
             path.style("stroke-opacity", 0.35);
             hideTooltip();
+        })
+        .on("click", function(event, d) {
+            togglePinTooltip(event, d.name, d.desc, `Pilastro ${d.group}`, COLORS[d.group], d.value);
+            event.stopPropagation();
         });
 
     svg.append("g")
@@ -278,15 +365,37 @@ const initSankeyGraph = (data) => {
         .style("text-shadow", "0px 2px 4px rgba(0,0,0,0.8)");
 };
 
+// ============================================================================
+// 5. LOGICA INTERATTIVA TOOLTIP
+// ============================================================================
 const showTooltip = (event, title, desc, badge, color, value) => {
-    tooltip.value = { visible: true, x: event.pageX, y: event.pageY, title, desc, badge, color, value };
+    tooltip.value = { ...tooltip.value, visible: true, x: event.pageX, y: event.pageY, title, desc, badge, color, value };
 };
+
 const moveTooltip = (event) => {
+    if (tooltip.value.pinned) return;
     tooltip.value.x = event.pageX;
     tooltip.value.y = event.pageY;
 };
+
 const hideTooltip = () => {
+    if (tooltip.value.pinned) return;
     tooltip.value.visible = false;
+};
+
+const togglePinTooltip = (event, title, desc, badge, color, value) => {
+    if (tooltip.value.pinned && tooltip.value.title === title) {
+        unpinTooltip();
+    } else {
+        tooltip.value = { visible: true, x: event.pageX, y: event.pageY, title, desc, badge, color, value, pinned: true };
+    }
+};
+
+const unpinTooltip = () => {
+    tooltip.value.pinned = false;
+    tooltip.value.visible = false;
+    d3.select(sankeyContainer.value).selectAll("path").style("stroke-opacity", 0.35);
+    d3.select(sankeyContainer.value).selectAll("rect").attr("stroke", "#06090F").attr("stroke-width", 1);
 };
 
 onMounted(async () => {
@@ -296,11 +405,10 @@ onMounted(async () => {
         
         if (opportunities && opportunities.length > 0) {
             const sankeyData = buildSankeyData(opportunities, matrixMap);
-            
             if (sankeyData.links.length > 0) {
                 nextTick(() => initSankeyGraph(sankeyData));
             } else {
-                error.value = "Documenti presenti nel DB, ma nessun Intent o Business Model ha superato il filtro per il flusso.";
+                error.value = "Documenti presenti nel DB, ma nessun flusso ha superato i filtri relazionali.";
             }
         } else if (!error.value) { 
             error.value = "Nessun documento utile trovato nel DB per generare i flussi.";
@@ -317,7 +425,9 @@ onMounted(async () => {
     --bg-dark: #06090F; 
     --text-main: #F3F4F6; 
     --text-muted: #9CA3AF;
-    width: 100%; height: 100vh; background-color: var(--bg-dark); color: var(--text-main);
+    width: 100%;
+    height: calc(100vh - 64px);
+    background-color: var(--bg-dark); color: var(--text-main);
     position: relative; overflow: hidden; font-family: system-ui, sans-serif;
 }
 .d3-container { width: 100%; height: 100%; }
@@ -335,10 +445,29 @@ onMounted(async () => {
 .error-overlay p { background: rgba(239, 68, 68, 0.1); border: 1px solid #EF4444; padding: 16px; border-radius: 8px; color: #FCA5A5; }
 .spinner { width: 32px; height: 32px; animation: spin 1s linear infinite; color: #10B981; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
-.custom-tooltip { position: fixed; background: rgba(11, 16, 26, 0.95); border: 1px solid #1F2937; border-radius: 8px; padding: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); backdrop-filter: blur(8px); z-index: 100; width: 320px; transform: translate(-50%, 15px); pointer-events: none; }
-.tooltip-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #1F2937; }
+
+.custom-tooltip { 
+    position: fixed; 
+    background: rgba(11, 16, 26, 0.95); 
+    border: 1px solid #1F2937; 
+    border-radius: 8px; 
+    padding: 16px; 
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); 
+    backdrop-filter: blur(8px); 
+    z-index: 100; 
+    width: 340px; 
+    transform: translate(-50%, 15px); 
+    pointer-events: none;
+    transition: opacity 0.15s ease-in-out;
+}
+.custom-tooltip.is-pinned {
+    border-color: #A78BFA; 
+    box-shadow: 0 0 15px rgba(167, 139, 250, 0.25);
+}
+.tooltip-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #1F2937; flex-wrap: wrap; }
 .tooltip-badge { font-family: monospace; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; color: #06090F; }
-.tooltip-title { margin: 0; font-size: 0.95rem; font-weight: 600; color: #F3F4F6; }
-.tooltip-desc { margin: 0 0 8px 0; font-size: 0.8rem; color: #D1D5DB; line-height: 1.5; }
+.pin-icon { font-size: 12px; margin-left: auto; }
+.tooltip-title { margin: 0; font-size: 0.95rem; font-weight: 600; color: #F3F4F6; flex-basis: 100%; margin-top: 4px; }
+.tooltip-desc { margin: 0 0 12px 0; font-size: 0.8rem; color: #D1D5DB; line-height: 1.5; white-space: normal; word-wrap: break-word; }
 .tooltip-value { font-family: monospace; font-size: 0.8rem; color: #9CA3AF; background: #1F2937; padding: 6px; border-radius: 4px; text-align: center; }
 </style>
