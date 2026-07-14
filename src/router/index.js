@@ -436,7 +436,16 @@ const router = createRouter({
             title: 'decision support',
             requiresAuth: true // se usi un sistema di autenticazione
         }
-    }
+    },
+    {
+        path: '/funding-hub',
+        name: 'FundingCallsDashboard',
+        component: () => import('@/components/FundingCallsDashboard.vue'),
+        meta: { 
+            title: 'Funding Hub - E-surf',
+            requiresAuth: true // se usi un sistema di autenticazione
+        }
+    },
   ]
 });
 
