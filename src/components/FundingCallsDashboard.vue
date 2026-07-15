@@ -49,131 +49,163 @@
                     </div>
                 </div>
 
-                <!-- BANDI ATTIVI -->
+                <!-- BANDI ATTIVI AD ACCORDION -->
                 <h3 class="section-heading mt-4" v-if="activeCalls.length > 0">Opportunità in Corso</h3>
-                <div class="calls-grid">
-                    <div v-for="call in activeCalls" :key="call._id || call.bando_id" class="call-card print-avoid-break">
+                <div class="accordion-container">
+                    <div v-for="call in activeCalls" :key="call._id || call.bando_id" class="accordion-item print-avoid-break" :class="{ 'is-open': openActive.includes(call._id || call.bando_id) }">
                         
-                        <div class="card-header">
-                            <div class="header-top">
-                                <span class="bando-id">{{ call.bando_id }}</span>
-                                <span class="ente-badge">{{ call.ente_erogatore }}</span>
+                        <!-- HEADER ACCORDION ATTIVO (Titolo, Date, Rating, Note in preview) -->
+                        <div class="accordion-header" @click="toggleActive(call._id || call.bando_id)">
+                            <div class="w-full">
+                                <div class="flex justify-between items-start gap-4">
+                                    
+                                    <div class="flex-1">
+                                        <h4 class="active-title m-0">{{ call.nome }}</h4>
+                                        <!-- DATE PREVIEW (Visibile solo ad accordion CHIUSO) -->
+                                        <div class="dates-preview mt-1" v-if="!openActive.includes(call._id || call.bando_id)">
+                                            <span>Start: {{ formatDate(call.data_start) }}</span>
+                                            <span class="mx-2">&bull;</span>
+                                            <span :class="{'urgent': isUrgent(call.data_end)}">Close: {{ formatDate(call.data_end) }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-3">
+                                        <!-- RATING A STELLE -->
+                                        <div class="rating-box no-print">
+                                            <!-- Usiamo @click.stop per evitare di aprire/chiudere l'accordion cliccando le stelle -->
+                                            <svg v-for="star in 5" :key="star" @click.stop="setRating(call, star)" class="star-icon" :class="{'active': star <= (call.rating || 0)}" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="chevron-box" :class="{ 'rotate': openActive.includes(call._id || call.bando_id) }">
+                                            <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
+                                    </div>
+                                </div>
                                 
-                                <!-- RATING A STELLE -->
-                                <div class="rating-box no-print">
-                                    <svg v-for="star in 5" :key="star" @click="setRating(call, star)" class="star-icon" :class="{'active': star <= (call.rating || 0)}" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                    </svg>
+                                <!-- NOTE PREVIEW (Visibile solo ad accordion CHIUSO) -->
+                                <div class="notes-preview-box mt-3" v-if="call.note && !openActive.includes(call._id || call.bando_id)">
+                                    <div class="notes-display markdown-content custom-scrollbar" v-html="renderMarkdown(call.note)"></div>
                                 </div>
                             </div>
-                            <h3 class="call-title">{{ call.nome }}</h3>
                         </div>
 
-                        <div class="card-body">
-                            <p class="call-desc">{{ call.descrizione_breve }}</p>
-                            
-                            <div class="financial-block">
-                                <span class="block-label">Dotazione / Ticket</span>
-                                <p class="financial-value">{{ call.dotazione_finanziaria }}</p>
-                            </div>
-                            
-                            <div class="dates-row">
-                                <div class="date-box start">
-                                    <span class="date-label">Apertura</span>
-                                    <span class="date-val">{{ formatDate(call.data_start) }}</span>
-                                </div>
-                                <div class="date-box end">
-                                    <span class="date-label">Scadenza</span>
-                                    <span class="date-val" :class="{'urgent': isUrgent(call.data_end)}">
-                                        {{ formatDate(call.data_end) }}
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div v-if="call.modelli_coperti && call.modelli_coperti.length" class="models-block">
-                                <span class="block-label">Modelli Business Mappati</span>
-                                <div class="models-chips">
-                                    <span v-for="(modello, i) in call.modelli_coperti" :key="i" class="model-chip" :title="getClusterTooltip(modello)">
-                                        Cluster {{ modello }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- SETUP & NOTE OPERATIVE -->
-                            <div class="notes-block">
-                                <div class="notes-header">
-                                    <span class="block-label mb-0">Setup & Note di Valutazione</span>
-                                    <button @click="toggleEditNote(call)" class="btn-edit-note no-print">
-                                        {{ editingNotes[call._id] ? '💾 Salva' : '✏️ Modifica' }}
-                                    </button>
-                                </div>
-                                <div v-if="editingNotes[call._id]">
-                                    <div class="edit-group mb-2">
-                                        <span class="input-label">🔗 Link Bando:</span>
-                                        <input type="text" v-model="call.link_ufficiale" class="link-input custom-scrollbar" placeholder="Inserisci URL (es. https://...)">
+                        <!-- BODY ACCORDION ATTIVO (Dettagli Espansi) -->
+                        <transition name="accordion-slide">
+                            <div v-show="openActive.includes(call._id || call.bando_id)" class="accordion-body">
+                                <div class="card-body accordion-card-body">
+                                    
+                                    <div class="header-top mb-3">
+                                        <span class="bando-id">{{ call.bando_id }}</span>
+                                        <span class="ente-badge">{{ call.ente_erogatore }}</span>
                                     </div>
-                                    <div class="edit-group">
-                                        <span class="input-label">📝 Note Valutazione:</span>
-                                        <textarea v-model="call.note" class="notes-textarea custom-scrollbar" placeholder="Inserisci appunti o note strategiche (supporta Markdown)..."></textarea>
-                                    </div>
-                                </div>
-                                <div v-else class="notes-display markdown-content custom-scrollbar" v-html="call.note ? renderMarkdown(call.note) : 'Nessuna nota presente.'">
-                                </div>
-                            </div>
 
-                            <!-- BLOCCO ASANA -->
-                            <div class="asana-interactive-block print-clean mt-2">
-                                <template v-if="call.asana_status !== 'ASSIGNED'">
-                                    <div class="assignment-controls no-print w-full">
-                                        <span class="asana-label">Delega Valutazione a:</span>
-                                        <div class="flex gap-2">
-                                            <select v-model="selectedRoles[call._id]" class="role-select flex-1">
-                                                <option value="" disabled selected>Seleziona Ruolo...</option>
-                                                <option v-for="role in ORG_ROLES" :key="role.role_id" :value="role.role_id">
-                                                    [{{ role.role_id }}] {{ role.role_name }}
-                                                </option>
-                                            </select>
-                                            <button 
-                                                @click="pushToAsana(call)"
-                                                :disabled="!selectedRoles[call._id] || pushStatus[call._id] === 'loading'"
-                                                class="btn-asana-push">
-                                                <span v-if="pushStatus[call._id] === 'loading'">...</span>
-                                                <span v-else>Push Asana</span>
+                                    <p class="call-desc">{{ call.descrizione_breve }}</p>
+                                    
+                                    <div class="financial-block mt-3">
+                                        <span class="block-label">Dotazione / Ticket</span>
+                                        <p class="financial-value">{{ call.dotazione_finanziaria }}</p>
+                                    </div>
+                                    
+                                    <div class="dates-row mt-3">
+                                        <div class="date-box start">
+                                            <span class="date-label">Apertura</span>
+                                            <span class="date-val">{{ formatDate(call.data_start) }}</span>
+                                        </div>
+                                        <div class="date-box end">
+                                            <span class="date-label">Scadenza</span>
+                                            <span class="date-val" :class="{'urgent': isUrgent(call.data_end)}">
+                                                {{ formatDate(call.data_end) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div v-if="call.modelli_coperti && call.modelli_coperti.length" class="models-block mt-3">
+                                        <span class="block-label">Modelli Business Mappati</span>
+                                        <div class="models-chips">
+                                            <span v-for="(modello, i) in call.modelli_coperti" :key="i" class="model-chip" :title="getClusterTooltip(modello)">
+                                                Cluster {{ modello }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- SETUP & NOTE OPERATIVE (Modificabili) -->
+                                    <div class="notes-block mt-3">
+                                        <div class="notes-header">
+                                            <span class="block-label mb-0">Setup & Note di Valutazione</span>
+                                            <button @click.stop="toggleEditNote(call)" class="btn-edit-note no-print">
+                                                {{ editingNotes[call._id] ? '💾 Salva' : '✏️ Modifica' }}
                                             </button>
                                         </div>
-                                    </div>
-                                </template>
-
-                                <template v-else>
-                                    <div class="assigned-state-container w-full">
-                                        <div class="assigned-details flex-1">
-                                            <span class="asana-label no-print">Task Asana Delegato a:</span>
-                                            <span class="role-assigned text-emerald-400">✓ {{ getRoleName(call.asana_role) }}</span>
-                                            <span class="task-id">ID: {{ call.asana_task_id }}</span>
+                                        <div v-if="editingNotes[call._id]">
+                                            <div class="edit-group mb-2">
+                                                <span class="input-label">🔗 Link Bando:</span>
+                                                <input type="text" v-model="call.link_ufficiale" class="link-input custom-scrollbar" placeholder="Inserisci URL (es. https://...)">
+                                            </div>
+                                            <div class="edit-group">
+                                                <span class="input-label">📝 Note Valutazione:</span>
+                                                <textarea v-model="call.note" class="notes-textarea custom-scrollbar" placeholder="Inserisci appunti o note strategiche (supporta Markdown)..."></textarea>
+                                            </div>
                                         </div>
-                                        <button 
-                                            @click="unassignAsanaTask(call)" 
-                                            class="btn-asana-remove no-print" 
-                                            :disabled="unassignStatus[call._id] === 'loading'"
-                                            title="Revoca assegnazione">
-                                            <span v-if="unassignStatus[call._id] === 'loading'">...</span>
-                                            <span v-else>
-                                                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                            </span>
-                                        </button>
+                                        <div v-else class="notes-display markdown-content custom-scrollbar" v-html="call.note ? renderMarkdown(call.note) : 'Nessuna nota presente.'">
+                                        </div>
                                     </div>
-                                </template>
+
+                                    <!-- BLOCCO ASANA -->
+                                    <div class="asana-interactive-block print-clean mt-3">
+                                        <template v-if="call.asana_status !== 'ASSIGNED'">
+                                            <div class="assignment-controls no-print w-full">
+                                                <span class="asana-label">Delega Valutazione a:</span>
+                                                <div class="flex gap-2">
+                                                    <select v-model="selectedRoles[call._id]" class="role-select flex-1">
+                                                        <option value="" disabled selected>Seleziona Ruolo...</option>
+                                                        <option v-for="role in ORG_ROLES" :key="role.role_id" :value="role.role_id">
+                                                            [{{ role.role_id }}] {{ role.role_name }}
+                                                        </option>
+                                                    </select>
+                                                    <button 
+                                                        @click="pushToAsana(call)"
+                                                        :disabled="!selectedRoles[call._id] || pushStatus[call._id] === 'loading'"
+                                                        class="btn-asana-push">
+                                                        <span v-if="pushStatus[call._id] === 'loading'">...</span>
+                                                        <span v-else>Push Asana</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <template v-else>
+                                            <div class="assigned-state-container w-full">
+                                                <div class="assigned-details flex-1">
+                                                    <span class="asana-label no-print">Task Asana Delegato a:</span>
+                                                    <span class="role-assigned text-emerald-400">✓ {{ getRoleName(call.asana_role) }}</span>
+                                                    <span class="task-id">ID: {{ call.asana_task_id }}</span>
+                                                </div>
+                                                <button 
+                                                    @click="unassignAsanaTask(call)" 
+                                                    class="btn-asana-remove no-print" 
+                                                    :disabled="unassignStatus[call._id] === 'loading'"
+                                                    title="Revoca assegnazione">
+                                                    <span v-if="unassignStatus[call._id] === 'loading'">...</span>
+                                                    <span v-else>
+                                                        <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                </div>
+
+                                <!-- FOOTER CON LINK UFFICIALE -->
+                                <div class="card-footer" v-if="call.link_ufficiale">
+                                    <a :href="call.link_ufficiale" target="_blank" rel="noopener noreferrer" class="link-bando no-print" title="Apri il bando in una nuova finestra">
+                                        <span>Vai al Bando Ufficiale</span>
+                                        <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                    </a>
+                                </div>
                             </div>
-
-                        </div>
-
-                        <!-- FOOTER CON LINK UFFICIALE -->
-                        <div class="card-footer" v-if="call.link_ufficiale">
-                            <a :href="call.link_ufficiale" target="_blank" rel="noopener noreferrer" class="link-bando no-print" title="Apri il bando in una nuova finestra">
-                                <span>Vai al Bando Ufficiale</span>
-                                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                            </a>
-                        </div>
+                        </transition>
                     </div>
                 </div>
 
@@ -251,6 +283,7 @@ import AppNavbar from '@/components/eddpsNavBar.vue';
 const calls = ref([]);
 const loading = ref(true);
 const error = ref(null);
+const openActive = ref([]); // Stato apertura per bandi attivi
 const openExpired = ref([]);
 
 const editingNotes = ref({});
@@ -289,6 +322,13 @@ const getClusterTooltip = (code) => CLUSTER_LEGEND[code] || 'Cluster ' + code;
 const getRoleName = (roleId) => {
     const role = ORG_ROLES.find(r => r.role_id === roleId);
     return role ? role.role_name : roleId;
+};
+
+// Funzioni Toggle Accordion
+const toggleActive = (id) => {
+    const idx = openActive.value.indexOf(id);
+    if (idx === -1) openActive.value.push(id);
+    else openActive.value.splice(idx, 1);
 };
 
 const toggleExpired = (id) => {
@@ -509,14 +549,26 @@ onMounted(async () => {
 @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.5); } 100% { opacity: 1; transform: scale(1); } }
 
 .section-heading { font-size: 1.25rem; color: #F3F4F6; margin-bottom: 1.25rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+/* UTILITA' CSS */
+.mt-1 { margin-top: 0.25rem; }
+.mt-3 { margin-top: 1rem; }
 .mt-4 { margin-top: 2rem; }
 .mt-5 { margin-top: 3rem; }
+.mb-2 { margin-bottom: 0.5rem; }
 .mb-3 { margin-bottom: 1rem; }
 .mb-0 { margin-bottom: 0 !important; }
+.mx-2 { margin-left: 0.5rem; margin-right: 0.5rem; }
+.m-0 { margin: 0; }
 .w-full { width: 100%; }
 .flex { display: flex; }
 .flex-1 { flex: 1; }
 .gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 0.75rem; }
+.gap-4 { gap: 1rem; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.justify-between { justify-content: space-between; }
 
 /* LEGENDA CLUSTER CSS */
 .legend-section {
@@ -544,22 +596,31 @@ onMounted(async () => {
 }
 .cluster-text { font-size: 0.75rem; color: #D1D5DB; }
 
-/* GRID BANDI ATTIVI */
-.calls-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(500px, 1fr)); gap: 1.5rem; }
 
-.call-card {
+/* STRUTTURA AD ACCORDION (USATA SIA PER ATTIVI CHE SCADUTI) */
+.accordion-container { display: flex; flex-direction: column; gap: 1.25rem; }
+.accordion-item {
     background-color: var(--bg-card); border: 1px solid var(--border-color);
-    border-radius: 12px; display: flex; flex-direction: column; overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;
 }
-.call-card:hover { border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
-
-.card-header {
-    padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color);
-    background: linear-gradient(to bottom, rgba(255,255,255,0.02), transparent);
+.accordion-item:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.3);
 }
 
-.header-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.accordion-header {
+    padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; background: linear-gradient(to bottom, rgba(255,255,255,0.02), transparent);
+    transition: background-color 0.2s;
+}
+.accordion-header:hover { background-color: rgba(255,255,255,0.03); }
+
+/* TITOLO E RATING E DATE (ATTIVI) */
+.active-title { font-size: 1.1rem; font-weight: 700; color: #F3F4F6; line-height: 1.4; }
+.dates-preview { font-size: 0.7rem; color: #9CA3AF; font-family: monospace; letter-spacing: 0.02em; }
+.dates-preview .urgent { color: #F87171; font-weight: 700; }
+
+/* BADGES (COMUNI E SCADUTI) */
 .bando-id {
     font-family: monospace; font-size: 0.7rem; font-weight: 700;
     color: #9CA3AF; background-color: #1F2937;
@@ -570,14 +631,31 @@ onMounted(async () => {
     color: #93C5FD; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(59, 130, 246, 0.3); margin-right: auto;
 }
 
+.expired-header-info { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.status-badge-expired {
+    background-color: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.3);
+    font-size: 0.65rem; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-family: monospace; letter-spacing: 0.05em;
+}
+.expired-date { font-size: 0.75rem; color: #9CA3AF; font-family: monospace; background-color: #1F2937; padding: 4px 8px; border-radius: 6px; }
+.expired-title { font-size: 1rem; font-weight: 600; color: #D1D5DB; margin: 0; }
+
 /* RATING STARS */
 .rating-box { display: flex; gap: 4px; }
 .star-icon { width: 16px; height: 16px; color: #374151; cursor: pointer; transition: color 0.2s; }
 .star-icon:hover, .star-icon.active { color: #FBBF24; }
 
-.call-title { font-size: 1.1rem; font-weight: 700; color: #F3F4F6; margin: 0; line-height: 1.4; }
+/* NOTE PREVIEW IN HEADER (ATTIVI) */
+.notes-preview-box {
+    padding: 10px 14px;
+    background-color: rgba(0,0,0,0.25);
+    border-radius: 6px;
+    border-left: 3px solid var(--accent-emerald);
+    font-size: 0.8rem;
+}
 
-.card-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; flex: 1; }
+/* INTERNI BODY ACCORDION */
+.accordion-body { border-top: 1px solid var(--border-color); background-color: var(--bg-body); }
+.accordion-card-body { padding: 1.5rem; }
 .call-desc { font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.5; }
 
 .block-label { display: block; font-size: 0.65rem; font-family: monospace; text-transform: uppercase; font-weight: 700; color: #6B7280; margin-bottom: 6px; letter-spacing: 0.05em; }
@@ -593,7 +671,7 @@ onMounted(async () => {
 .models-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .model-chip { font-size: 0.725rem; background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #D1D5DB; padding: 4px 10px; border-radius: 6px; font-family: monospace; cursor: help; }
 
-/* STILI SETUP E EDITING */
+/* STILI SETUP E EDITING NOTE (BODY) */
 .input-label { font-size: 0.65rem; font-family: monospace; text-transform: uppercase; color: #a7f3d0; font-weight: 700; display: block; margin-bottom: 4px; }
 .link-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid #374151; color: #60A5FA; padding: 8px; font-size: 0.8rem; border-radius: 6px; font-family: system-ui, -apple-system, sans-serif; margin-bottom: 8px; }
 .link-input:focus { outline: none; border-color: var(--accent-blue); }
@@ -603,7 +681,6 @@ onMounted(async () => {
 .markdown-content :deep(.md-list) { list-style-type: disc; padding-left: 20px; margin: 6px 0; }
 .markdown-content :deep(li) { margin-bottom: 4px; }
 
-/* NOTE E ASANA CSS */
 .notes-block { background-color: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.03); border-radius: 8px; padding: 12px; }
 .notes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .btn-edit-note { background: transparent; border: 1px solid #374151; color: #9CA3AF; font-size: 0.65rem; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-family: monospace; transition: all 0.2s; }
@@ -612,6 +689,7 @@ onMounted(async () => {
 .notes-textarea:focus { outline: none; border-color: var(--accent-blue); }
 .notes-display { font-size: 0.8rem; color: #E5E7EB; min-height: 40px; font-style: italic; white-space: pre-wrap; }
 
+/* ASANA CSS */
 .asana-interactive-block { display: flex; align-items: flex-end; gap: 12px; padding: 12px; background-color: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 8px; }
 .asana-label { font-size: 0.625rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; display: block; }
 .role-select { background-color: var(--bg-body); color: var(--text-main); border: 1px solid #374151; padding: 8px 10px; border-radius: 6px; font-size: 0.75rem; font-family: monospace; outline: none; cursor: pointer; }
@@ -622,6 +700,13 @@ onMounted(async () => {
 .role-assigned { font-size: 0.75rem; font-weight: 700; color: #34D399; }
 .task-id { font-size: 0.65rem; font-family: monospace; color: var(--text-muted); margin-top: 2px; }
 .btn-asana-remove { background-color: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 32px; }
+
+/* ANIMAZIONI ACCORDION & ICONS */
+.chevron-box { padding: 6px; background-color: #1F2937; border-radius: 50%; color: #D1D5DB; transition: transform 0.3s ease, background-color 0.3s; }
+.chevron-box.rotate { transform: rotate(180deg); background-color: #374151; }
+
+.accordion-slide-enter-active, .accordion-slide-leave-active { transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out; max-height: 1200px; overflow: hidden; opacity: 1; }
+.accordion-slide-enter-from, .accordion-slide-leave-to { max-height: 0; opacity: 0; }
 
 /* FOOTER CARD */
 .card-footer {
@@ -636,40 +721,10 @@ onMounted(async () => {
 }
 .link-bando:hover { background-color: rgba(59, 130, 246, 0.2); color: #60A5FA; border-color: rgba(59, 130, 246, 0.4); transform: translateY(-1px); }
 
-/* ACCORDION BANDI SCADUTI */
-.accordion-container { display: flex; flex-direction: column; gap: 1rem; }
-.accordion-item {
-    background-color: var(--bg-card); border: 1px solid var(--border-color);
-    border-radius: 12px; overflow: hidden;
-}
-.accordion-header {
-    padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center;
-    cursor: pointer; background: linear-gradient(to bottom, rgba(255,255,255,0.02), transparent);
-    transition: background-color 0.2s;
-}
-.accordion-header:hover { background-color: rgba(255,255,255,0.03); }
-
-.expired-header-info { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.status-badge-expired {
-    background-color: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.3);
-    font-size: 0.65rem; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-family: monospace; letter-spacing: 0.05em;
-}
-.expired-date { font-size: 0.75rem; color: #9CA3AF; font-family: monospace; background-color: #1F2937; padding: 4px 8px; border-radius: 6px; }
-.expired-title { font-size: 1rem; font-weight: 600; color: #D1D5DB; margin: 0; }
-
-.chevron-box { padding: 6px; background-color: #1F2937; border-radius: 50%; color: #D1D5DB; transition: transform 0.3s ease, background-color 0.3s; }
-.chevron-box.rotate { transform: rotate(180deg); background-color: #374151; }
-
-.accordion-body { border-top: 1px solid var(--border-color); background-color: var(--bg-body); }
-.accordion-card-body { padding: 1.5rem; }
-
 .link-bando-expired {
     color: #9CA3AF; background-color: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1);
 }
 .link-bando-expired:hover { color: #E5E7EB; background-color: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); }
-
-.accordion-slide-enter-active, .accordion-slide-leave-active { transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out; max-height: 1200px; overflow: hidden; opacity: 1; }
-.accordion-slide-enter-from, .accordion-slide-leave-to { max-height: 0; opacity: 0; }
 
 /* Spinner e Utils */
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -678,7 +733,6 @@ onMounted(async () => {
 .icon-md { width: 20px; height: 20px; }
 
 @media (max-width: 768px) {
-    .calls-grid { grid-template-columns: 1fr; }
     .page-header-compact { flex-direction: column; align-items: flex-start; gap: 1rem; }
     .card-footer { justify-content: stretch; }
     .link-bando { width: 100%; justify-content: center; }
